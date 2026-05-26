@@ -1,0 +1,28 @@
+# 平台阶段定义（不可变）
+# Lean 模型 (WriteCategory.lean) 保证此结构在范畴论上正确
+stages:
+  material:
+    to: [outline]
+  outline:
+    to: [firstDraft, finalDraft]
+  firstDraft:
+    to:
+      - self: review
+      - self: reflect
+      - self: rewrite
+    done:
+      to: finalDraft
+  finalDraft: {}
+
+# 用户自定义有界展开配置
+# Lean 模型 + LLM 校验：guards 和 vars 是否与范畴模型一致
+expand:
+  firstDraft:
+    self:
+      rewrite:
+        max: 5
+      review:
+        max_consecutive: 3
+    done:
+      finalize:
+        min_cycle: 1
