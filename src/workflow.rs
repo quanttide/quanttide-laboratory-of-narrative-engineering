@@ -125,3 +125,44 @@ fn build_self_guards(name: &str, expand: Option<&crate::contract::PerStageExpand
         pre.push(Box::new(MaxGuard { via: name.into(), var: "consecutive_review".into(), max: mc, rule: format!("{}.{}.max_consecutive", id, name) }));
     }
 }
+
+#[cfg(kani)]
+mod kani_proofs {
+    use super::*;
+
+    #[kani::proof]
+    fn rewrite_increments_cycle() {
+        let sit = WritingSituation {
+            stage: "firstDraft".into(),
+            cycle: kani::any(),
+            consecutive_review: kani::any(),
+        };
+        let next = apply_transition(&sit, "rewrite", "firstDraft");
+        assert!(next.cycle == sit.cycle.wrapping_add(1));
+        assert_eq!(next.consecutive_review, 0);
+    }
+
+    #[kani::proof]
+    fn review_increments_consecutive() {
+        let sit = WritingSituation {
+            stage: "firstDraft".into(),
+            cycle: kani::any(),
+            consecutive_review: kani::any(),
+        };
+        let next = apply_transition(&sit, "review", "firstDraft");
+        assert_eq!(next.cycle, sit.cycle);
+        assert_eq!(next.consecutive_review, sit.consecutive_review.wrapping_add(1));
+    }
+
+    #[kani::proof]
+    fn reflect_resets_consecutive() {
+        let sit = WritingSituation {
+            stage: "firstDraft".into(),
+            cycle: kani::any(),
+            consecutive_review: kani::any(),
+        };
+        let next = apply_transition(&sit, "reflect", "firstDraft");
+        assert_eq!(next.cycle, sit.cycle);
+        assert_eq!(next.consecutive_review, 0);
+    }
+}
