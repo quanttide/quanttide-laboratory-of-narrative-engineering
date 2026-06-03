@@ -11,7 +11,7 @@ import pytest
 from cli import (
     read_input, clean_json, write_output, _write_text,
     cmd_review, cmd_reflect, cmd_rewrite,
-    EXIT_EMPTY, EXIT_TOO_LONG,
+    EXIT_EMPTY, EXIT_TOO_LONG, EXIT_PARSE_ERROR, EXIT_API_ERROR,
     MAX_INPUT_LENGTH,
 )
 
@@ -237,6 +237,63 @@ class TestMain:
                     except SystemExit as e:
                         assert e.code == EXIT_TOO_LONG
                         raise
+
+
+# ── 边缘情况 ──
+
+
+class TestEdgeCases:
+    def test_write_text_unknown_dict(self, capsys):
+        """不匹配 review/cycle 的 dict 走 key-value 兜底"""
+        _write_text({"foo": "bar", "num": 42})
+        out = capsys.readouterr().out
+        assert "foo: bar" in out
+        assert "num: 42" in out
+
+    def test_call_llm_no_api_key(self):
+        """API key 缺失时调用 cmd_review 应报错退出"""
+        import cli
+        with patch.object(cli, "DEEPSEEK_API_KEY", ""):
+            with pytest.raises(SystemExit) as exc:
+                cli.cmd_review("text", "deepseek-chat", 0.3)
+            assert exc.value.code == 1
+
+    def test_main_cycle_command(self, tmp_path):
+        f = tmp_path / "d.md"
+        f.write_text("测试文本", encoding="utf-8")
+        with patch("sys.argv", ["3r", "cycle", str(f)]):
+            from cli import main
+            with patch("cli.cmd_review") as r, patch("cli.cmd_reflect") as rf, patch("cli.cmd_rewrite") as rw:
+                r.return_value = {"genre": "t"}
+                rf.return_value = [{"gap_type": "time_jump"}]
+                rw.return_value = "新版本"
+                main()
+                r.assert_called_once()
+                rf.assert_called_once()
+                rw.assert_called_once()
+
+    def test_main_json_decode_error(self, tmp_path):
+        f = tmp_path / "d.md"
+        f.write_text("测试文本", encoding="utf-8")
+        with patch("sys.argv", ["3r", "review", str(f)]):
+            from cli import main
+            with patch("cli.call_llm") as mock:
+                mock.return_value = "not json"
+                with pytest.raises(SystemExit) as exc:
+                    main()
+                assert exc.value.code == EXIT_PARSE_ERROR
+
+    def test_main_api_error(self, tmp_path):
+        f = tmp_path / "d.md"
+        f.write_text("测试文本", encoding="utf-8")
+        with patch("sys.argv", ["3r", "review", str(f)]):
+            from cli import main
+            with patch("cli.call_llm") as mock:
+                from requests import RequestException
+                mock.side_effect = RequestException("connection failed")
+                with pytest.raises(SystemExit) as exc:
+                    main()
+                assert exc.value.code == EXIT_API_ERROR
 
 
 # ── 集成：prompt 模板没有语法错误 ──
