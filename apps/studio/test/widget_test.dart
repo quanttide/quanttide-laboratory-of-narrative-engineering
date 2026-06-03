@@ -4,9 +4,9 @@ import 'package:docs_agent/main.dart';
 
 void main() {
   testWidgets('app renders without crash', (tester) async {
-    await tester.pumpWidget(DocAgentApp());
+    await tester.pumpWidget(const LabApp());
     await tester.pump();
-    expect(find.byType(DocAgentApp), findsOneWidget);
+    expect(find.byType(LabApp), findsOneWidget);
     await tester.pumpWidget(const SizedBox());
     await tester.pump();
   });

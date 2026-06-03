@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """
-p02 — 3R 循环效果度量实验
+p02 — 3R 循环效果度量实验（修正版）
 
-对 3 篇初稿运行 5 轮 3R（Review → Reflect → Rewrite），
-每轮记录 5 维评分，分析收益递减。
+按正确的 3R 定义：
+  Review:  理解文本意图      → {genre, intent, stage, summary}
+  Reflect: 检测空隙 + 多角度归因 → [{gap, 结构/人物/读者/技法归因}]
+  Rewrite: 带理解去修改      → 新版本
 """
 
 import json
@@ -28,21 +30,15 @@ EXPERIMENTAL = [
     {"id": "C", "name": "第六章（论坛热搜）", "path": "校园言情/3_初稿/6_第六章.md"},
 ]
 
-REFERENCES = [
-    {"id": "R1", "name": "深夜失眠", "path": "职场言情/4_成稿/1_2_深夜失眠.md"},
-    {"id": "R2", "name": "傍晚小龙虾", "path": "职场言情/4_成稿/2_3_傍晚小龙虾.md"},
-    {"id": "R3", "name": "书房陪伴", "path": "职场言情/4_成稿/10_1_书房陪伴.md"},
-]
-
 MAX_ROUNDS = 5
+GAP_TYPES = ["time_jump", "dialog_gap", "action_gap", "perspective_shift", "transition"]
 
 
 def read_article(path: str) -> str:
-    full_path = FICTION_ROOT / path
-    text = full_path.read_text("utf-8")
+    text = (FICTION_ROOT / path).read_text("utf-8")
     lines = text.split("\n")
-    body_lines = ["" if l.strip() == "" else l for l in lines if not l.startswith("# ")]
-    return "\n".join(body_lines).strip()
+    body = ["" if l.strip() == "" else l for l in lines if not l.startswith("# ")]
+    return "\n".join(body).strip()
 
 
 def call_llm(prompt: str, system: str = "") -> str:
@@ -50,7 +46,6 @@ def call_llm(prompt: str, system: str = "") -> str:
     if system:
         messages.append({"role": "system", "content": system})
     messages.append({"role": "user", "content": prompt})
-
     resp = requests.post(
         API_URL,
         headers={"Authorization": f"Bearer {DEEPSEEK_API_KEY}", "Content-Type": "application/json"},
@@ -61,86 +56,83 @@ def call_llm(prompt: str, system: str = "") -> str:
     return resp.json()["choices"][0]["message"]["content"]
 
 
-def build_review_prompt(text: str, references: list[str]) -> str:
-    ref_text = "\n\n---\n".join(f"【参考文章 {i+1}】\n{r[:500]}" for i, r in enumerate(references))
-    return f"""你是一个专业写作评审。请评审下面的文章，输出 5 维评分和空隙列表。
+def build_review_prompt(text: str) -> str:
+    """Review: 只理解意图，不找问题"""
+    return f"""请阅读下面的文章片段，从写作意图的角度分析它。
 
-评分维度（每项 0-10）：
-1. 空隙密度：文本中有多少时间跳跃、对话间隙、动作空隙、视角切换、过渡压缩（0=极多空隙，10=几乎没有）
-2. 风格一致度：与参考文章风格的吻合程度（参考文章附后）
-3. 情感张力：情感表达的层次感和释放节奏（0=平淡，10=感染力强）
-4. 细节密度：有多少具体可感的物象细节（0=空洞，10=细节丰富）
-5. 整体评分：综合可读性、完整性、感染力
+不需要找问题。只需要理解这段文本在做什么。
 
 输出 JSON：
 {{
-  "scores": {{"gap": 0-10, "style": 0-10, "tension": 0-10, "detail": 0-10, "overall": 0-10}},
-  "gaps": [{{"type": "time_jump/dialog_gap/action_gap/perspective_shift/transition", "location": "段落位置描述", "detail": "问题说明"}}]
+  "genre": "场景体裁分类（如：重逢场景/日常对话/情感释放/事件驱动），10字以内",
+  "intent": "作者的创作意图（如：营造暧昧氛围/推进人物关系/展示角色性格），20字以内",
+  "stage": "根据文本呈现出来的完成度，判断这是初稿还是成稿，以及一句话依据",
+  "summary": "一句话总结这段文本在干什么（30字以内）"
 }}
 
-参考文章（同一作者的好文章范例）：
-{ref_text}
-
-待评审文章：
+文章：
 {text}"""
 
 
-def build_reflect_prompt(text: str, review_result: dict) -> str:
-    gaps = review_result.get("gaps", [])
-    scores = review_result.get("scores", {})
-    gap_text = "\n".join(f"- {g['type']}: {g['detail']}" for g in gaps) if gaps else "- 无明显空隙"
-    low_dims = [k for k, v in scores.items() if v is not None and v < 6]
+def build_reflect_prompt(text: str, review: dict) -> str:
+    """Reflect: 先检测空隙，再多角度归因"""
+    return f"""你是一个写作诊断专家。以下是对当前文本的意图理解：
 
-    prompt = f"""你是一个写作诊断专家。Review 已经找出了文章的问题（空隙和低分维度）。
-现在请你从多个角度深入分析每个问题为什么会存在。
+体裁：{review.get('genre', '')}
+意图：{review.get('intent', '')}
+阶段：{review.get('stage', '')}
 
-评审结果：
-{json.dumps(scores, ensure_ascii=False)}
+请检测文本中的写作空隙，并对每个空隙从 4 个角度分析深层原因。
 
-检测到的空隙：
-{gap_text}
+空隙类型（5 种）：
+- time_jump：时间跳跃没有过渡标记
+- dialog_gap：对话之间缺少反应或沉默描写
+- action_gap：动作之间缺少衔接
+- perspective_shift：视角切换缺少锚点
+- transition：场景转换缺少桥梁
 
-需要改进的低分维度：{', '.join(low_dims) if low_dims else '无'}
+必须输出 JSON 数组，格式如下（不要额外文字）：
+[
+  {{
+    "gap_type": "time_jump",
+    "location": "具体的段落位置描述",
+    "detail": "问题说明",
+    "structure": "叙事结构角度的归因",
+    "psychology": "人物心理角度的归因",
+    "reader": "读者期待角度的归因",
+    "craft": "有意识留白 或 无意识忽略",
+    "root_cause": "一句话总结根本原因"
+  }}
+]
 
-请从以下 4 个角度逐一分析每个空隙/低分维度的深层原因：
-
-1. 【叙事结构】这个空隙是情节推进的必然省略，还是作者不知道中间发生了什么？
-2. 【人物心理】角色在这个空隙里是什么状态？他在想什么、感受什么？作者为什么没写？
-3. 【读者期待】读者在这里会有什么疑问？作者没有满足什么预期？
-4. 【写作技法】这是一个有意识的选择（留白）还是无意识的忽略？
-
-输出 JSON：
-{{
-  "analysis": [
-    {{
-      "issue": "问题描述",
-      "structure": "叙事结构角度的归因",
-      "psychology": "人物心理角度的归因",
-      "reader": "读者期待角度的归因",
-      "craft": "写作技法角度的归因",
-      "root_cause": "一句话总结根本原因"
-    }}
-  ]
-}}"""
-    return prompt
+文本：
+{text}"""
 
 
-def build_rewrite_prompt(text: str, review_result: dict, reflect_analysis: list[dict]) -> str:
+def build_rewrite_prompt(text: str, review: dict, analysis: list[dict]) -> str:
+    """Rewrite: 带着意图理解 + 空隙归因去修改"""
     analysis_text = "\n".join(
-        f"{i+1}. {a['issue']}\n"
+        f"{i+1}. [{a['gap_type']}] {a.get('detail', '')}\n"
         f"   叙事结构: {a.get('structure', '')}\n"
         f"   人物心理: {a.get('psychology', '')}\n"
         f"   读者期待: {a.get('reader', '')}\n"
         f"   写作技法: {a.get('craft', '')}\n"
         f"   根本原因: {a.get('root_cause', '')}"
-        for i, a in enumerate(reflect_analysis)
+        for i, a in enumerate(analysis)
     )
-    return f"""你已经知道了当前文章的以下问题和深层原因：
 
-问题与归因：
+    return f"""当前文本的定位：
+体裁：{review.get('genre', '')}
+意图：{review.get('intent', '')}
+
+对文本中空隙的诊断：
 {analysis_text}
 
-请带着对这些问题的理解重新修改文章。不要机械地填补每个空隙——而是根据你对深层原因的理解，做出有针对性的修改。可以补写、可以调整节奏、可以增加细节，但保持原文的整体风格和叙事基调。
+请带着以上理解重新修改文章。注意：
+- 如果空隙被判定为"有意识留白"，不需要修改
+- 如果空隙被判定为"无意识忽略"，针对性地补写
+- 保持原文的风格和节奏
+- 可以补写细节、调整过渡，但不要改变叙事走向
 
 输出格式：直接输出修改后的完整文章。
 
@@ -148,25 +140,15 @@ def build_rewrite_prompt(text: str, review_result: dict, reflect_analysis: list[
 {text}"""
 
 
-def build_score_only_prompt(text: str, references: list[str]) -> str:
-    """只评分，不检测空隙（用于基线后的轮次）"""
-    ref_text = "\n\n---\n".join(f"【参考文章 {i+1}】\n{r[:500]}" for i, r in enumerate(references))
-    return f"""请评审下面文章，输出 5 维评分（0-10）。
-
-维度：gap(空隙/流畅度), style(风格一致度), tension(情感张力), detail(细节密度), overall(整体)
-
-参考文章：{ref_text}
-
-输出 JSON：{{"scores": {{"gap": 0, "style": 0, "tension": 0, "detail": 0, "overall": 0}}}}
-
-文章：
-{text}"""
+def clear_json(raw: str) -> str:
+    raw = raw.strip()
+    if raw.startswith("```"):
+        raw = raw.split("\n", 1)[1].rsplit("```", 1)[0].strip()
+    return raw
 
 
 def run_experiment():
     RESULTS_DIR.mkdir(exist_ok=True)
-
-    refs = [read_article(r["path"]) for r in REFERENCES]
 
     for art in EXPERIMENTAL:
         print(f"\n{'='*60}")
@@ -174,15 +156,13 @@ def run_experiment():
         print(f"{'='*60}")
 
         text = read_article(art["path"])
-        round_data = []
 
         for rnd in range(1, MAX_ROUNDS + 1):
             round_file = RESULTS_DIR / f"{art['id']}_round{rnd}.json"
             if round_file.exists():
                 print(f"  第 {rnd} 轮 ← 读取缓存")
-                round_data.append(json.loads(round_file.read_text("utf-8")))
-                # 更新 text 为上一轮改写结果
-                text = round_data[-1].get("rewritten_text", text)
+                data = json.loads(round_file.read_text("utf-8"))
+                text = data.get("rewritten_text", text)
                 continue
 
             print(f"  第 {rnd} 轮...")
@@ -190,67 +170,67 @@ def run_experiment():
             # Step 1: Review
             print(f"    Review...", end=" ", flush=True)
             try:
-                review_raw = call_llm(build_review_prompt(text, refs))
-                review_raw = review_raw.strip()
-                if review_raw.startswith("```"):
-                    review_raw = review_raw.split("\n", 1)[1].rsplit("```", 1)[0].strip()
-                review_result = json.loads(review_raw)
-                print(f"✓ 整体={review_result['scores']['overall']}")
+                raw = clear_json(call_llm(build_review_prompt(text)))
+                review = json.loads(raw)
+                print(f"✓ {review.get('genre', '?')}")
             except Exception as e:
                 print(f"✗ {e}")
-                review_result = {"scores": {"gap": None, "style": None, "tension": None, "detail": None, "overall": None}, "gaps": []}
+                review = {"genre": "?", "intent": "?", "stage": "?", "summary": "?"}
 
-            # Step 2: Reflect（多角度归因）
+            # Step 2: Reflect（检测 + 归因）
             print(f"    Reflect...", end=" ", flush=True)
-            try:
-                reflect_raw = call_llm(build_reflect_prompt(text, review_result))
-                reflect_raw = reflect_raw.strip()
-                if reflect_raw.startswith("```"):
-                    reflect_raw = reflect_raw.split("\n", 1)[1].rsplit("```", 1)[0].strip()
-                reflect_result = json.loads(reflect_raw)
-                analysis = reflect_result.get("analysis", [])
-                print(f"✓ {len(analysis)} 条归因")
-            except Exception as e:
-                print(f"✗ {e}")
-                analysis = []
+            analysis = []
+            for attempt in range(2):
+                try:
+                    raw = clear_json(call_llm(build_reflect_prompt(text, review)))
+                    parsed = json.loads(raw)
+                    if isinstance(parsed, list):
+                        analysis = parsed
+                    elif isinstance(parsed, dict) and "analysis" in parsed:
+                        analysis = parsed["analysis"]
+                    elif isinstance(parsed, dict):
+                        analysis = [parsed]
+                    if analysis:
+                        break
+                except Exception as e:
+                    if attempt == 0:
+                        continue
+                    print(f"✗ {e}")
+            if analysis:
+                print(f"✓ {len(analysis)} 个空隙")
+            else:
+                print(f"→ 未检测到空隙")
 
-            # Step 3: Rewrite（带着归因理解去改写）
+            # Step 3: Rewrite
             if analysis:
                 print(f"    Rewrite...", end=" ", flush=True)
                 try:
-                    rewritten = call_llm(build_rewrite_prompt(text, review_result, analysis))
-                    rewritten = rewritten.strip()
-                    if rewritten.startswith("```"):
-                        rewritten = rewritten.split("\n", 1)[1].rsplit("```", 1)[0].strip()
+                    rewritten = clear_json(call_llm(build_rewrite_prompt(text, review, analysis)))
                     print(f"✓ {len(rewritten)} 字")
                 except Exception as e:
                     print(f"✗ {e}")
                     rewritten = text
             else:
                 rewritten = text
-                print(f"    Rewrite → 无归因，跳过")
+                print(f"    Rewrite → 无空隙，跳过")
 
-            # 保存该轮数据
-            round_entry = {
+            entry = {
                 "round": rnd,
-                "scores": review_result["scores"],
-                "gaps": review_result.get("gaps", []),
+                "review": review,
                 "analysis": analysis,
                 "rewritten_text": rewritten,
             }
-            round_file.write_text(json.dumps(round_entry, ensure_ascii=False, indent=2), "utf-8")
-            round_data.append(round_entry)
+            round_file.write_text(json.dumps(entry, ensure_ascii=False, indent=2), "utf-8")
             text = rewritten
 
 
 def analyze():
     print(f"\n\n{'='*60}")
-    print("p02 分析报告：3R 循环效果度量")
+    print("p02 分析报告：3R 循环（修正版）")
     print(f"{'='*60}")
 
     for art in EXPERIMENTAL:
         print(f"\n## {art['id']}: {art['name']}")
-        print()
 
         rounds = []
         for rnd in range(1, MAX_ROUNDS + 1):
@@ -259,69 +239,47 @@ def analyze():
                 rounds.append(json.loads(f.read_text("utf-8")))
 
         if not rounds:
-            print("  无数据")
             continue
 
-        # 评分表
-        dims = ["gap", "style", "tension", "detail", "overall"]
-        header = f"  {'轮次':>4}  " + "  ".join(f"{d:>7}" for d in dims)
-        print(f"  {header}")
-        print(f"  {'-' * (len(header))}")
-
-        prev = None
+        # Review 输出的意图变化
+        print(f"\n  Review 输出变化：")
+        print(f"  {'轮次':>4}  {'体裁':<12} {'意图':<26} {'阶段':<14}")
+        print(f"  {'-'*60}")
         for r in rounds:
-            s = r["scores"]
-            vals = [s.get(d, "-") for d in dims]
-            row = f"  {r['round']:>4}  " + "  ".join(f"{str(v):>7}" for v in vals)
-            print(row)
+            rv = r.get("review", {})
+            print(f"  {r['round']:>4}  {rv.get('genre', ''):<12} {rv.get('intent', ''):<26} {rv.get('stage', '')[:12]:<14}")
 
-            curr = sum(v for v in vals if isinstance(v, (int, float)))
-            if prev is not None:
-                delta = curr - prev
-            prev = curr
-
-        # 找收益递减拐点
-        print()
-        improvements = []
-        prev_total = None
+        # 空隙数量与类型变化
+        print(f"\n  空隙变化：")
+        total_gaps = []
         for r in rounds:
-            s = r["scores"]
-            total = sum(s.get(d, 0) or 0 for d in dims)
-            if prev_total is not None:
-                imp = total - prev_total
-                improvements.append((r["round"], imp))
-            prev_total = total
+            a = r.get("analysis", [])
+            gaps_detail = ", ".join(f"{g['gap_type']}" for g in a)
+            print(f"    第 {r['round']} 轮: {len(a)} 个空隙 [{gaps_detail}]")
+            total_gaps.append(len(a))
 
-        if improvements:
-            print(f"  {'轮次':>4}  {'改善值':>6}  {'改善率':>6}")
-            print(f"  {'-'*20}")
-            for rnd, imp in improvements:
-                rate = ""
-                if len(improvements) > 0:
-                    first_imp = improvements[0][1]
-                    if first_imp != 0 and rnd > 1:
-                        rate = f"{imp/first_imp*100:>5.0f}%"
-                print(f"  {rnd:>4}  {imp:>+6.1f}  {rate:>6}")
-
-            # 递减拐点：首次改善<上一轮50%
-            for i in range(1, len(improvements)):
-                if improvements[i][1] < improvements[i-1][1] * 0.5:
-                    print(f"\n  ⬇ 递减拐点：第 {improvements[i][0]} 轮（改善 {improvements[i][1]:+.1f} < 上一轮 {improvements[i-1][1]:+.1f} 的 50%）")
-                    break
-            else:
-                print(f"\n  ➡ 5 轮内未出现明显递减")
-
-        # 空隙变化
-        print()
-        print(f"  空隙数量变化：")
+        # 有意识 vs 无意识（汇总所有轮次）
+        conscious_all = 0
+        unconscious_all = 0
+        total_all = 0
         for r in rounds:
-            gap_count = len(r.get("gaps", []))
-            print(f"    第 {r['round']} 轮: {gap_count} 个空隙")
+            a = r.get("analysis", [])
+            for g in a:
+                total_all += 1
+                craft = g.get("craft", "")
+                if "有意识" in craft or "有意" in craft:
+                    conscious_all += 1
+                if "无意识" in craft or "忽略" in craft:
+                    unconscious_all += 1
+        if total_all:
+            print(f"\n  留白类型汇总（全部轮次）：")
+            print(f"    有意识留白: {conscious_all} / {total_all} ({conscious_all/total_all*100:.0f}%)")
+            print(f"    无意识忽略: {unconscious_all} / {total_all} ({unconscious_all/total_all*100:.0f}%)")
 
 
 def main():
     print("=" * 60)
-    print("p02 — 3R 循环效果度量实验")
+    print("p02 — 3R 循环效果度量（修正版）")
     print("=" * 60)
     run_experiment()
     analyze()
