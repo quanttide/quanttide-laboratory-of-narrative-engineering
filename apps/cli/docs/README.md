@@ -5,20 +5,46 @@
 ## 安装
 
 ```bash
-pip install -e /path/to/apps/cli
+git clone https://github.com/quanttide/quanttide-laboratory-of-narrative-engineering.git
+cd quanttide-laboratory-of-narrative-engineering/apps/cli
+pip install -e .
 export DEEPSEEK_API_KEY="sk-..."
 ```
 
-## 命令
-
-### 3r review — 理解文本意图
+验证安装成功：
 
 ```bash
+3r --help
+```
+
+依赖：Python ≥ 3.12、DeepSeek API key。
+
+## 先试试
+
+```bash
+echo '他推开门，看到她坐在窗边。想说话，但喉咙发紧。' | 3r review --format text
+```
+
+10 秒内能看到输出，确认工具正常。
+
+## 输入格式
+
+- 纯文本（推荐）或 Markdown
+- 中文/英文均可
+- 不限长度（长文本会自动截断到前 2000 字）
+- 每段用空行分隔
+
+## 命令
+
+### `3r review` — 理解文本意图
+
+```bash
+3r review draft.md
 cat draft.md | 3r review
 3r review draft.md --format text
 ```
 
-输出 JSON：
+输出：
 ```json
 {
   "genre": "重逢场景",
@@ -28,15 +54,14 @@ cat draft.md | 3r review
 }
 ```
 
-### 3r reflect — 检测空隙 + 归因
+### `3r reflect` — 检测空隙 + 归因
 
 ```bash
 cat draft.md | 3r reflect
 cat draft.md | 3r reflect --format text
 ```
 
-输出 JSON 数组，每个空隙包含 4 视角分析：
-
+输出 JSON 数组：
 ```json
 [
   {
@@ -51,23 +76,31 @@ cat draft.md | 3r reflect --format text
 ]
 ```
 
-### 3r rewrite — 带归因改写
+### `3r rewrite` — 带归因改写
 
 ```bash
 cat draft.md | 3r rewrite > final.md
-cat draft.md | 3r rewrite --format text
 ```
 
-输入原文，输出改写后的完整文本。
+输出：
+```json
+{
+  "text": "修改后的完整文章……",
+  "length": 1234
+}
+```
 
-### 3r 3r — 完整一轮
+`--format text` 时直接输出纯文本，适合重定向到文件。
+
+### `3r cycle` — 完整一轮
 
 ```bash
-cat draft.md | 3r 3r > result.json
-cat draft.md | 3r 3r --format text
+cat draft.md | 3r cycle > result.json
 ```
 
-等价于依次执行 review → reflect → rewrite。
+等价于依次执行 review → reflect → rewrite。输出包含全部三个阶段的结果。
+
+`3r 3r` 也支持（与 `3r cycle` 等价），但推荐用 `cycle`。
 
 ## 参数
 
@@ -77,19 +110,28 @@ cat draft.md | 3r 3r --format text
 | `--temp` | `0.3` | 温度 |
 | `--format` | `json` | 输出格式：`json` 或 `text` |
 
+## 输出结构
+
+| 命令 | json 格式 | text 格式 |
+|------|----------|----------|
+| `review` | `{genre, intent, stage, summary}` | 五行文本 |
+| `reflect` | `[{gap_type, ...}]` | 每条空隙一屏 |
+| `rewrite` | `{text, length}` | 纯文本 |
+| `cycle` | `{review, reflect, rewrite}` | 三段式文本 |
+
 ## 管道用法
 
 ```bash
 cat draft.md | 3r review | 3r reflect | 3r rewrite > final.md
 ```
 
-每个命令的输出都可直接作为下一个命令的上下文。组合灵活，不限于内置的 `3r 3r`。
+每条命令的输出可作为下一条的输入。不限于内置的 `3r cycle`。
 
 ## 退出码
 
 | 码 | 含义 |
 |----|------|
 | 0 | 成功 |
-| 2 | API 错误 |
-| 3 | 解析错误 |
+| 2 | API 错误（网络/认证） |
+| 3 | 解析错误（LLM 输出格式异常） |
 | 4 | 输入为空 |

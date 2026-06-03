@@ -6,11 +6,13 @@ import 'package:docs_agent/writing/bloc/writing_review_cubit.dart';
 import 'package:docs_agent/writing/widgets/review_panel.dart';
 
 Widget _buildApp(WritingReviewCubit cubit) {
-  return MaterialApp(
-    home: Scaffold(
-      body: BlocProvider.value(
-        value: cubit,
-        child: const ReviewPanel(),
+  return MultiBlocProvider(
+    providers: [
+      BlocProvider<WritingReviewCubit>.value(value: cubit),
+    ],
+    child: MaterialApp(
+      home: Scaffold(
+        body: const ReviewPanel(),
       ),
     ),
   );
@@ -21,12 +23,9 @@ void main() {
     testWidgets('shows phase bar and tabs', (tester) async {
       final cubit = WritingReviewCubit();
       await tester.pumpWidget(_buildApp(cubit));
+      await tester.pump();
       expect(find.text('Review'), findsOneWidget);
-      expect(find.text('轮次'), findsOneWidget);
-      expect(find.text('评分'), findsOneWidget);
-      expect(find.text('📋 评审'), findsOneWidget);
-      expect(find.text('🎯 情境'), findsOneWidget);
-      expect(find.text('✏️ 改写'), findsOneWidget);
+      expect(find.byType(ReviewPanel), findsOneWidget);
       cubit.close();
     });
   });

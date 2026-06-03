@@ -211,7 +211,7 @@ def cmd_rewrite(text: str, model: str, temp: float) -> str:
 
 def main():
     parser = argparse.ArgumentParser(description="qtcloud-3r — 3R writing toolchain")
-    parser.add_argument("command", choices=["review", "reflect", "rewrite", "3r"])
+    parser.add_argument("command", choices=["review", "reflect", "rewrite", "cycle", "3r"])
     parser.add_argument("file", nargs="?", default="-", help="输入文件（默认 stdin）")
     parser.add_argument("--model", default=DEFAULT_MODEL)
     parser.add_argument("--temp", type=float, default=0.3)
@@ -234,8 +234,11 @@ def main():
             write_output(result, args.format)
         elif args.command == "rewrite":
             result = cmd_rewrite(text, args.model, args.temp)
-            write_output(result, "text" if args.format == "text" else "json")
-        elif args.command == "3r":
+            if args.format == "text":
+                print(result)
+            else:
+                write_output({"text": result, "length": len(result)}, "json")
+        elif args.command in ("cycle", "3r"):
             result = {
                 "review": cmd_review(text, args.model, args.temp),
                 "reflect": cmd_reflect(text, args.model, args.temp),
