@@ -7,11 +7,11 @@ from unittest.mock import patch, MagicMock
 import pytest
 from fastapi.testclient import TestClient
 
-from cli import (
+from app import (
     cmd_review, cmd_reflect, cmd_rewrite, cmd_cycle,
     clean_json, call_llm, read_text, MAX_INPUT_LENGTH,
 )
-from cli.app import app
+from app.app import app
 
 client = TestClient(app)
 
@@ -44,13 +44,13 @@ class TestCleanJson:
 
 
 class TestCmdReview:
-    @patch("cli.call_llm")
+    @patch("app.call_llm")
     def test_success(self, mock_call):
         mock_call.return_value = '{"genre":"g","intent":"i","stage":"s","summary":"x"}'
         r = cmd_review("text")
         assert r["genre"] == "g"
 
-    @patch("cli.call_llm")
+    @patch("app.call_llm")
     def test_wrapped(self, mock_call):
         mock_call.return_value = "```\n{\"genre\":\"g\"}\n```"
         r = cmd_review("text")
@@ -61,7 +61,7 @@ class TestCmdReview:
 
 
 class TestCmdReflect:
-    @patch("cli.call_llm")
+    @patch("app.call_llm")
     def test_returns_list(self, mock_call):
         mock_call.side_effect = [
             '{"genre":"g"}',
@@ -70,7 +70,7 @@ class TestCmdReflect:
         r = cmd_reflect("text")
         assert r[0]["gap_type"] == "t"
 
-    @patch("cli.call_llm")
+    @patch("app.call_llm")
     def test_returns_analysis_key(self, mock_call):
         mock_call.side_effect = [
             '{"genre":"g"}',
@@ -79,7 +79,7 @@ class TestCmdReflect:
         r = cmd_reflect("text")
         assert r[0]["gap_type"] == "t"
 
-    @patch("cli.call_llm")
+    @patch("app.call_llm")
     def test_empty_on_unexpected(self, mock_call):
         mock_call.side_effect = [
             '{"genre":"g"}',
@@ -92,7 +92,7 @@ class TestCmdReflect:
 
 
 class TestCmdRewrite:
-    @patch("cli.call_llm")
+    @patch("app.call_llm")
     def test_rewrite(self, mock_call):
         mock_call.side_effect = [
             '{"genre":"g","intent":"","stage":""}',
@@ -102,7 +102,7 @@ class TestCmdRewrite:
         ]
         assert cmd_rewrite("原文") == "修改后"
 
-    @patch("cli.call_llm")
+    @patch("app.call_llm")
     def test_no_gaps_returns_original(self, mock_call):
         mock_call.side_effect = [
             '{"genre":"g","intent":"","stage":""}',
@@ -116,9 +116,9 @@ class TestCmdRewrite:
 
 
 class TestCmdCycle:
-    @patch("cli.cmd_review")
-    @patch("cli.cmd_reflect")
-    @patch("cli.cmd_rewrite")
+    @patch("app.cmd_review")
+    @patch("app.cmd_reflect")
+    @patch("app.cmd_rewrite")
     def test_cycle(self, mock_rw, mock_rf, mock_rv):
         mock_rv.return_value = {"genre": "g", "intent": "", "stage": "", "summary": ""}
         mock_rf.return_value = [{"gap_type": "t"}]
@@ -134,7 +134,7 @@ class TestCmdCycle:
 
 class TestAPI:
     def test_review(self):
-        with patch("cli.call_llm") as mock:
+        with patch("app.call_llm") as mock:
             mock.return_value = '{"genre":"g","intent":"i","stage":"s","summary":"x"}'
             resp = client.post("/review", json={"text": "测试"})
             assert resp.status_code == 200
@@ -149,20 +149,20 @@ class TestAPI:
         assert resp.status_code == 422
 
     def test_reflect(self):
-        with patch("cli.app.cmd_reflect") as mock:
+        with patch("app.app.cmd_reflect") as mock:
             mock.return_value = [{"gap_type": "t", "detail": "x"}]
             resp = client.post("/reflect", json={"text": "测试"})
             assert resp.status_code == 200
             assert resp.json()[0]["gap_type"] == "t"
 
     def test_reflect_empty(self):
-        with patch("cli.app.cmd_reflect", return_value=[]):
+        with patch("app.app.cmd_reflect", return_value=[]):
             resp = client.post("/reflect", json={"text": "测试"})
             assert resp.status_code == 200
             assert resp.json() == []
 
     def test_rewrite(self):
-        with patch("cli.app.cmd_rewrite") as mock:
+        with patch("app.app.cmd_rewrite") as mock:
             mock.return_value = "修改后"
             resp = client.post("/rewrite", json={"text": "原文"})
             assert resp.status_code == 200
@@ -170,7 +170,7 @@ class TestAPI:
             assert resp.json()["length"] == 3
 
     def test_cycle(self):
-        with patch("cli.app.cmd_review") as rv, patch("cli.app.cmd_reflect") as rf, patch("cli.app.cmd_rewrite") as rw:
+        with patch("app.app.cmd_review") as rv, patch("app.app.cmd_reflect") as rf, patch("app.app.cmd_rewrite") as rw:
             rv.return_value = {"genre": "g", "intent": "", "stage": "", "summary": ""}
             rf.return_value = [{"gap_type": "t"}]
             rw.return_value = "新版本"
@@ -183,8 +183,8 @@ class TestAPI:
 
     def test_api_error_502(self):
         """所有端点在命令失败时返回 502"""
-        for endpoint, cmd in [("/review", "cli.app.cmd_review"), ("/reflect", "cli.app.cmd_reflect"),
-                              ("/rewrite", "cli.app.cmd_rewrite"), ("/cycle", "cli.app.cmd_review")]:
+        for endpoint, cmd in [("/review", "app.app.cmd_review"), ("/reflect", "app.app.cmd_reflect"),
+                              ("/rewrite", "app.app.cmd_rewrite"), ("/cycle", "app.app.cmd_review")]:
             with patch(cmd) as mock:
                 mock.side_effect = RuntimeError("fail")
                 resp = client.post(endpoint, json={"text": "测试"})
@@ -200,22 +200,22 @@ class TestAPI:
 
 class TestCallLLM:
     def test_no_api_key(self):
-        import cli
-        with patch.object(cli, "DEEPSEEK_API_KEY", ""):
+        import app
+        with patch.object(app, "DEEPSEEK_API_KEY", ""):
             with pytest.raises(RuntimeError, match="未设置"):
-                cli.call_llm("test")
+                app.call_llm("test")
 
-    @patch("cli.requests.post")
+    @patch("app.requests.post")
     def test_with_system_prompt(self, mock_post):
         mock_post.return_value.json.return_value = {"choices": [{"message": {"content": "ok"}}]}
-        import cli
-        result = cli.call_llm("提示词", system="你是一个助手")
+        import app
+        result = app.call_llm("提示词", system="你是一个助手")
         assert result == "ok"
 
-    @patch("cli.requests.post")
+    @patch("app.requests.post")
     def test_http_success(self, mock_post):
         mock_post.return_value.json.return_value = {"choices": [{"message": {"content": "回复"}}]}
-        import cli
-        result = cli.call_llm("test")
+        import app
+        result = app.call_llm("test")
         assert result == "回复"
         mock_post.assert_called_once()

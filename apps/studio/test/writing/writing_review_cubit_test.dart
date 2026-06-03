@@ -73,12 +73,21 @@ void main() {
       cubit.close();
     });
 
-    test('jumpToLine does not change state', () {
+    test('jumpToLine sets pendingJumpLine', () {
       final cubit = WritingReviewCubit();
       cubit.loadSample();
-      final originalTab = cubit.state.currentTab;
-      cubit.jumpToLine(3);
-      expect(cubit.state.currentTab, originalTab);
+      cubit.jumpToLine(5);
+      expect(cubit.state.pendingJumpLine, 5);
+      cubit.close();
+    });
+
+    test('clearPendingJump resets pendingJumpLine', () {
+      final cubit = WritingReviewCubit();
+      cubit.loadSample();
+      cubit.jumpToLine(5);
+      expect(cubit.state.pendingJumpLine, 5);
+      cubit.clearPendingJump();
+      expect(cubit.state.pendingJumpLine, isNull);
       cubit.close();
     });
 

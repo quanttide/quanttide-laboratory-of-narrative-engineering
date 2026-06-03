@@ -79,6 +79,15 @@ void main() {
       expect(result.rewrites.any((r) => r.location.contains('对话偏多')), isTrue);
     });
 
+    test('avgScore is average of three style scores', () {
+      const text = '他走了出去。\n第二天，他又来了。\n她悲伤地看着他。';
+      final result = AnalysisEngine.analyze(text);
+      expect(result.styles, hasLength(3));
+      final expectedAvg =
+          result.styles.fold(0.0, (sum, s) => sum + s.score) / 3;
+      expect(result.avgScore, closeTo(expectedAvg, 0.01));
+    });
+
     test('handles sample text without errors', () {
       const sample =
           '# 咖啡厅重逢\n\n春天的一个工作日的下午，咖啡店外下着淅淅沥沥的小雨。\n\n'

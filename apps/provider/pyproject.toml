@@ -10,7 +10,7 @@ dependencies = [
 ]
 
 [project.scripts]
-3r = "cli.__main__:main"
+3r = "app.__main__:main"
 
 [project.entry-points."fastapi.app"]
-app = "cli.app:app"
+app = "app.app:app"

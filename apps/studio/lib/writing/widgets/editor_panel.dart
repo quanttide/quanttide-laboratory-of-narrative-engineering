@@ -25,6 +25,10 @@ class _EditorPanelState extends State<EditorPanel> {
     _textCtrl = TextEditingController(text: widget.cubit.state.text);
     _scrollCtrl = ScrollController();
     widget.cubit.stream.listen((state) {
+      if (state.pendingJumpLine != null) {
+        _doJump(state.pendingJumpLine!);
+        widget.cubit.clearPendingJump();
+      }
       if (_textCtrl.text != state.text) {
         _textCtrl.text = state.text;
       }
@@ -52,7 +56,7 @@ class _EditorPanelState extends State<EditorPanel> {
     _updateLineCount(text);
   }
 
-  void _jumpToLine(int line) {
+  void _doJump(int line) {
     final offset = (line - 1) * GapMarkersColumn.lineHeight - 60;
     if (_scrollCtrl.hasClients) {
       _scrollCtrl.animateTo(
@@ -67,6 +71,10 @@ class _EditorPanelState extends State<EditorPanel> {
       pos += lines[i].length + 1;
     }
     _textCtrl.selection = TextSelection.collapsed(offset: pos);
+  }
+
+  void _jumpToLine(int line) {
+    _doJump(line);
     widget.cubit.jumpToLine(line);
   }
 

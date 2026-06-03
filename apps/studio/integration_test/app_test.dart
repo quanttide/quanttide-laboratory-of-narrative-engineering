@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:docs_agent/writing/bloc/writing_review_cubit.dart';
+import 'package:docs_agent/writing/widgets/draggable_divider.dart';
 import 'package:docs_agent/writing/widgets/writing_workbench.dart';
 
 void main() {
@@ -64,26 +65,27 @@ void main() {
       expect(cubit.state.gapCount, greaterThan(0));
     });
 
-    testWidgets('dragging divider changes panel width', (tester) async {
+    testWidgets('dragging left divider changes left panel width', (tester) async {
       await tester.binding.setSurfaceSize(const Size(1200, 800));
       await tester.pumpWidget(buildApp());
       await tester.pump();
 
-      // The divider is a GestureDetector wrapped in MouseRegion + Container
-      final dividers = find.byType(GestureDetector);
-      expect(dividers, findsWidgets);
+      // DraftPanel is the left panel — get its right edge
+      final draftPanel = find.text('📄 底稿');
+      final panelBox = tester.getRect(draftPanel);
+      final initialRight = panelBox.right;
 
-      // Get initial width of left panel
-      final leftPanel = find.text('📄 底稿');
-      final initialPos = tester.getTopLeft(leftPanel);
+      // Find and drag the DraggableDivider widgets
+      final dividerWidgets = find.byType(DraggableDivider);
+      expect(dividerWidgets, findsNWidgets(2));
 
-      // Drag the first divider to the right
-      await tester.drag(dividers.first, const Offset(50, 0));
+      // Drag the left divider to the right by 50px
+      await tester.drag(dividerWidgets.first, const Offset(50, 0));
       await tester.pump();
 
-      // Verify left panel moved (wider) by checking new position
-      final newPos = tester.getTopLeft(leftPanel);
-      expect(newPos.dx, initialPos.dx);
+      // After dragging right, the left panel's right edge should have moved right
+      final newRect = tester.getRect(draftPanel);
+      expect(newRect.right, greaterThan(initialRight));
     });
 
     testWidgets('full 3R workflow: load → review → switch tabs → preview',
@@ -246,6 +248,28 @@ void main() {
       final round2Gaps = cubit.state.gapCount;
       expect(round2Gaps, lessThan(round1Gaps));
       await tester.pump();
+    });
+
+    testWidgets('结尾建议出现在结尾不合状态句的文本中', (tester) async {
+      await tester.binding.setSurfaceSize(const Size(1200, 800));
+      await tester.pumpWidget(buildApp());
+      await tester.pump();
+      final editorField = find.byType(TextField);
+
+      // 输入结尾在情节推进上的文本（无忘不了/不$/…）
+      await tester.enterText(
+        editorField,
+        '他推开门走了出去。\n她跟在他身后。\n他们一起走进了咖啡厅。',
+      );
+      await tester.pump();
+      await tester.tap(find.text('▶ 评审'));
+      await tester.pumpAndSettle();
+
+      // 切到改写标签 → 应看到结尾建议
+      await tester.tap(find.text('✏️ 改写'));
+      await tester.pumpAndSettle();
+      // 结尾建议含"结尾 · 状态句"文本
+      expect(find.textContaining('结尾'), findsWidgets);
     });
 
     testWidgets('实时空隙反馈：编辑后重新评审更新空隙数', (tester) async {
