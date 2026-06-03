@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
 """
-qtcloud-3r — 3R writing toolchain for AI.
+qtcloud-3r — 3R writing engine.
 """
 
 import json
 import os
-import sys
-import argparse
 from pathlib import Path
 
 import requests
@@ -14,66 +12,25 @@ import requests
 DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY", "")
 API_URL = "https://api.deepseek.com/chat/completions"
 DEFAULT_MODEL = "deepseek-chat"
-
-
-def read_input(file: str | None) -> str:
-    if file and file != "-":
-        return Path(file).read_text("utf-8")
-    return sys.stdin.read()
-
-
 MAX_INPUT_LENGTH = 8000
 
-EXIT_API_ERROR = 2
-EXIT_PARSE_ERROR = 3
-EXIT_EMPTY = 4
-EXIT_TOO_LONG = 5
+
+class ReviewError(Exception):
+    """LLM review failed."""
+class ReflectError(Exception):
+    """LLM reflect failed."""
+class RewriteError(Exception):
+    """LLM rewrite failed."""
 
 
-def write_output(data, fmt: str):
-    if fmt == "json":
-        print(json.dumps(data, ensure_ascii=False, indent=2))
-    else:
-        _write_text(data)
-
-
-def _write_text(data):
-    if isinstance(data, dict):
-        if "genre" in data:
-            for key, label in [("genre", "体裁"), ("intent", "意图"), ("stage", "阶段"), ("summary", "总结")]:
-                val = data.get(key, "")
-                if val:
-                    print(f"{label}: {val}")
-        elif "review" in data:
-            print("=== Review ===")
-            _write_text(data.get("review", {}))
-            print("\n=== Reflect ===")
-            _write_text(data.get("reflect", []))
-            print("\n=== Rewrite ===")
-            rw = data.get("rewrite", {})
-            print(rw.get("text", str(rw)))
-        else:
-            for k, v in data.items():
-                print(f"{k}: {v}")
-    elif isinstance(data, list):
-        for i, item in enumerate(data, 1):
-            print(f"\n--- 空隙 {i} ---")
-            print(f"类型: {item.get('gap_type', '')}")
-            print(f"位置: {item.get('location', '')}")
-            print(f"说明: {item.get('detail', '')}")
-            print(f"叙事结构: {item.get('structure', '')}")
-            print(f"人物心理: {item.get('psychology', '')}")
-            print(f"读者期待: {item.get('reader', '')}")
-            print(f"写作技法: {item.get('craft', '')}")
-            print(f"根本原因: {item.get('root_cause', '')}")
-    elif isinstance(data, str):
-        print(data)
+def read_text(source: str | Path) -> str:
+    p = Path(source)
+    return p.read_text("utf-8") if p.exists() else source
 
 
 def call_llm(prompt: str, system: str = "", model: str = DEFAULT_MODEL, temp: float = 0.3) -> str:
     if not DEEPSEEK_API_KEY:
-        print("错误：请设置 DEEPSEEK_API_KEY 环境变量", file=sys.stderr)
-        sys.exit(1)
+        raise RuntimeError("DEEPSEEK_API_KEY 未设置")
     messages = []
     if system:
         messages.append({"role": "system", "content": system})
@@ -94,8 +51,6 @@ def clean_json(raw: str) -> str:
         raw = raw.split("\n", 1)[1].rsplit("```", 1)[0].strip()
     return raw
 
-
-# ── prompts ──
 
 REVIEW_PROMPT = """请阅读下面的文章片段，从写作意图的角度分析它。
 
@@ -162,15 +117,12 @@ REWRITE_PROMPT = """当前文本的定位：
 {text}"""
 
 
-# ── commands ──
-
-
-def cmd_review(text: str, model: str, temp: float) -> dict:
+def cmd_review(text: str, model: str = DEFAULT_MODEL, temp: float = 0.3) -> dict:
     raw = call_llm(REVIEW_PROMPT.format(text=text), model=model, temp=temp)
     return json.loads(clean_json(raw))
 
 
-def cmd_reflect(text: str, model: str, temp: float) -> list[dict]:
+def cmd_reflect(text: str, model: str = DEFAULT_MODEL, temp: float = 0.3) -> list[dict]:
     review = cmd_review(text, model, temp)
     prompt = REFLECT_PROMPT.format(
         genre=review.get("genre", ""),
@@ -187,7 +139,7 @@ def cmd_reflect(text: str, model: str, temp: float) -> list[dict]:
     return []
 
 
-def cmd_rewrite(text: str, model: str, temp: float) -> str:
+def cmd_rewrite(text: str, model: str = DEFAULT_MODEL, temp: float = 0.3) -> str:
     review = cmd_review(text, model, temp)
     analysis = cmd_reflect(text, model, temp)
     if not analysis:
@@ -210,51 +162,9 @@ def cmd_rewrite(text: str, model: str, temp: float) -> str:
     return clean_json(call_llm(prompt, model=model, temp=temp))
 
 
-# ── entry point ──
-
-
-def main():
-    parser = argparse.ArgumentParser(description="qtcloud-3r — 3R writing toolchain")
-    parser.add_argument("command", choices=["review", "reflect", "rewrite", "cycle", "3r"], help="review | reflect | rewrite | cycle")
-    parser.add_argument("file", nargs="?", default="-", help="输入文件（默认 stdin）")
-    parser.add_argument("--model", default=DEFAULT_MODEL)
-    parser.add_argument("--temp", type=float, default=0.3)
-    parser.add_argument("--format", choices=["json", "text"], default="json")
-
-    args = parser.parse_args()
-    text = read_input(args.file)
-    if not text.strip():
-        print("错误：输入为空", file=sys.stderr)
-        sys.exit(EXIT_EMPTY)
-    if len(text) > MAX_INPUT_LENGTH:
-        print(f"错误：输入过长（当前 {len(text)} 字，上限 {MAX_INPUT_LENGTH} 字），请手动截取", file=sys.stderr)
-        sys.exit(EXIT_TOO_LONG)
-
-    try:
-        if args.command == "review":
-            write_output(cmd_review(text, args.model, args.temp), args.format)
-        elif args.command == "reflect":
-            result = cmd_reflect(text, args.model, args.temp)
-            if not result:
-                print("[]", file=sys.stderr)
-                sys.exit(EXIT_EMPTY)
-            write_output(result, args.format)
-        elif args.command == "rewrite":
-            result = cmd_rewrite(text, args.model, args.temp)
-            if args.format == "text":
-                print(result)
-            else:
-                write_output({"text": result, "length": len(result)}, "json")
-        elif args.command in ("cycle", "3r"):
-            result = {
-                "review": cmd_review(text, args.model, args.temp),
-                "reflect": cmd_reflect(text, args.model, args.temp),
-                "rewrite": cmd_rewrite(text, args.model, args.temp),
-            }
-            write_output(result, args.format)
-    except json.JSONDecodeError as e:
-        print(f"解析错误: {e}", file=sys.stderr)
-        sys.exit(EXIT_PARSE_ERROR)
-    except requests.RequestException as e:
-        print(f"API 错误: {e}", file=sys.stderr)
-        sys.exit(EXIT_API_ERROR)
+def cmd_cycle(text: str, model: str = DEFAULT_MODEL, temp: float = 0.3) -> dict:
+    return {
+        "review": cmd_review(text, model, temp),
+        "reflect": cmd_reflect(text, model, temp),
+        "rewrite": cmd_rewrite(text, model, temp),
+    }

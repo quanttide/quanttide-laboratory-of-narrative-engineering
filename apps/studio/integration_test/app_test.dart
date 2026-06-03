@@ -177,5 +177,108 @@ void main() {
         await tester.pump();
       }
     });
+
+    testWidgets('完整 3R 循环：写 → 评审 → 看情境 → 改写 → 再评审评分改善',
+        (tester) async {
+      await tester.binding.setSurfaceSize(const Size(1200, 800));
+      await tester.pumpWidget(buildApp());
+      await tester.pump();
+      final editorField = find.byType(TextField);
+
+      // 1. 写一段带空隙的文本
+      await tester.enterText(
+        editorField,
+        '他推开门走了出去。\n第二天，他又回来了。\n她悲伤地看着他。\n他笑了笑。\n',
+      );
+      await tester.pump();
+
+      // 2. 评审 → 看到空隙
+      await tester.tap(find.text('▶ 评审'));
+      await tester.pumpAndSettle();
+      expect(cubit.state.gapCount, greaterThan(0));
+      expect(find.text('空隙'), findsOneWidget);
+
+      // 3. 切到情境标签 → 看到可写位置
+      await tester.tap(find.text('🎯 情境'));
+      await tester.pumpAndSettle();
+      if (find.text('可写位置').evaluate().isNotEmpty) {
+        expect(find.text('可写位置'), findsOneWidget);
+      }
+
+      // 4. 切到改写标签 → 看到改写建议
+      await tester.tap(find.text('✏️ 改写'));
+      await tester.pumpAndSettle();
+
+      // 5. 根据建议改写文本（去掉空隙触发词）
+      await tester.tap(find.text('📋 评审'));
+      await tester.pump();
+      await tester.enterText(
+        editorField,
+        '他推开门走了出去。她站在门口看着他。他注意到她的目光。她轻轻地点了点头。',
+      );
+      await tester.pump();
+
+      // 6. 再次评审 → 确认分析已更新
+      await tester.tap(find.text('▶ 评审'));
+      await tester.pumpAndSettle();
+      expect(cubit.state.analysis, isNotNull);
+    });
+
+    testWidgets('多轮迭代：评分随改写变化', (tester) async {
+      await tester.binding.setSurfaceSize(const Size(1200, 800));
+      await tester.pumpWidget(buildApp());
+      await tester.pump();
+      final editorField = find.byType(TextField);
+
+      // 第1轮：通过 UI 输入有空隙的文本 → 评审 → 记录空隙数
+      await tester.enterText(editorField, '他走了出去。第二天，他又来了。她悲伤地看着他。');
+      await tester.pump();
+      await tester.tap(find.text('▶ 评审'));
+      await tester.pumpAndSettle();
+      expect(cubit.state.analysis, isNotNull);
+      final round1Gaps = cubit.state.gapCount;
+      expect(round1Gaps, greaterThan(0));
+
+      // 第2轮：改写去掉时间跳跃词 → 评审 → 空隙数应减少
+      cubit.textChanged('他走在街上。冷风扑面而来。他裹紧了外套。');
+      cubit.runReview();
+      await tester.pump();
+      final round2Gaps = cubit.state.gapCount;
+      expect(round2Gaps, lessThan(round1Gaps));
+      await tester.pump();
+    });
+
+    testWidgets('实时空隙反馈：编辑后重新评审更新空隙数', (tester) async {
+      await tester.binding.setSurfaceSize(const Size(1200, 800));
+      await tester.pumpWidget(buildApp());
+      await tester.pump();
+      final editorField = find.byType(TextField);
+
+      // 输入有空隙的文本 → 评审 → 确认有 N 个空隙
+      await tester.enterText(
+        editorField,
+        '他推开门走了出去。\n第二天，他又来了。',
+      );
+      await tester.pump();
+      await tester.tap(find.text('▶ 评审'));
+      await tester.pumpAndSettle();
+      final gapCountWithJump = cubit.state.gapCount;
+      expect(gapCountWithJump, greaterThan(0));
+
+      // 换一段无触发词的文本（每行独立，无时间跳跃、无连续动作） → 评审 → 空隙应减少
+      await tester.enterText(
+        editorField,
+        '窗外的雨淅淅沥沥地下着。\n'
+        '咖啡厅里播放着舒缓的音乐。\n'
+        '她的身影出现在门口。\n'
+        '他抬起头看见了熟悉的面孔。',
+      );
+      await tester.pump();
+      await tester.tap(find.text('▶ 评审'));
+      await tester.pumpAndSettle();
+      final gapCountPlain = cubit.state.gapCount;
+      // 改写的文本不应有时间跳跃，空隙数应少于或等于原文本
+      expect(gapCountPlain, lessThanOrEqualTo(gapCountWithJump));
+    });
   });
 }

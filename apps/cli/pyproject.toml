@@ -1,14 +1,16 @@
 [project]
 name = "qtcloud-3r"
-version = "0.1.0"
-description = "3R writing toolchain: Review, Reflect, Rewrite"
+version = "0.2.0"
+description = "3R writing service — review, reflect, rewrite"
 requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.34",
+    "requests>=2.32",
+]
 
 [project.scripts]
-3r = "cli:main"
+3r = "cli.__main__:main"
 
-[dependency-groups]
-dev = []
-
-[tool.uv]
-dev-dependencies = []
+[project.entry-points."fastapi.app"]
+app = "cli.app:app"
