@@ -11,6 +11,7 @@ class WritingReviewState {
   final int round;
   final bool isLoading;
   final String? error;
+  final int? pendingJumpLine;
 
   const WritingReviewState({
     this.text = '',
@@ -19,6 +20,7 @@ class WritingReviewState {
     this.round = 1,
     this.isLoading = false,
     this.error,
+    this.pendingJumpLine,
   });
 
   WritingReviewState copyWith({
@@ -29,6 +31,8 @@ class WritingReviewState {
     bool? isLoading,
     String? error,
     bool clearError = false,
+    int? pendingJumpLine,
+    bool clearPendingJump = false,
   }) {
     return WritingReviewState(
       text: text ?? this.text,
@@ -37,6 +41,8 @@ class WritingReviewState {
       round: round ?? this.round,
       isLoading: isLoading ?? this.isLoading,
       error: clearError ? null : (error ?? this.error),
+      pendingJumpLine:
+          clearPendingJump ? null : (pendingJumpLine ?? this.pendingJumpLine),
     );
   }
 
@@ -85,8 +91,11 @@ class WritingReviewCubit extends Cubit<WritingReviewState> {
   }
 
   void jumpToLine(int line) {
-    // UI handles the scroll; cubit just stores the target
-    emit(state.copyWith(currentTab: state.currentTab));
+    emit(state.copyWith(pendingJumpLine: line));
+  }
+
+  void clearPendingJump() {
+    emit(state.copyWith(clearPendingJump: true));
   }
 
   static const _sampleText = '''# 咖啡厅重逢
