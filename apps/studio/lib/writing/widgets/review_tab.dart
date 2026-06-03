@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../bloc/writing_review_cubit.dart';
 import '../models/analysis.dart';
 import '../theme/writing_theme.dart';
+import 'deep_review_section.dart';
 import 'style_bar.dart';
 
 class ReviewTab extends StatelessWidget {
@@ -83,6 +84,8 @@ class ReviewTab extends StatelessWidget {
             ),
           ),
         ),
+        const Divider(height: 16, color: WritingColors.border),
+        const DeepReviewSection(),
       ],
     );
   }

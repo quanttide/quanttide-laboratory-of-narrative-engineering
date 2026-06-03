@@ -1,46 +1,61 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../models/analysis.dart';
+import '../models/deep_analysis.dart';
 import '../services/analysis_engine.dart';
+import '../services/deep_analysis_service.dart';
 
 enum ReviewPanelTab { review, reflect, rewrite }
 
 class WritingReviewState {
   final String text;
   final AnalysisResult? analysis;
+  final DeepReview? deepAnalysis;
   final ReviewPanelTab currentTab;
   final int round;
   final bool isLoading;
+  final bool isDeepAnalyzing;
   final String? error;
+  final String? deepError;
   final int? pendingJumpLine;
 
   const WritingReviewState({
     this.text = '',
     this.analysis,
+    this.deepAnalysis,
     this.currentTab = ReviewPanelTab.review,
     this.round = 1,
     this.isLoading = false,
+    this.isDeepAnalyzing = false,
     this.error,
+    this.deepError,
     this.pendingJumpLine,
   });
 
   WritingReviewState copyWith({
     String? text,
     AnalysisResult? analysis,
+    DeepReview? deepAnalysis,
     ReviewPanelTab? currentTab,
     int? round,
     bool? isLoading,
+    bool? isDeepAnalyzing,
     String? error,
+    String? deepError,
     bool clearError = false,
+    bool clearDeepError = false,
     int? pendingJumpLine,
     bool clearPendingJump = false,
   }) {
     return WritingReviewState(
       text: text ?? this.text,
       analysis: analysis ?? this.analysis,
+      deepAnalysis: deepAnalysis ?? this.deepAnalysis,
       currentTab: currentTab ?? this.currentTab,
       round: round ?? this.round,
       isLoading: isLoading ?? this.isLoading,
+      isDeepAnalyzing: isDeepAnalyzing ?? this.isDeepAnalyzing,
       error: clearError ? null : (error ?? this.error),
+      deepError: clearDeepError ? null : (deepError ?? this.deepError),
       pendingJumpLine:
           clearPendingJump ? null : (pendingJumpLine ?? this.pendingJumpLine),
     );
@@ -52,7 +67,11 @@ class WritingReviewState {
 }
 
 class WritingReviewCubit extends Cubit<WritingReviewState> {
-  WritingReviewCubit() : super(const WritingReviewState());
+  final DeepAnalysisService? _deepService;
+
+  WritingReviewCubit({DeepAnalysisService? deepService})
+      : _deepService = deepService,
+        super(const WritingReviewState());
 
   void textChanged(String text) {
     emit(state.copyWith(text: text));
@@ -96,6 +115,33 @@ class WritingReviewCubit extends Cubit<WritingReviewState> {
 
   void clearPendingJump() {
     emit(state.copyWith(clearPendingJump: true));
+  }
+
+  Future<void> runDeepAnalysis() async {
+    if (state.text.trim().isEmpty) return;
+    if (_deepService == null) {
+      emit(state.copyWith(
+        isDeepAnalyzing: false,
+        deepError: '未配置 Provider 服务地址',
+      ));
+      return;
+    }
+    emit(state.copyWith(isDeepAnalyzing: true, clearDeepError: true));
+    try {
+      final paragraphs = state.text.split('\n').where((l) => l.trim().isNotEmpty).toList();
+      final result = await _deepService.submitReview(
+        title: '未命名文稿',
+        paragraphs: paragraphs,
+        author: 'user',
+        tag: 'bad',
+      );
+      emit(state.copyWith(deepAnalysis: result, isDeepAnalyzing: false));
+    } catch (e) {
+      emit(state.copyWith(
+        isDeepAnalyzing: false,
+        deepError: '深度分析失败: $e',
+      ));
+    }
   }
 
   static const _sampleText = '''# 咖啡厅重逢

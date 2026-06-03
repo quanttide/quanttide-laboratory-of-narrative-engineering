@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:docs_agent/writing/bloc/writing_review_cubit.dart';
 import 'package:docs_agent/writing/widgets/review_tab.dart';
 
 Widget _buildApp(WritingReviewCubit cubit) {
-  return MaterialApp(
-    home: Scaffold(
-      body: ReviewTab(cubit: cubit),
+  return BlocProvider<WritingReviewCubit>.value(
+    value: cubit,
+    child: MaterialApp(
+      home: Scaffold(
+        body: ReviewTab(cubit: cubit),
+      ),
     ),
   );
 }

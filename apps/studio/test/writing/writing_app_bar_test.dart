@@ -19,6 +19,7 @@ void main() {
       expect(find.text('✎ 写作云'), findsOneWidget);
       expect(find.text('合成工作台'), findsOneWidget);
       expect(find.text('▶ 评审'), findsOneWidget);
+      expect(find.text('🧠 深度分析'), findsOneWidget);
       expect(find.text('加载样本'), findsOneWidget);
       cubit.close();
     });
