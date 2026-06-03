@@ -295,6 +295,110 @@ class TestEdgeCases:
                     main()
                 assert exc.value.code == EXIT_API_ERROR
 
+    def test_main_reflect_command(self, tmp_path):
+        """main() reflect 分支"""
+        f = tmp_path / "d.md"
+        f.write_text("测试文本", encoding="utf-8")
+        with patch("sys.argv", ["3r", "reflect", str(f)]):
+            from cli import main
+            with patch("cli.cmd_reflect") as mock:
+                mock.return_value = [{"gap_type": "t"}]
+                main()
+
+    def test_main_rewrite_json(self, tmp_path):
+        """main() rewrite json 分支"""
+        f = tmp_path / "d.md"
+        f.write_text("测试文本", encoding="utf-8")
+        with patch("sys.argv", ["3r", "rewrite", str(f), "--format", "json"]):
+            from cli import main
+            with patch("cli.cmd_rewrite") as mock:
+                mock.return_value = "修改后"
+                main()
+
+    def test_main_rewrite_text(self, tmp_path):
+        """main() rewrite text 分支"""
+        f = tmp_path / "d.md"
+        f.write_text("测试文本", encoding="utf-8")
+        with patch("sys.argv", ["3r", "rewrite", str(f), "--format", "text"]):
+            from cli import main
+            with patch("cli.cmd_rewrite") as mock:
+                mock.return_value = "修改后"
+                main()
+
+    def test_main_reflect_empty(self, tmp_path):
+        """main() reflect 空结果 → exit 4"""
+        f = tmp_path / "d.md"
+        f.write_text("测试文本", encoding="utf-8")
+        with patch("sys.argv", ["3r", "reflect", str(f)]):
+            from cli import main
+            with patch("cli.cmd_reflect") as mock:
+                mock.return_value = []
+                with pytest.raises(SystemExit) as exc:
+                    main()
+                assert exc.value.code == EXIT_EMPTY
+
+
+class TestCallLLM:
+    """直接测试 call_llm 的 HTTP 调用层"""
+
+    @patch("cli.requests.post")
+    def test_call_llm_success(self, mock_post):
+        mock_post.return_value.json.return_value = {
+            "choices": [{"message": {"content": "回复内容"}}]
+        }
+        import cli
+        result = cli.call_llm("提示词", model="deepseek-chat", temp=0.3)
+        assert result == "回复内容"
+        mock_post.assert_called_once()
+
+    @patch("cli.requests.post")
+    def test_call_llm_with_system(self, mock_post):
+        mock_post.return_value.json.return_value = {
+            "choices": [{"message": {"content": "回复"}}]
+        }
+        import cli
+        result = cli.call_llm("提示词", system="你是一个助手", model="deepseek-chat", temp=0.3)
+        assert result == "回复"
+
+    @patch("cli.requests.post")
+    def test_call_llm_http_error(self, mock_post):
+        """HTTP 错误经 main() 捕获后 exit(2)"""
+        from requests import HTTPError
+        mock_resp = mock_post.return_value
+        mock_resp.raise_for_status.side_effect = HTTPError("403 Forbidden")
+        import cli
+
+        # 通过 cmd_review 触发 call_llm，异常会上抛到 main 的 except
+        with patch("sys.argv", ["3r", "review", "/dev/null"]):
+            with patch("cli.read_input", return_value="test"):
+                with pytest.raises(SystemExit) as exc:
+                    cli.main()
+                assert exc.value.code == EXIT_API_ERROR
+
+
+class TestCmdReflectFallback:
+    """cmd_reflect 的 JSON 解析兜底"""
+
+    @patch("cli.call_llm")
+    def test_reflect_unexpected_format_returns_empty(self, mock_call):
+        """LLM 返回既不是数组也不是 analysis 键 → 返回 []"""
+        mock_call.side_effect = [
+            '{"genre": "t"}',
+            '{"unexpected": "format"}',
+        ]
+        result = cmd_reflect("text", "deepseek-chat", 0.3)
+        assert result == []
+
+
+class TestMainModule:
+    """__main__.py 入口调用"""
+
+    def test_main_module(self):
+        """python -m cli 等价于调用 main()"""
+        with patch("cli.main") as mock_main:
+            import cli.__main__
+            mock_main.assert_called_once()
+
 
 # ── 集成：prompt 模板没有语法错误 ──
 

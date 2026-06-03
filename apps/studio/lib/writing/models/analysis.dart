@@ -1,19 +1,6 @@
 enum GapType { timeJump, dialogGap, actionGap, transitionCompression }
 
 extension GapTypeX on GapType {
-  String get label {
-    switch (this) {
-      case GapType.timeJump:
-        return '时间跳跃';
-      case GapType.dialogGap:
-        return '对话间隙';
-      case GapType.actionGap:
-        return '动作空隙';
-      case GapType.transitionCompression:
-        return '过渡压缩';
-    }
-  }
-
   String get guide {
     switch (this) {
       case GapType.timeJump:
