@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:docs_agent/writing/bloc/writing_review_cubit.dart';
 import 'package:docs_agent/writing/widgets/editor_panel.dart';
+import 'package:docs_agent/writing/widgets/gap_markers_column.dart';
 
 Widget _buildApp(WritingReviewCubit cubit) {
   return MaterialApp(
@@ -70,6 +71,20 @@ void main() {
       await tester.tap(find.text('预览'));
       await tester.pump();
       expect(find.textContaining('空隙'), findsNothing);
+      cubit.close();
+    });
+
+    testWidgets('gap markers column is tappable', (tester) async {
+      final cubit = WritingReviewCubit();
+      cubit.textChanged('第二天，他走了出去。\n她走了进来。');
+      cubit.runReview();
+      await tester.pumpWidget(_buildApp(cubit));
+      final markers = find.byType(GapMarkersColumn);
+      expect(markers, findsOneWidget);
+      // Tapping in the gap markers area should not throw
+      await tester.tapAt(
+        tester.getTopLeft(markers).translate(9, 40),
+      );
       cubit.close();
     });
   });

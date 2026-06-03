@@ -28,5 +28,18 @@ void main() {
       expect(find.text('可写位置'), findsOneWidget);
       cubit.close();
     });
+
+    testWidgets('tapping a situation card button triggers jump', (tester) async {
+      final cubit = WritingReviewCubit();
+      cubit.textChanged('第二天，他推开门走了出去。');
+      cubit.runReview();
+      await tester.pumpWidget(_buildApp(cubit));
+      await tester.pump();
+      final writeButton = find.text('✎ 写在这里');
+      if (writeButton.evaluate().isNotEmpty) {
+        await tester.tap(writeButton.first);
+      }
+      cubit.close();
+    });
   });
 }

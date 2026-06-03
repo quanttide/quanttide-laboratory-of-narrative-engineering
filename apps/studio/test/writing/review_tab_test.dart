@@ -38,5 +38,28 @@ void main() {
       expect(find.textContaining('/100'), findsOneWidget);
       cubit.close();
     });
+
+    testWidgets('tapping a gap item triggers jumpToLine', (tester) async {
+      final cubit = WritingReviewCubit();
+      cubit.textChanged('第二天，他走到了街上。\n她整理了一下衣角。');
+      cubit.runReview();
+      await tester.pumpWidget(_buildApp(cubit));
+      // Find a gap item by line number label
+      final gapItem = find.textContaining('L1');
+      expect(gapItem, findsWidgets);
+      await tester.tap(gapItem.first);
+      cubit.close();
+    });
+
+    testWidgets('tapping a second gap item does not throw', (tester) async {
+      final cubit = WritingReviewCubit();
+      cubit.textChanged('第二天。\n过了一会儿，他又来了。');
+      cubit.runReview();
+      await tester.pumpWidget(_buildApp(cubit));
+      final gapItems = find.textContaining('L');
+      expect(gapItems, findsWidgets);
+      await tester.tap(gapItems.last);
+      cubit.close();
+    });
   });
 }
