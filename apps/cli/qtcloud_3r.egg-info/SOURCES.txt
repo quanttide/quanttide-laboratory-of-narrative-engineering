@@ -1,8 +1,0 @@
-pyproject.toml
-cli/__init__.py
-cli/__main__.py
-qtcloud_3r.egg-info/PKG-INFO
-qtcloud_3r.egg-info/SOURCES.txt
-qtcloud_3r.egg-info/dependency_links.txt
-qtcloud_3r.egg-info/entry_points.txt
-qtcloud_3r.egg-info/top_level.txt
