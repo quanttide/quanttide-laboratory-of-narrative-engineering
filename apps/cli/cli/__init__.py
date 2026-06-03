@@ -40,17 +40,18 @@ def write_output(data, fmt: str):
 def _write_text(data):
     if isinstance(data, dict):
         if "genre" in data:
-            print(f"体裁: {data['genre']}")
-            print(f"意图: {data['intent']}")
-            print(f"阶段: {data['stage']}")
-            print(f"总结: {data['summary']}")
+            for key, label in [("genre", "体裁"), ("intent", "意图"), ("stage", "阶段"), ("summary", "总结")]:
+                val = data.get(key, "")
+                if val:
+                    print(f"{label}: {val}")
         elif "review" in data:
             print("=== Review ===")
-            _write_text(data["review"])
+            _write_text(data.get("review", {}))
             print("\n=== Reflect ===")
-            _write_text(data["reflect"])
+            _write_text(data.get("reflect", []))
             print("\n=== Rewrite ===")
-            print(data["rewrite"])
+            rw = data.get("rewrite", {})
+            print(rw.get("text", str(rw)))
         else:
             for k, v in data.items():
                 print(f"{k}: {v}")
