@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:docs_agent/writing/bloc/writing_review_cubit.dart';
-import 'package:docs_agent/writing/widgets/rewrite_tab.dart';
+import 'package:docs_agent/blocs/writing_review_cubit.dart';
+import 'package:docs_agent/widgets/rewrite_tab.dart';
 
 Widget _buildApp(WritingReviewCubit cubit) {
   return MaterialApp(

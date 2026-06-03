@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:docs_agent/writing/bloc/writing_review_cubit.dart';
-import 'package:docs_agent/writing/widgets/editor_panel.dart';
-import 'package:docs_agent/writing/widgets/gap_markers_column.dart';
+import 'package:docs_agent/blocs/writing_review_cubit.dart';
+import 'package:docs_agent/widgets/editor_panel.dart';
+import 'package:docs_agent/widgets/gap_markers_column.dart';
 
 Widget _buildApp(WritingReviewCubit cubit) {
   return MaterialApp(

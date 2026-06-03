@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:docs_agent/cubits/markdown_document_cubit.dart';
-import 'package:docs_agent/ui/markdown_editor_panel.dart';
+import 'package:docs_agent/blocs/markdown_document_cubit.dart';
+import 'package:docs_agent/widgets/markdown_editor_panel.dart';
 import 'package:docs_agent/services/document_storage.dart';
 
 class _MockStorage implements DocumentStorage {

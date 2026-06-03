@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../theme/writing_theme.dart';
+import '../themes/writing_theme.dart';
 
 class DraggableDivider extends StatelessWidget {
   final bool isLeft;

@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:docs_agent/cubits/chat_cubit.dart';
-import 'package:docs_agent/cubits/markdown_document_cubit.dart';
+import 'package:docs_agent/blocs/chat_cubit.dart';
+import 'package:docs_agent/blocs/markdown_document_cubit.dart';
 import 'package:docs_agent/services/ai_chat_service.dart';
 import 'package:docs_agent/services/document_storage.dart';
 

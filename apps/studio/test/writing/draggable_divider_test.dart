@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:docs_agent/writing/widgets/draggable_divider.dart';
+import 'package:docs_agent/widgets/draggable_divider.dart';
 
 void main() {
   group('DraggableDivider', () {

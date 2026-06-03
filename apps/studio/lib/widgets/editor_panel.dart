@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
-import '../bloc/writing_review_cubit.dart';
-import '../theme/writing_theme.dart';
+import '../blocs/writing_review_cubit.dart';
+import '../themes/writing_theme.dart';
 import 'gap_markers_column.dart';
 
 class EditorPanel extends StatefulWidget {

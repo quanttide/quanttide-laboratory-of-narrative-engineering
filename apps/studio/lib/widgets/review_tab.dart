@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../bloc/writing_review_cubit.dart';
+import '../blocs/writing_review_cubit.dart';
 import '../models/analysis.dart';
-import '../theme/writing_theme.dart';
+import '../themes/writing_theme.dart';
 import 'deep_review_section.dart';
 import 'style_bar.dart';
 

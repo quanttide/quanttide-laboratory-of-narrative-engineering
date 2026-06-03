@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
-import '../bloc/writing_review_cubit.dart';
-import '../theme/writing_theme.dart';
+import '../blocs/writing_review_cubit.dart';
+import '../themes/writing_theme.dart';
 import 'guide_card.dart';
 
-class RewriteTab extends StatelessWidget {
+class ReflectTab extends StatelessWidget {
   final WritingReviewCubit cubit;
 
-  const RewriteTab({super.key, required this.cubit});
+  const ReflectTab({super.key, required this.cubit});
 
   @override
   Widget build(BuildContext context) {
-    final rewrites = cubit.state.analysis?.rewrites ?? [];
-    if (rewrites.isEmpty) {
+    final situations = cubit.state.analysis?.situations ?? [];
+    if (situations.isEmpty) {
       return const Center(
         child: Text(
-          '暂无改写建议。',
+          '暂无识别到的可写位置。',
           style: TextStyle(fontSize: 12, color: WritingColors.textDim),
         ),
       );
@@ -24,7 +24,7 @@ class RewriteTab extends StatelessWidget {
       padding: const EdgeInsets.all(10),
       children: [
         const Text(
-          '改写建议',
+          '可写位置',
           style: TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.w600,
@@ -33,11 +33,11 @@ class RewriteTab extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 8),
-        ...rewrites.map((r) => Padding(
+        ...situations.map((s) => Padding(
               padding: const EdgeInsets.only(bottom: 8),
-              child: GuideCard.rewrite(
-                r,
-                onJumpTo: () => cubit.jumpToLine(r.line),
+              child: GuideCard.situation(
+                s,
+                onJumpTo: () => cubit.jumpToLine(s.line),
               ),
             )),
       ],

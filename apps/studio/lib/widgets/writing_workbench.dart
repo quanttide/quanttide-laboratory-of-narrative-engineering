@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../bloc/writing_review_cubit.dart';
-import '../theme/writing_theme.dart';
+import '../blocs/writing_review_cubit.dart';
+import '../themes/writing_theme.dart';
 import 'writing_app_bar.dart';
 import 'draft_panel.dart';
 import 'editor_panel.dart';

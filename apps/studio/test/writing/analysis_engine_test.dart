@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:docs_agent/writing/models/analysis.dart';
-import 'package:docs_agent/writing/services/analysis_engine.dart';
+import 'package:docs_agent/models/analysis.dart';
+import 'package:docs_agent/services/analysis_engine.dart';
 
 void main() {
   group('AnalysisEngine.analyze', () {

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../bloc/writing_review_cubit.dart';
+import '../blocs/writing_review_cubit.dart';
 import '../models/deep_analysis.dart';
-import '../theme/writing_theme.dart';
+import '../themes/writing_theme.dart';
 
 class DeepReviewSection extends StatelessWidget {
   const DeepReviewSection({super.key});

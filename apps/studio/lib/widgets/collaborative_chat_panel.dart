@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../cubits/chat_cubit.dart';
+import '../blocs/chat_cubit.dart';
 
 class CollaborativeChatPanel extends StatelessWidget {
   final ChatCubit cubit;

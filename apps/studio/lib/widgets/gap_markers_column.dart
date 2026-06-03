@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../theme/writing_theme.dart';
+import '../themes/writing_theme.dart';
 import '../models/analysis.dart';
 
 class GapMarkersColumn extends StatelessWidget {

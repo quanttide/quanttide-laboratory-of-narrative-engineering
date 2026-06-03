@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:docs_agent/cubits/chat_cubit.dart';
-import 'package:docs_agent/cubits/markdown_document_cubit.dart';
+import 'package:docs_agent/blocs/chat_cubit.dart';
+import 'package:docs_agent/blocs/markdown_document_cubit.dart';
 import 'package:docs_agent/services/ai_chat_service.dart';
 import 'package:docs_agent/services/document_storage.dart';
-import 'package:docs_agent/ui/collaborative_chat_panel.dart';
+import 'package:docs_agent/widgets/collaborative_chat_panel.dart';
 
 class _MockAiService implements AiChatService {
   @override

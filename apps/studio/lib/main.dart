@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'writing/bloc/writing_review_cubit.dart';
-import 'writing/services/deep_analysis_service.dart';
-import 'writing/theme/writing_theme.dart';
-import 'writing/widgets/writing_workbench.dart';
+import 'blocs/writing_review_cubit.dart';
+import 'services/deep_analysis_service.dart';
+import 'themes/writing_theme.dart';
+import 'widgets/writing_workbench.dart';
 
 void main() {
   final providerUrl =

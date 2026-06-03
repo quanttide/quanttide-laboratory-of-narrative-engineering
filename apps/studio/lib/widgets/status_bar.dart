@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../bloc/writing_review_cubit.dart';
-import '../theme/writing_theme.dart';
+import '../blocs/writing_review_cubit.dart';
+import '../themes/writing_theme.dart';
 
 class StatusBar extends StatelessWidget {
   final WritingReviewCubit cubit;

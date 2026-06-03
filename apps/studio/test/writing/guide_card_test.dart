@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:docs_agent/writing/models/analysis.dart';
-import 'package:docs_agent/writing/widgets/guide_card.dart';
+import 'package:docs_agent/models/analysis.dart';
+import 'package:docs_agent/widgets/guide_card.dart';
 
 void main() {
   group('GuideCard.situation', () {

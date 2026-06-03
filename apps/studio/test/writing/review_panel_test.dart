@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:docs_agent/writing/bloc/writing_review_cubit.dart';
-import 'package:docs_agent/writing/widgets/review_panel.dart';
+import 'package:docs_agent/blocs/writing_review_cubit.dart';
+import 'package:docs_agent/widgets/review_panel.dart';
 
 Widget _buildApp(WritingReviewCubit cubit) {
   return MultiBlocProvider(

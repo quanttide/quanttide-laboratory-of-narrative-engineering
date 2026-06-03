@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../cubits/markdown_document_cubit.dart';
+import '../blocs/markdown_document_cubit.dart';
 
 class MarkdownEditorPanel extends StatefulWidget {
   final MarkdownDocumentCubit cubit;

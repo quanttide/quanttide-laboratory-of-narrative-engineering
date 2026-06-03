@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:docs_agent/ui/document_agent_layout.dart';
+import 'package:docs_agent/widgets/document_agent_layout.dart';
 
 Widget _buildLayout(double width) {
   return MediaQuery(
