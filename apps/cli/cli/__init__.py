@@ -22,9 +22,12 @@ def read_input(file: str | None) -> str:
     return sys.stdin.read()
 
 
+MAX_INPUT_LENGTH = 8000
+
 EXIT_API_ERROR = 2
 EXIT_PARSE_ERROR = 3
 EXIT_EMPTY = 4
+EXIT_TOO_LONG = 5
 
 
 def write_output(data, fmt: str):
@@ -222,6 +225,9 @@ def main():
     if not text.strip():
         print("错误：输入为空", file=sys.stderr)
         sys.exit(EXIT_EMPTY)
+    if len(text) > MAX_INPUT_LENGTH:
+        print(f"错误：输入过长（当前 {len(text)} 字，上限 {MAX_INPUT_LENGTH} 字），请手动截取", file=sys.stderr)
+        sys.exit(EXIT_TOO_LONG)
 
     try:
         if args.command == "review":

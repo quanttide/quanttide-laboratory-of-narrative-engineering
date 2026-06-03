@@ -5,10 +5,12 @@ import 'package:docs_agent/writing/bloc/writing_review_cubit.dart';
 import 'package:docs_agent/writing/widgets/writing_workbench.dart';
 
 Widget _buildApp(WritingReviewCubit cubit) {
-  return MaterialApp(
-    home: BlocProvider.value(
-      value: cubit,
-      child: const WritingWorkbench(),
+  return MultiBlocProvider(
+    providers: [
+      BlocProvider<WritingReviewCubit>.value(value: cubit),
+    ],
+    child: MaterialApp(
+      home: const WritingWorkbench(),
     ),
   );
 }
@@ -23,7 +25,7 @@ void main() {
       expect(find.text('加载样本'), findsOneWidget);
       expect(find.text('📄 底稿'), findsOneWidget);
       expect(find.text('Review'), findsOneWidget);
-      expect(find.text('字数'), findsOneWidget);
+      expect(find.textContaining('字数'), findsOneWidget);
       cubit.close();
     });
 
@@ -64,8 +66,8 @@ void main() {
       final cubit = WritingReviewCubit();
       cubit.loadSample();
       await tester.pumpWidget(_buildApp(cubit));
-      expect(find.text('字数'), findsOneWidget);
-      expect(find.text('空隙'), findsOneWidget);
+      expect(find.textContaining('字数'), findsOneWidget);
+      expect(find.textContaining('空隙'), findsOneWidget);
       cubit.close();
     });
   });

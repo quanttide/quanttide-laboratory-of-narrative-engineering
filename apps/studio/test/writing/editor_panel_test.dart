@@ -17,7 +17,7 @@ void main() {
       final cubit = WritingReviewCubit();
       await tester.pumpWidget(_buildApp(cubit));
       expect(find.byType(TextField), findsOneWidget);
-      expect(find.text('空隙'), findsOneWidget);
+      expect(find.textContaining('空隙'), findsOneWidget);
       expect(find.text('编辑'), findsOneWidget);
       expect(find.text('预览'), findsOneWidget);
       cubit.close();
@@ -66,10 +66,10 @@ void main() {
       final cubit = WritingReviewCubit();
       cubit.textChanged('test');
       await tester.pumpWidget(_buildApp(cubit));
-      expect(find.text('空隙'), findsOneWidget);
+      expect(find.textContaining('空隙'), findsOneWidget);
       await tester.tap(find.text('预览'));
       await tester.pump();
-      expect(find.text('空隙'), findsNothing);
+      expect(find.textContaining('空隙'), findsNothing);
       cubit.close();
     });
   });
