@@ -22,9 +22,48 @@ def read_input(file: str | None) -> str:
     return sys.stdin.read()
 
 
+EXIT_API_ERROR = 2
+EXIT_PARSE_ERROR = 3
+EXIT_EMPTY = 4
+
+
 def write_output(data, fmt: str):
-    out = json.dumps(data, ensure_ascii=False, indent=2) if fmt == "json" else str(data)
-    print(out)
+    if fmt == "json":
+        print(json.dumps(data, ensure_ascii=False, indent=2))
+    else:
+        _write_text(data)
+
+
+def _write_text(data):
+    if isinstance(data, dict):
+        if "genre" in data:
+            print(f"体裁: {data['genre']}")
+            print(f"意图: {data['intent']}")
+            print(f"阶段: {data['stage']}")
+            print(f"总结: {data['summary']}")
+        elif "review" in data:
+            print("=== Review ===")
+            _write_text(data["review"])
+            print("\n=== Reflect ===")
+            _write_text(data["reflect"])
+            print("\n=== Rewrite ===")
+            print(data["rewrite"])
+        else:
+            for k, v in data.items():
+                print(f"{k}: {v}")
+    elif isinstance(data, list):
+        for i, item in enumerate(data, 1):
+            print(f"\n--- 空隙 {i} ---")
+            print(f"类型: {item.get('gap_type', '')}")
+            print(f"位置: {item.get('location', '')}")
+            print(f"说明: {item.get('detail', '')}")
+            print(f"叙事结构: {item.get('structure', '')}")
+            print(f"人物心理: {item.get('psychology', '')}")
+            print(f"读者期待: {item.get('reader', '')}")
+            print(f"写作技法: {item.get('craft', '')}")
+            print(f"根本原因: {item.get('root_cause', '')}")
+    elif isinstance(data, str):
+        print(data)
 
 
 def call_llm(prompt: str, system: str = "", model: str = DEFAULT_MODEL, temp: float = 0.3) -> str:
@@ -182,19 +221,30 @@ def main():
     text = read_input(args.file)
     if not text.strip():
         print("错误：输入为空", file=sys.stderr)
-        sys.exit(1)
+        sys.exit(EXIT_EMPTY)
 
-    if args.command == "review":
-        write_output(cmd_review(text, args.model, args.temp), args.format)
-    elif args.command == "reflect":
-        write_output(cmd_reflect(text, args.model, args.temp), args.format)
-    elif args.command == "rewrite":
-        result = cmd_rewrite(text, args.model, args.temp)
-        write_output(result, "text" if args.format == "text" else "json")
-    elif args.command == "3r":
-        result = {
-            "review": cmd_review(text, args.model, args.temp),
-            "reflect": cmd_reflect(text, args.model, args.temp),
-            "rewrite": cmd_rewrite(text, args.model, args.temp),
-        }
-        write_output(result, args.format)
+    try:
+        if args.command == "review":
+            write_output(cmd_review(text, args.model, args.temp), args.format)
+        elif args.command == "reflect":
+            result = cmd_reflect(text, args.model, args.temp)
+            if not result:
+                print("[]", file=sys.stderr)
+                sys.exit(EXIT_EMPTY)
+            write_output(result, args.format)
+        elif args.command == "rewrite":
+            result = cmd_rewrite(text, args.model, args.temp)
+            write_output(result, "text" if args.format == "text" else "json")
+        elif args.command == "3r":
+            result = {
+                "review": cmd_review(text, args.model, args.temp),
+                "reflect": cmd_reflect(text, args.model, args.temp),
+                "rewrite": cmd_rewrite(text, args.model, args.temp),
+            }
+            write_output(result, args.format)
+    except json.JSONDecodeError as e:
+        print(f"解析错误: {e}", file=sys.stderr)
+        sys.exit(EXIT_PARSE_ERROR)
+    except requests.RequestException as e:
+        print(f"API 错误: {e}", file=sys.stderr)
+        sys.exit(EXIT_API_ERROR)

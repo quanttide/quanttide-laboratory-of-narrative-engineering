@@ -30,25 +30,21 @@
 
 ## 阶段
 
-### P0 — 核心管线（当前）
+### P0 — 核心管线 ✅
 
-目标：跑通 3R 管线，AI 可调用。
+- [x] 项目骨架：pyproject.toml、cli entry point
+- [x] `3r review` —— 迁移 p04 的 Review prompt
+- [x] `3r reflect` —— 迁移 p02 的 Reflect prompt
+- [x] `3r rewrite` —— 输入原文 + Reflect JSON，输出改写文本
+- [x] `3r 3r` —— 组合命令
+- [x] 管道支持：stdin/stdout JSON
 
-- [ ] 项目骨架：pyproject.toml、cli entry point
-- [ ] `3r review` —— 迁移 p04 的 Review prompt（体裁/意图/阶段/总结）
-- [ ] `3r reflect` —— 迁移 p02 的 Reflect prompt（空隙检测 + 4 视角归因）
-- [ ] `3r rewrite` —— 输入原文 + Reflect JSON，输出改写文本
-- [ ] `3r 3r` —— 组合命令，一次调用完成一轮 3R
-- [ ] 管道支持：所有命令可接受 stdin，输出 JSON 到 stdout
+### P1 — AI 交互优化（当前）
 
-### P1 — AI 交互优化
-
-目标：让 AI 调用更自然。
-
-- [ ] `--format text` 参数：输出人类可读文本而非 JSON（调试用）
-- [ ] `--model` 参数：可选 LLM 模型
-- [ ] `--temperature` 参数
-- [ ] 非 0 退出码：Review/Reflect 失败时退出码区分问题类型
+- [x] `--model` 参数
+- [x] `--temperature` 参数
+- [ ] `--format text` 人类可读输出
+- [ ] 非 0 退出码：区分 API 错误 / 解析错误 / 无输出
 
 ### P2 — 配置与扩展
 
