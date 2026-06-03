@@ -1,0 +1,14 @@
+[project]
+name = "qtcloud-3r"
+version = "0.1.0"
+description = "3R writing toolchain: Review, Reflect, Rewrite"
+requires-python = ">=3.12"
+
+[project.scripts]
+3r = "cli:main"
+
+[dependency-groups]
+dev = []
+
+[tool.uv]
+dev-dependencies = []
