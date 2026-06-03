@@ -91,7 +91,8 @@ def build_reflect_prompt(text: str, review_result: dict) -> str:
     gap_text = "\n".join(f"- {g['type']}: {g['detail']}" for g in gaps) if gaps else "- 无明显空隙"
     low_dims = [k for k, v in scores.items() if v is not None and v < 6]
 
-    prompt = f"""基于以下评审结果，为作者生成具体的改写提示。
+    prompt = f"""你是一个写作诊断专家。Review 已经找出了文章的问题（空隙和低分维度）。
+现在请你从多个角度深入分析每个问题为什么会存在。
 
 评审结果：
 {json.dumps(scores, ensure_ascii=False)}
@@ -101,25 +102,47 @@ def build_reflect_prompt(text: str, review_result: dict) -> str:
 
 需要改进的低分维度：{', '.join(low_dims) if low_dims else '无'}
 
-请输出 3-5 条具体的改写提示，每条包含：要改什么、怎么改、预期效果。
+请从以下 4 个角度逐一分析每个空隙/低分维度的深层原因：
+
+1. 【叙事结构】这个空隙是情节推进的必然省略，还是作者不知道中间发生了什么？
+2. 【人物心理】角色在这个空隙里是什么状态？他在想什么、感受什么？作者为什么没写？
+3. 【读者期待】读者在这里会有什么疑问？作者没有满足什么预期？
+4. 【写作技法】这是一个有意识的选择（留白）还是无意识的忽略？
 
 输出 JSON：
 {{
-  "suggestions": [
-    {{"target": "修改目标（哪段/哪个方面）", "action": "具体修改方法", "expected": "预期效果"}}
+  "analysis": [
+    {{
+      "issue": "问题描述",
+      "structure": "叙事结构角度的归因",
+      "psychology": "人物心理角度的归因",
+      "reader": "读者期待角度的归因",
+      "craft": "写作技法角度的归因",
+      "root_cause": "一句话总结根本原因"
+    }}
   ]
 }}"""
     return prompt
 
 
-def build_rewrite_prompt(text: str, suggestions: list[dict]) -> str:
-    sug_text = "\n".join(f"{i+1}. {s['action']}（目标：{s['target']}）" for i, s in enumerate(suggestions))
-    return f"""请根据以下改写提示修改文章。保持原文的整体结构和风格，只针对性修改。
+def build_rewrite_prompt(text: str, review_result: dict, reflect_analysis: list[dict]) -> str:
+    analysis_text = "\n".join(
+        f"{i+1}. {a['issue']}\n"
+        f"   叙事结构: {a.get('structure', '')}\n"
+        f"   人物心理: {a.get('psychology', '')}\n"
+        f"   读者期待: {a.get('reader', '')}\n"
+        f"   写作技法: {a.get('craft', '')}\n"
+        f"   根本原因: {a.get('root_cause', '')}"
+        for i, a in enumerate(reflect_analysis)
+    )
+    return f"""你已经知道了当前文章的以下问题和深层原因：
 
-改写提示：
-{sug_text}
+问题与归因：
+{analysis_text}
 
-输出格式：直接输出修改后的完整文章，不要额外的说明文字。
+请带着对这些问题的理解重新修改文章。不要机械地填补每个空隙——而是根据你对深层原因的理解，做出有针对性的修改。可以补写、可以调整节奏、可以增加细节，但保持原文的整体风格和叙事基调。
+
+输出格式：直接输出修改后的完整文章。
 
 原文：
 {text}"""
@@ -177,7 +200,7 @@ def run_experiment():
                 print(f"✗ {e}")
                 review_result = {"scores": {"gap": None, "style": None, "tension": None, "detail": None, "overall": None}, "gaps": []}
 
-            # Step 2: Reflect
+            # Step 2: Reflect（多角度归因）
             print(f"    Reflect...", end=" ", flush=True)
             try:
                 reflect_raw = call_llm(build_reflect_prompt(text, review_result))
@@ -185,17 +208,17 @@ def run_experiment():
                 if reflect_raw.startswith("```"):
                     reflect_raw = reflect_raw.split("\n", 1)[1].rsplit("```", 1)[0].strip()
                 reflect_result = json.loads(reflect_raw)
-                suggestions = reflect_result.get("suggestions", [])
-                print(f"✓ {len(suggestions)} 条建议")
+                analysis = reflect_result.get("analysis", [])
+                print(f"✓ {len(analysis)} 条归因")
             except Exception as e:
                 print(f"✗ {e}")
-                suggestions = []
+                analysis = []
 
-            # Step 3: Rewrite
-            if suggestions:
+            # Step 3: Rewrite（带着归因理解去改写）
+            if analysis:
                 print(f"    Rewrite...", end=" ", flush=True)
                 try:
-                    rewritten = call_llm(build_rewrite_prompt(text, suggestions))
+                    rewritten = call_llm(build_rewrite_prompt(text, review_result, analysis))
                     rewritten = rewritten.strip()
                     if rewritten.startswith("```"):
                         rewritten = rewritten.split("\n", 1)[1].rsplit("```", 1)[0].strip()
@@ -205,14 +228,14 @@ def run_experiment():
                     rewritten = text
             else:
                 rewritten = text
-                print(f"    Rewrite → 无建议，跳过")
+                print(f"    Rewrite → 无归因，跳过")
 
             # 保存该轮数据
             round_entry = {
                 "round": rnd,
                 "scores": review_result["scores"],
                 "gaps": review_result.get("gaps", []),
-                "suggestions": suggestions,
+                "analysis": analysis,
                 "rewritten_text": rewritten,
             }
             round_file.write_text(json.dumps(round_entry, ensure_ascii=False, indent=2), "utf-8")
