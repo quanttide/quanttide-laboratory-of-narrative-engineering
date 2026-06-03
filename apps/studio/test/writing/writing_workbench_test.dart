@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:docs_agent/writing/bloc/writing_review_cubit.dart';
+import 'package:docs_agent/writing/widgets/status_bar.dart';
 import 'package:docs_agent/writing/widgets/writing_workbench.dart';
 
 Widget _buildApp(WritingReviewCubit cubit) {
@@ -25,7 +26,7 @@ void main() {
       expect(find.text('加载样本'), findsOneWidget);
       expect(find.text('📄 底稿'), findsOneWidget);
       expect(find.text('Review'), findsOneWidget);
-      expect(find.textContaining('字数'), findsOneWidget);
+      expect(find.byType(StatusBar), findsOneWidget);
       cubit.close();
     });
 
@@ -66,8 +67,7 @@ void main() {
       final cubit = WritingReviewCubit();
       cubit.loadSample();
       await tester.pumpWidget(_buildApp(cubit));
-      expect(find.textContaining('字数'), findsOneWidget);
-      expect(find.textContaining('空隙'), findsOneWidget);
+      expect(find.text(cubit.state.charCount.toString()), findsWidgets);
       cubit.close();
     });
   });

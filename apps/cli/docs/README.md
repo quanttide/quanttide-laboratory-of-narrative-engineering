@@ -1,5 +1,7 @@
 # qtcloud-3r
 
+**位置**：`apps/cli/` · 属于 [quanttide-laboratory-of-narrative-engineering](https://github.com/quanttide/quanttide-laboratory-of-narrative-engineering)
+
 3R 写作工具链。AI for AI。
 
 ## 安装
@@ -42,11 +44,12 @@ echo '他推开门，看到她坐在窗边。想说话，但喉咙发紧。' | 3
 
 ## 命令
 
+统一用法：`3r <command> [file]`。省略 file 时从 stdin 读取。
+
 ### `3r review` — 理解文本意图
 
 ```bash
 3r review draft.md
-cat draft.md | 3r review
 ```
 
 ```json
@@ -70,7 +73,7 @@ cat draft.md | 3r review
 ### `3r reflect` — 检测空隙 + 归因
 
 ```bash
-cat draft.md | 3r reflect
+3r reflect draft.md
 ```
 
 ```json
@@ -105,8 +108,10 @@ cat draft.md | 3r reflect
 ### `3r rewrite` — 带归因改写
 
 ```bash
-cat draft.md | 3r rewrite > final.md
+3r rewrite draft.md --format text > final.md
 ```
+
+`--format text` 输出纯文本，**没有 JSON 包裹**，适合 `> final.md`。
 
 ```json
 {
@@ -115,14 +120,12 @@ cat draft.md | 3r rewrite > final.md
 }
 ```
 
-`--format text` 时直接输出纯文本，适合重定向到文件。
-
 ### `3r cycle` — 完整一轮
 
 等价于依次执行 review → reflect → rewrite。
 
 ```bash
-cat draft.md | 3r cycle > result.json
+3r cycle draft.md > result.json
 ```
 
 ```json
@@ -138,6 +141,9 @@ cat draft.md | 3r cycle > result.json
       "gap_type": "transition",
       "location": "从林远亭视角切换到陆知微",
       "detail": "缺少过渡性衔接",
+      "structure": "必然省略，但缺少过渡锚点",
+      "psychology": "未写林远亭的观察过程",
+      "reader": "读者需要一个共享感官细节桥接",
       "craft": "无意识忽略",
       "root_cause": "视角切换缺少共享感官细节"
     }
@@ -148,16 +154,6 @@ cat draft.md | 3r cycle > result.json
   }
 }
 ```
-
-`3r 3r` 也支持（等价），但推荐用 `cycle`。
-
-## 管道用法
-
-```bash
-cat draft.md | 3r rewrite > final.md
-```
-
-每条命令单独用，输出重定向到文件。不推荐跨命令管道串联——因为 `reflect` 需要原文作上下文，而 `review` 的输出不包含原文。如需完整一轮，直接用 `3r cycle`。
 
 ## 参数
 
@@ -172,9 +168,9 @@ cat draft.md | 3r rewrite > final.md
 | 命令 | json 格式 | text 格式 |
 |------|----------|----------|
 | `review` | `{genre, intent, stage, summary}` | 4 行键值 |
-| `reflect` | `[{gap_type, structure, psychology, reader, craft, root_cause}]` | 每条空隙一屏（8 行） |
-| `rewrite` | `{text, length}` | 纯文本 |
-| `cycle` | `{review: …, reflect: […], rewrite: {text, length}}` | 三段式文本 |
+| `reflect` | `[{gap_type, structure, psychology, reader, craft, root_cause}]` | 每条空隙 8 行 |
+| `rewrite` | `{text, length}` | 纯文本，无包裹 |
+| `cycle` | `{review, reflect, rewrite}` | 三段式文本 |
 
 ## 退出码
 

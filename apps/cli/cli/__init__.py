@@ -214,7 +214,7 @@ def cmd_rewrite(text: str, model: str, temp: float) -> str:
 
 def main():
     parser = argparse.ArgumentParser(description="qtcloud-3r — 3R writing toolchain")
-    parser.add_argument("command", choices=["review", "reflect", "rewrite", "cycle", "3r"])
+    parser.add_argument("command", choices=["review", "reflect", "rewrite", "cycle", "3r"], help="review | reflect | rewrite | cycle")
     parser.add_argument("file", nargs="?", default="-", help="输入文件（默认 stdin）")
     parser.add_argument("--model", default=DEFAULT_MODEL)
     parser.add_argument("--temp", type=float, default=0.3)
