@@ -182,10 +182,10 @@ def cross_work_similarity_matrix(fragments: list[dict]) -> list[dict]:
 
 
 def motif_chain_reconstruction(fragments: list[dict]) -> dict:
-    """步骤 3：母题链重构——LLM 自由聚类 14 个片段"""
+    """步骤 3：母题链重构——LLM 自由聚类 14 个片段（BLINDED）"""
     descriptions = "\n".join(
-        f"[{f['motif']}] {f['series']}-{f['scene']}: {f['description']}"
-        for f in fragments
+        f"场景 {i+1}: {f['description']}"
+        for i, f in enumerate(fragments)
     )
 
     prompt = f"""以下 14 个来自两部小说的场景片段。请将它们按体现的母题分组成若干类。
@@ -230,12 +230,12 @@ def blind_pairing(fragments: list[dict], n_motifs: int = 4) -> dict:
     random.shuffle(test_items)
 
     items_text = "\n".join(
-        f"[{i+1}] 系列: {'都市' if f['series']=='urban' else '校园'}\n    描述: {f['description']}"
+        f"场景 {i+1}: {f['description']}"
         for i, f in enumerate(test_items)
     )
 
-    prompt = f"""以下 8 个场景描述来自两部不同的小说。请将它们两两配对——每组 2 个场景
-应当体现同一叙事母题（一个来自都市言情，一个来自校园言情）。
+    prompt = f"""以下 8 个场景描述来自两部不同的小说。请将它们两两配成 4 组——
+每组内的 2 个场景应当体现同一叙事母题。
 
 输出格式（JSON）：
 {{
