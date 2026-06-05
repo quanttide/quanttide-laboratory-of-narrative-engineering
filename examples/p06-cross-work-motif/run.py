@@ -318,7 +318,7 @@ def report(similarity_results: list[dict], reconstruction: dict, blind_results: 
         for p in r.get("pairs", []):
             print(f"    {p['pair']} → {p.get('motif_reason', '')[:60]}")
     avg = total_acc / len(blind_results) if blind_results else 0
-    print(f"\n  平均准确率: {avg:.0f}%（随机基线 25%）")
+    print(f"\n  平均准确率: {avg:.0f}%（无系列信息，完全盲测）")
 
 
 def main():
