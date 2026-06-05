@@ -1,0 +1,256 @@
+{
+  "urban": {
+    "single_coverage": {
+      "U1": {
+        "extracted_count": 5,
+        "matched_count": 3,
+        "coverage": 0.6,
+        "matches": [
+          {
+            "extracted": "照片与记忆",
+            "gt": "十年",
+            "similarity": 0.75
+          },
+          {
+            "extracted": "未说出口的思念",
+            "gt": "手势",
+            "similarity": 0.95
+          },
+          {
+            "extracted": "时间与变化",
+            "gt": "十年",
+            "similarity": 0.95
+          }
+        ]
+      },
+      "U2": {
+        "extracted_count": 5,
+        "matched_count": 5,
+        "coverage": 1.0,
+        "matches": [
+          {
+            "extracted": "等待与相遇",
+            "gt": "十年",
+            "similarity": 0.95
+          },
+          {
+            "extracted": "身体语言与触碰",
+            "gt": "手势",
+            "similarity": 0.95
+          },
+          {
+            "extracted": "食物与关怀",
+            "gt": "手势",
+            "similarity": 0.95
+          },
+          {
+            "extracted": "回忆与对比",
+            "gt": "十年",
+            "similarity": 0.85
+          },
+          {
+            "extracted": "压力与倾诉",
+            "gt": "孤独",
+            "similarity": 0.85
+          }
+        ]
+      },
+      "U3": {
+        "extracted_count": 6,
+        "matched_count": 5,
+        "coverage": 1.0,
+        "matches": [
+          {
+            "extracted": "雨与重逢",
+            "gt": "雨",
+            "similarity": 0.85
+          },
+          {
+            "extracted": "十年暗恋",
+            "gt": "十年",
+            "similarity": 0.95
+          },
+          {
+            "extracted": "手机媒介",
+            "gt": "手势",
+            "similarity": 0.95
+          },
+          {
+            "extracted": "身体语言",
+            "gt": "手势",
+            "similarity": 0.95
+          },
+          {
+            "extracted": "咖啡店空间",
+            "gt": "十年",
+            "similarity": 0.8
+          }
+        ]
+      },
+      "U4": {
+        "extracted_count": 5,
+        "matched_count": 4,
+        "coverage": 0.8,
+        "matches": [
+          {
+            "extracted": "醉酒真言",
+            "gt": "孤独",
+            "similarity": 0.85
+          },
+          {
+            "extracted": "十年执念",
+            "gt": "十年",
+            "similarity": 0.95
+          },
+          {
+            "extracted": "音乐抒情",
+            "gt": "歌声",
+            "similarity": 0.85
+          },
+          {
+            "extracted": "细节记忆",
+            "gt": "十年",
+            "similarity": 0.85
+          }
+        ]
+      },
+      "U5": {
+        "extracted_count": 5,
+        "matched_count": 4,
+        "coverage": 0.8,
+        "matches": [
+          {
+            "extracted": "书信对话",
+            "gt": "孤独",
+            "similarity": 0.75
+          },
+          {
+            "extracted": "默默守望",
+            "gt": "十年",
+            "similarity": 0.85
+          },
+          {
+            "extracted": "肢体依赖",
+            "gt": "手势",
+            "similarity": 0.95
+          },
+          {
+            "extracted": "时光回溯",
+            "gt": "十年",
+            "similarity": 0.85
+          }
+        ]
+      }
+    },
+    "single_avg_coverage": 0.8400000000000001,
+    "joint_coverage": 0.6,
+    "joint_matches": [
+      {
+        "extracted": "雨天重逢",
+        "gt": "雨",
+        "similarity": 0.95
+      },
+      {
+        "extracted": "十年暗恋",
+        "gt": "十年",
+        "similarity": 0.95
+      },
+      {
+        "extracted": "沉默的关怀",
+        "gt": "手势",
+        "similarity": 0.95
+      }
+    ],
+    "gt_motif_count": 5
+  },
+  "campus": {
+    "single_coverage": {
+      "C1": {
+        "extracted_count": 5,
+        "matched_count": 4,
+        "coverage": 1.0,
+        "matches": [
+          {
+            "extracted": "错位表达",
+            "gt": "旁观者",
+            "similarity": 0.72
+          },
+          {
+            "extracted": "身体关怀",
+            "gt": "随身携带的温柔",
+            "similarity": 0.85
+          },
+          {
+            "extracted": "主动与被动转换",
+            "gt": "论坛",
+            "similarity": 0.95
+          },
+          {
+            "extracted": "意象传递",
+            "gt": "协作书写",
+            "similarity": 0.85
+          }
+        ]
+      },
+      "C2": {
+        "extracted_count": 5,
+        "matched_count": 3,
+        "coverage": 0.75,
+        "matches": [
+          {
+            "extracted": "保护与担当",
+            "gt": "随身携带的温柔",
+            "similarity": 0.85
+          },
+          {
+            "extracted": "协作书写",
+            "gt": "论坛",
+            "similarity": 0.95
+          },
+          {
+            "extracted": "弥补遗憾",
+            "gt": "论坛",
+            "similarity": 0.85
+          }
+        ]
+      },
+      "C3": {
+        "extracted_count": 5,
+        "matched_count": 1,
+        "coverage": 0.25,
+        "matches": [
+          {
+            "extracted": "未言之情",
+            "gt": "旁观者",
+            "similarity": 0.85
+          }
+        ]
+      }
+    },
+    "single_avg_coverage": 0.6666666666666666,
+    "joint_coverage": 1.0,
+    "joint_matches": [
+      {
+        "extracted": "身体接触",
+        "gt": "旁观者",
+        "similarity": 0.85
+      },
+      {
+        "extracted": "共同创作",
+        "gt": "论坛",
+        "similarity": 0.85
+      },
+      {
+        "extracted": "保护与责任",
+        "gt": "随身携带的温柔",
+        "similarity": 0.95
+      },
+      {
+        "extracted": "细节关怀",
+        "gt": "随身携带的温柔",
+        "similarity": 0.95
+      }
+    ],
+    "gt_motif_count": 4
+  }
+}

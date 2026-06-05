@@ -1,0 +1,291 @@
+{
+  "results": [
+    {
+      "group": "constrained_urban",
+      "scene": "咖啡厅初遇",
+      "alignment": 0.4,
+      "detected_count": 5,
+      "target_count": 5,
+      "detected_titles": [
+        "雨与重逢",
+        "重复的手势",
+        "远距离凝视",
+        "咖啡与记忆",
+        "偶然的视线交汇"
+      ]
+    },
+    {
+      "group": "constrained_urban",
+      "scene": "雨天再次相遇",
+      "alignment": 0.4,
+      "detected_count": 5,
+      "target_count": 5,
+      "detected_titles": [
+        "雨天偶遇",
+        "未说破的关怀",
+        "重复的场所与位置",
+        "记忆与细节的珍藏",
+        "等待与延迟"
+      ]
+    },
+    {
+      "group": "constrained_urban",
+      "scene": "日常帮忙",
+      "alignment": 0.6,
+      "detected_count": 5,
+      "target_count": 5,
+      "detected_titles": [
+        "雨夜重逢",
+        "递毛巾的关怀",
+        "默默修正错误",
+        "未言明的默契",
+        "音乐作为情感背景"
+      ]
+    },
+    {
+      "group": "constrained_urban",
+      "scene": "夜晚散步",
+      "alignment": 0.2,
+      "detected_count": 5,
+      "target_count": 5,
+      "detected_titles": [
+        "影子与平行线",
+        "沉默的关怀",
+        "等待与十年",
+        "重复的物件",
+        "未完成的告白"
+      ]
+    },
+    {
+      "group": "constrained_urban",
+      "scene": "表白时刻",
+      "alignment": 0.6,
+      "detected_count": 5,
+      "target_count": 5,
+      "detected_titles": [
+        "雨天重逢",
+        "默默守护",
+        "循环的歌曲",
+        "十年等待",
+        "细节记忆"
+      ]
+    },
+    {
+      "group": "control_urban",
+      "scene": "咖啡厅初遇",
+      "alignment": 0.4,
+      "detected_count": 5,
+      "target_count": 5,
+      "detected_titles": [
+        "雨与重逢",
+        "定格的画面",
+        "偶然的相遇",
+        "身体的停滞",
+        "无声的交流"
+      ]
+    },
+    {
+      "group": "control_urban",
+      "scene": "雨天再次相遇",
+      "alignment": 0.4,
+      "detected_count": 5,
+      "target_count": 5,
+      "detected_titles": [
+        "雨中的相遇",
+        "共享伞下的亲密",
+        "目光与微笑的交流",
+        "细节记忆与身体特征",
+        "尴尬与默契的互动"
+      ]
+    },
+    {
+      "group": "control_urban",
+      "scene": "日常帮忙",
+      "alignment": 0.2,
+      "detected_count": 5,
+      "target_count": 5,
+      "detected_titles": [
+        "疲惫的城市意象",
+        "深夜加班与孤独",
+        "温柔的关怀与掩饰",
+        "食物作为情感载体",
+        "默契的沉默与陪伴"
+      ]
+    },
+    {
+      "group": "control_urban",
+      "scene": "夜晚散步",
+      "alignment": 0.0,
+      "detected_count": 5,
+      "target_count": 5,
+      "detected_titles": [
+        "夜色与灯光",
+        "行走与陪伴",
+        "无声的关怀",
+        "影子与交织",
+        "自然意象的烘托"
+      ]
+    },
+    {
+      "group": "control_urban",
+      "scene": "表白时刻",
+      "alignment": 0.2,
+      "detected_count": 5,
+      "target_count": 5,
+      "detected_titles": [
+        "光影交叠",
+        "身体语言泄露情感",
+        "告白前的沉默与迟疑",
+        "细节记忆作为爱的证据",
+        "反转式回应"
+      ]
+    },
+    {
+      "group": "constrained_campus",
+      "scene": "咖啡厅初遇",
+      "alignment": 0.75,
+      "detected_count": 5,
+      "target_count": 4,
+      "detected_titles": [
+        "雨与玻璃",
+        "纸巾传递",
+        "孤岛与相遇",
+        "论坛与评论区",
+        "沉默与默契"
+      ]
+    },
+    {
+      "group": "constrained_campus",
+      "scene": "雨天再次相遇",
+      "alignment": 0.25,
+      "detected_count": 5,
+      "target_count": 4,
+      "detected_titles": [
+        "雨天的偶遇",
+        "偷拍与照片传播",
+        "论坛私信与线上互动",
+        "小物件传递与肢体接触",
+        "等待与停留"
+      ]
+    },
+    {
+      "group": "constrained_campus",
+      "scene": "日常帮忙",
+      "alignment": 0.5,
+      "detected_count": 5,
+      "target_count": 4,
+      "detected_titles": [
+        "深夜加班",
+        "递纸巾",
+        "工作文件随身带",
+        "键盘声与安静协作",
+        "保温杯"
+      ]
+    },
+    {
+      "group": "constrained_campus",
+      "scene": "夜晚散步",
+      "alignment": 0.75,
+      "detected_count": 5,
+      "target_count": 4,
+      "detected_titles": [
+        "影子交叠",
+        "网络舆论反转",
+        "协作改写声明",
+        "随身携带物品",
+        "耳朵发红"
+      ]
+    },
+    {
+      "group": "constrained_campus",
+      "scene": "表白时刻",
+      "alignment": 0.5,
+      "detected_count": 5,
+      "target_count": 4,
+      "detected_titles": [
+        "纸巾意象",
+        "论坛叙事",
+        "反复出现的物品与习惯",
+        "天台场景",
+        "未完成的表白"
+      ]
+    },
+    {
+      "group": "control_campus",
+      "scene": "咖啡厅初遇",
+      "alignment": 0.0,
+      "detected_count": 5,
+      "target_count": 4,
+      "detected_titles": [
+        "雨天重逢",
+        "避雨与偶遇",
+        "旧物触发记忆",
+        "错失的联系",
+        "四目相对时的时空凝滞"
+      ]
+    },
+    {
+      "group": "control_campus",
+      "scene": "雨天再次相遇",
+      "alignment": 0.0,
+      "detected_count": 5,
+      "target_count": 4,
+      "detected_titles": [
+        "不期而遇的避雨",
+        "未使用的伞",
+        "共享的物理空间",
+        "感官细节的强化",
+        "重复的相遇与记忆"
+      ]
+    },
+    {
+      "group": "control_campus",
+      "scene": "日常帮忙",
+      "alignment": 0.25,
+      "detected_count": 5,
+      "target_count": 4,
+      "detected_titles": [
+        "深夜加班",
+        "意外陪伴",
+        "细节关怀",
+        "暧昧对视",
+        "静谧中的亲密"
+      ]
+    },
+    {
+      "group": "control_campus",
+      "scene": "夜晚散步",
+      "alignment": 0.25,
+      "detected_count": 4,
+      "target_count": 4,
+      "detected_titles": [
+        "深夜独行与偶遇",
+        "光影下的距离与陪伴",
+        "工作压力下的默契关怀",
+        "感官细节中的情感暗示"
+      ]
+    },
+    {
+      "group": "control_campus",
+      "scene": "表白时刻",
+      "alignment": 0.0,
+      "detected_count": 5,
+      "target_count": 4,
+      "detected_titles": [
+        "水汽与光线",
+        "眼神与注视",
+        "沉默与停顿",
+        "自然意象与情感映射",
+        "时间标记与情感积累"
+      ]
+    }
+  ],
+  "urban_avg": {
+    "constrained": 0.44000000000000006,
+    "control": 0.24000000000000005
+  },
+  "campus_avg": {
+    "constrained": 0.55,
+    "control": 0.1
+  }
+}
