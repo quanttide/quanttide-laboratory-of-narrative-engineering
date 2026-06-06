@@ -1,29 +1,82 @@
 {
-  "combined": {
-    "scores": {
-      "specific": 4,
-      "root_cause": 3,
-      "motif_fit": 3,
-      "natural": 4,
-      "style_cover": 4
+  "pairwise": {
+    "combined_vs_style_only": {
+      "winners": {
+        "specific": "A",
+        "root_cause": "B",
+        "motif_fit": "A",
+        "natural": "A",
+        "style_cover": "B"
+      },
+      "mapping": [
+        {
+          "group": "combined",
+          "label": "A"
+        },
+        {
+          "group": "style_only",
+          "label": "B"
+        }
+      ]
+    },
+    "combined_vs_motif_only": {
+      "winners": {
+        "specific": "A",
+        "root_cause": "B",
+        "motif_fit": "B",
+        "natural": "A",
+        "style_cover": "B"
+      },
+      "mapping": [
+        {
+          "group": "combined",
+          "label": "A"
+        },
+        {
+          "group": "motif_only",
+          "label": "B"
+        }
+      ]
+    },
+    "style_only_vs_motif_only": {
+      "winners": {
+        "specific": "A",
+        "root_cause": "B",
+        "motif_fit": "B",
+        "natural": "A",
+        "style_cover": "B"
+      },
+      "mapping": [
+        {
+          "group": "style_only",
+          "label": "A"
+        },
+        {
+          "group": "motif_only",
+          "label": "B"
+        }
+      ]
     }
   },
-  "style_only": {
-    "scores": {
-      "specific": 4,
-      "root_cause": 3,
-      "motif_fit": 3,
-      "natural": 4,
-      "style_cover": 4
-    }
-  },
-  "motif_only": {
-    "scores": {
-      "specific": 4,
-      "root_cause": 3,
-      "motif_fit": 3,
-      "natural": 4,
-      "style_cover": 4
+  "aggregated_scores": {
+    "combined": {
+      "specific": 2,
+      "root_cause": 0,
+      "motif_fit": 1,
+      "natural": 2,
+      "style_cover": 0
+    },
+    "style_only": {
+      "specific": 1,
+      "root_cause": 1,
+      "motif_fit": 0,
+      "natural": 1,
+      "style_cover": 1
+    },
+    "motif_only": {
+      "root_cause": 2,
+      "motif_fit": 2,
+      "style_cover": 2
     }
   }
 }

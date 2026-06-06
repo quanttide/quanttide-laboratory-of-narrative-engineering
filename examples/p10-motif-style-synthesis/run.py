@@ -12,6 +12,8 @@ from pathlib import Path
 import requests
 import yaml
 
+import random
+
 DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY", "")
 if not DEEPSEEK_API_KEY:
     print("错误：请设置 DEEPSEEK_API_KEY 环境变量")
@@ -162,22 +164,42 @@ def extract_motifs(text: str, article_name: str) -> dict:
 
 
 def diagnose_style_motif_links(style_scores: list[dict], extracted_motifs: list[dict], target_motifs: list[dict], article_name: str) -> dict:
+    """Two-step diagnosis: free inference first, then match against known motifs."""
     weak_dims = [d for d in style_scores if d.get("score", 10) <= 7]
-    dim_names = [d["dimension"] for d in weak_dims]
+    if not weak_dims:
+        return {"links": []}
+
     ext_titles = [m["title"] for m in extracted_motifs]
+    ext_descs = [m.get("description", "") for m in extracted_motifs]
     target_titles = [m["title"] for m in target_motifs]
-    missing = [t for t in target_titles if t not in ext_titles]
 
-    prompt = f"""场景《{article_name}》风格评分中以下维度偏低：{', '.join(dim_names) if dim_names else '无'}。
-该系列目标母题：{', '.join(target_titles)}。
-本文缺失的母题：{', '.join(missing) if missing else '无'}。
+    # Step A: free inference
+    wd_text = "\n".join(f"- {d['dimension']} (score={d['score']}): {d.get('note','')}" for d in weak_dims)
+    free_prompt = f"""场景《{article_name}》风格评审中以下维度偏低：
+{wd_text}
 
-请推断风格维度弱点与母题缺失之间的关联：
-对每个弱维度，判断"最可能与缺少哪个母题有关"并说明理由。
-如果弱维度与母题缺失无关，设置 confidence 为 low。
+请分析每个弱维度的根因可能是什么（自由文本，不要参考任何预定义母题列表）。
+对每个弱维度，描述"该维度偏弱最可能是因为缺少什么叙事元素"。
+如果某个弱维度与叙事元素缺失无关（如纯技巧问题），说明原因。
 
-输出JSON：{{"links":[{{"weak_dimension":"情感表达","related_missing_motif":"手势","confidence":"high","reasoning":"因为该维度强调动作先于语言..."}}]}}"""
-    raw = call_llm(prompt, "你是一个叙事诊断专家。只输出 JSON。", temperature=0.2)
+输出JSON：{{"free_analysis":[{{"weak_dimension":"情感表达","root_cause_hypothesis":"场景缺乏非言语的情感动作——角色说了很多但身体没有表达","confidence":"high|medium|low"}}]}}"""
+    raw = call_llm(free_prompt, "你是一个叙事诊断专家。只输出 JSON。", temperature=0.2)
+    free_analysis = json.loads(clean_json(raw))
+
+    # Step B: match hypotheses against known motif pool
+    target_motif_pool = "\n".join(f"- {m['title']}: {m.get('description','')}" for m in target_motifs)
+    hypotheses = "\n".join(f"- {d['weak_dimension']}: {d['root_cause_hypothesis']}" for d in free_analysis.get("free_analysis", []))
+    match_prompt = f"""以下是叙事元素缺失假设：
+{hypotheses}
+
+已知该系列的母题库：
+{target_motif_pool}
+
+对每个假设，判断它最接近哪个已知母题（如有）。
+如果假设与任何已知母题都不匹配，related_missing_motif 留空。
+输出JSON：{{"links":[{{"weak_dimension":"情感表达","related_missing_motif":"手势","confidence":"high","hypothesis":"..."}}]}}"""
+
+    raw = call_llm(match_prompt, "你是一个叙事编辑。只输出 JSON。", temperature=0.2)
     return json.loads(clean_json(raw))
 
 
@@ -203,19 +225,52 @@ def generate_style_only_fix(article_name: str, text_sample: str, weak_dim: str, 
     return raw.strip()
 
 
-def evaluate_fix(fix_text: str, weak_dim: str, related_motif: str, group: str) -> dict:
-    prompt = f"""评估下面这条改写建议的五个维度（各1-5分）：
-1. specific: 是否给出了具体的、可执行的文本操作？
-2. root_cause: 是否对准了风格问题的真实原因？
-3. motif_fit: 是否会增强目标母题「{related_motif}」？
-4. natural: 按建议修改后的场景是否自然？
-5. style_cover: 是否会提升「{weak_dim}」风格维度？
+def evaluate_pairwise(fix_a: str, fix_b: str, weak_dim: str, related_motif: str) -> dict:
+    """Pairwise comparison: which fix is better? Blind to group identity."""
+    label_a, text_a = fix_a
+    label_b, text_b = fix_b
+    # shuffle order to avoid position bias
+    if random.random() < 0.5:
+        label_a, label_b, text_a, text_b = label_b, label_a, text_a, text_b
 
-建议（{group}）：{fix_text[:500]}
+    prompt = f"""比较下面两条针对「{weak_dim}」维度的改写建议，从 5 个维度各选赢家（或平局）。
 
-输出JSON：{{"scores":{{"specific":4,"root_cause":3,"motif_fit":3,"natural":4,"style_cover":4}}}}"""
+建议 A：{text_a[:400]}
+建议 B：{text_b[:400]}
+
+五个维度：
+1. specific: 谁给出了更具体的、可执行的文本操作？
+2. root_cause: 谁更对准了风格问题的真实原因？
+3. motif_fit: 谁更会增强母题「{related_motif}」？
+4. natural: 谁的修改更自然、不刻意？
+5. style_cover: 谁的修改更能提升「{weak_dim}」维度？
+
+对每个维度输出 winner: "A" / "B" / "tie"。
+输出JSON：{{"winners":{{"specific":"A","root_cause":"B","motif_fit":"tie","natural":"A","style_cover":"B"}}}}"""
     raw = call_llm(prompt, "你是一个叙事编辑。只输出 JSON。", temperature=0.1)
     return json.loads(clean_json(raw))
+
+
+def score_pairwise_results(pairwise_results: list[dict]) -> dict:
+    """Convert pairwise winners to per-group scores (win=2, tie=1, lose=0)."""
+    scores = {}
+    for r in pairwise_results:
+        winners = r.get("winners", {})
+        for result in r.get("mapping", []):
+            group = result["group"]
+            label = result["label"]
+            if group not in scores:
+                scores[group] = {k: 0 for k in ["specific", "root_cause", "motif_fit", "natural", "style_cover"]}
+                scores[group]["count"] = 0
+            for dim in ["specific", "root_cause", "motif_fit", "natural", "style_cover"]:
+                w = winners.get(dim, "tie")
+                if w == label:
+                    scores[group][dim] += 2
+                elif w == "tie":
+                    scores[group][dim] += 1
+                # else: loss = 0
+            scores[group]["count"] += 1
+    return scores
 
 
 def main():
@@ -303,7 +358,9 @@ def main():
             # Find related motif from diagnosis
             links = diagnosis.get("links", [])
             related = next((l for l in links if l.get("weak_dimension") == dim_name), None)
-            related_motif = related.get("related_missing_motif", "手势") if related else "手势"
+            related_motif = related.get("related_missing_motif") if related else None
+            if not related_motif:
+                related_motif = "手势"  # default fallback
             motif_desc = motif_descs.get(related_motif, "")
 
             print(f"    [{dim_name} score={wd['score']}] → related_motif={related_motif}")
@@ -344,23 +401,46 @@ def main():
                 motif_cache_fix.write_text(motif_fix, "utf-8")
                 print(f"✓ ({len(motif_fix)}字)")
 
-            # Evaluate
+            # Evaluate (pairwise, blind, shuffled)
             eval_cache = RESULTS_DIR / f"eval_{aid}_{dim_name}.json"
             if eval_cache.exists():
-                evals = json.loads(eval_cache.read_text("utf-8"))
+                pairwise_data = json.loads(eval_cache.read_text("utf-8"))
             else:
-                print(f"      评估...", end=" ", flush=True)
-                evals = {
-                    "combined": evaluate_fix(comb_fix, dim_name, related_motif, "combined"),
-                    "style_only": evaluate_fix(style_fix, dim_name, related_motif, "style_only"),
-                    "motif_only": evaluate_fix(motif_fix, dim_name, related_motif, "motif_only"),
-                }
-                eval_cache.write_text(json.dumps(evals, ensure_ascii=False, indent=2), "utf-8")
-                cs = evals["combined"]["scores"]
-                print(f"✓ comb=({cs['specific']},{cs['root_cause']},{cs['motif_fit']},{cs['natural']},{cs['style_cover']})")
+                print(f"      评估(blind pairwise)...", end=" ", flush=True)
+                # Three pairwise comparisons
+                pairs = [
+                    (("A", comb_fix), ("B", style_fix), "combined", "style_only", "A", "B"),
+                    (("A", comb_fix), ("B", motif_fix), "combined", "motif_only", "A", "B"),
+                    (("A", style_fix), ("B", motif_fix), "style_only", "motif_only", "A", "B"),
+                ]
+                pairwise = {}
+                scores = {"combined": {}, "style_only": {}, "motif_only": {}}
+                for fix_a, fix_b, ga, gb, la, lb in pairs:
+                    result = evaluate_pairwise(fix_a, fix_b, dim_name, related_motif)
+                    result["mapping"] = [{"group": ga, "label": la}, {"group": gb, "label": lb}]
+                    pair_key = f"{ga}_vs_{gb}"
+                    pairwise[pair_key] = result
+                    winners = result.get("winners", {})
+                    for dim in ["specific", "root_cause", "motif_fit", "natural", "style_cover"]:
+                        if dim not in scores[ga]:
+                            scores[ga][dim] = 0
+                            scores[gb][dim] = 0
+                        w = winners.get(dim, "tie")
+                        if w == la:
+                            scores[ga][dim] = scores[ga].get(dim, 0) + 1
+                        elif w == lb:
+                            scores[gb][dim] = scores[gb].get(dim, 0) + 1
+                        else:
+                            scores[ga][dim] = scores[ga].get(dim, 0) + 0.5
+                            scores[gb][dim] = scores[gb].get(dim, 0) + 0.5
+
+                pairwise_data = {"pairwise": pairwise, "aggregated_scores": scores}
+                eval_cache.write_text(json.dumps(pairwise_data, ensure_ascii=False, indent=2), "utf-8")
+                wins_summary = {g: sum(v for k, v in scores[g].items()) for g in scores}
+                print(f"✓ wins: comb={wins_summary['combined']:.0f} style={wins_summary['style_only']:.0f} motif={wins_summary['motif_only']:.0f}")
 
             art_fixes[dim_name] = {"combined": comb_fix, "style_only": style_fix, "motif_only": motif_fix}
-            art_evals[dim_name] = evals
+            art_evals[dim_name] = pairwise_data
 
         all_fixes[aid] = art_fixes
         all_evaluations[aid] = art_evals
@@ -397,32 +477,39 @@ def main():
     print("p10 分析报告：三组改法对比")
     print(f"{'='*60}")
 
-    group_totals = {"combined": {"specific": 0, "root_cause": 0, "motif_fit": 0, "natural": 0, "style_cover": 0, "count": 0},
-                    "style_only": {"specific": 0, "root_cause": 0, "motif_fit": 0, "natural": 0, "style_cover": 0, "count": 0},
-                    "motif_only": {"specific": 0, "root_cause": 0, "motif_fit": 0, "natural": 0, "style_cover": 0, "count": 0}}
+    group_totals = {"combined": {"specific": 0, "root_cause": 0, "motif_fit": 0, "natural": 0, "style_cover": 0, "n_dims": 0},
+                    "style_only": {"specific": 0, "root_cause": 0, "motif_fit": 0, "natural": 0, "style_cover": 0, "n_dims": 0},
+                    "motif_only": {"specific": 0, "root_cause": 0, "motif_fit": 0, "natural": 0, "style_cover": 0, "n_dims": 0}}
 
     for aid, evals_by_dim in all_evaluations.items():
         print(f"\n## {aid}")
-        for dim_name, evals in evals_by_dim.items():
+        for dim_name, eval_data in evals_by_dim.items():
+            scores = eval_data.get("aggregated_scores", {})
+            pairwise = eval_data.get("pairwise", {})
             print(f"  [{dim_name}]")
             for group in ["combined", "style_only", "motif_only"]:
-                if group in evals:
-                    s = evals[group]["scores"]
-                    avg = sum(s.values()) / len(s)
-                    print(f"    {group:<12}: spec={s['specific']} root={s['root_cause']} motif={s['motif_fit']} nat={s['natural']} style={s['style_cover']} avg={avg:.1f}")
-                    for k in s:
-                        group_totals[group][k] += s[k]
-                    group_totals[group]["count"] += 1
+                if group in scores and scores[group]:
+                    gs = scores[group]
+                    total = sum(gs.values())
+                    print(f"    {group:<12}: wins={total:.1f} ({gs})")
+                    for k in gs:
+                        group_totals[group][k] += gs[k]
+                    group_totals[group]["n_dims"] += 1
+            # Show pairwise results
+            for pk, pr in pairwise.items():
+                w = pr.get("winners", {})
+                print(f"    {pk}: {w}")
 
-    print(f"\n## 总体对比")
+    print(f"\n## 总体对比（pairwise win counts, max=3 per dimension）")
     for group in ["combined", "style_only", "motif_only"]:
         gt = group_totals[group]
-        if gt["count"] == 0:
+        if gt["n_dims"] == 0:
             continue
-        n = gt["count"]
-        avgs = {k: gt[k] / n for k in ["specific", "root_cause", "motif_fit", "natural", "style_cover"]}
-        total_avg = sum(avgs.values()) / len(avgs)
-        print(f"  {group}: spec={avgs['specific']:.1f} root={avgs['root_cause']:.1f} motif={avgs['motif_fit']:.1f} nat={avgs['natural']:.1f} style={avgs['style_cover']:.1f} total_avg={total_avg:.1f}")
+        print(f"  {group}: ", end="")
+        parts = []
+        for k in ["specific", "root_cause", "motif_fit", "natural", "style_cover"]:
+            parts.append(f"{k}={gt[k]:.1f}")
+        print(", ".join(parts))
 
     # Save full report
     report = {
@@ -436,6 +523,10 @@ def main():
         "group_totals": {g: {k: v for k, v in gt.items()} for g, gt in group_totals.items()},
     }
     (RESULTS_DIR / "full_report.json").write_text(json.dumps(report, ensure_ascii=False, indent=2), "utf-8")
+    (RESULTS_DIR / "style_motif_mapping.json").write_text(json.dumps({
+        "human": {k: list(v) for k, v in HUMAN_STYLE_MOTIF_MAP.items()},
+        "llm_inferred": {k: list(v) for k, v in llm_inferred.items()},
+    }, ensure_ascii=False, indent=2), "utf-8")
     print(f"\n结果已保存到: {RESULTS_DIR}")
 
 
