@@ -85,7 +85,7 @@ Gallery 中已经存在这种审美的编码：
   └─ 输出格式：
       {"dimension_scores": [
         {"dimension": "叙事视角", "score": 8, "evidence": ["原文引用"],
-         "contradiction": null, "note": "..."
+          "tension": null, "note": "..."
       ]}
 
 步骤 3: 审美一致性检验

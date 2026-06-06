@@ -115,7 +115,7 @@ def aesthetic_review(text: str, article_name: str, style_prompt: str) -> dict:
 
 输出 JSON：
 {{"dimension_scores": [
-  {{"dimension": "维度名", "score": 8, "evidence": ["原文引用"], "contradiction": null, "note": "一句话理由"}}
+  {{"dimension": "维度名", "score": 8, "evidence": ["原文引用"], "tension": null, "note": "一句话理由"}}
 ]}}
 
 场景文本：{sample}"""
@@ -123,12 +123,12 @@ def aesthetic_review(text: str, article_name: str, style_prompt: str) -> dict:
     raw = call_llm(prompt, temperature=0.0)
     result = json.loads(clean_json(raw))
 
-    # 检测独立发现的 contradictions
-    found_contradictions = []
+    # 检测独立发现的 tensions
+    found_tensions = []
     for ds in result.get("dimension_scores", []):
-        if ds.get("contradiction"):
-            found_contradictions.append({"dimension": ds["dimension"], "contradiction": ds["contradiction"]})
-    result["_found_contradictions"] = found_contradictions
+        if ds.get("tension"):
+            found_tensions.append({"dimension": ds["dimension"], "tension": ds["tension"]})
+    result["_found_tensions"] = found_tensions
 
     return result
 
@@ -182,12 +182,12 @@ def compute_alignment(scores_by_article: dict, style: dict) -> dict:
 
     avg_rho = sum(rho_parts) / len(rho_parts) if rho_parts else 0
 
-    all_contradictions = []
+    all_tensions = []
     for aid, result in scores_by_article.items():
-        all_contradictions.extend(result.get("_found_contradictions", []))
+        all_tensions.extend(result.get("_found_tensions", []))
 
-    return {"direction_match_rate": direction_match / len(scores_by_article) if scores_by_article else 0,
-            "avg_rho": avg_rho, "found_contradictions": all_contradictions}
+    return {"direction_match_rate": direction_match_rate / len(scores_by_article) if scores_by_article else 0,
+            "avg_rho": avg_rho, "found_tensions": all_tensions}
 
 
 def check_draft_gradient(scores_by_article: dict) -> dict:
@@ -260,8 +260,8 @@ def main():
 
             dims = result.get("dimension_scores", [])
             avg = sum(d["score"] for d in dims) / len(dims) if dims else 0
-            contras = len(result.get("_found_contradictions", []))
-            print(f"✓ avg={avg:.1f} contradictions={contras}")
+            tensions_count = len(result.get("_found_tensions", []))
+            print(f"✓ avg={avg:.1f} tensions={tensions_count}")
 
         all_scores[group["id"]] = group_scores
 
@@ -320,10 +320,10 @@ def main():
         alignment = compute_alignment(scores, urban_style)
         print(f"  方向匹配率: {alignment['direction_match_rate']*100:.0f}%")
         print(f"  平均 ρ: {alignment['avg_rho']:.3f}")
-        contras = alignment["found_contradictions"]
-        print(f"  独立发现 contradiction: {len(contras)} 个")
-        for c in contras:
-            print(f"    [{c.get('dimension','?')}] {c.get('contradiction','')[:80]}")
+        tensions = alignment["found_tensions"]
+        print(f"  独立发现 tension: {len(tensions)} 个")
+        for c in tensions:
+            print(f"    [{c.get('dimension','?')}] {c.get('tension','')[:80]}")
 
         gradient = check_draft_gradient(scores)
         print(f"  初稿→成稿梯度:")
@@ -350,7 +350,7 @@ def main():
         if g in all_scores:
             a = compute_alignment(all_scores[g], urban_style)
             label = next(gr["label"] for gr in GROUPS if gr["id"] == g)
-            print(f"  {label}: direction_match={a['direction_match_rate']*100:.0f}% ρ={a['avg_rho']:.3f} contradictions={len(a['found_contradictions'])}")
+            print(f"  {label}: direction_match={a['direction_match_rate']*100:.0f}% ρ={a['avg_rho']:.3f} tensions={len(a['found_tensions'])}")
 
     # Save full report
     report = {
