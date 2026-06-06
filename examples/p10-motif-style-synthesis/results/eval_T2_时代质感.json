@@ -1,0 +1,29 @@
+{
+  "combined": {
+    "scores": {
+      "specific": 4,
+      "root_cause": 3,
+      "motif_fit": 5,
+      "natural": 4,
+      "style_cover": 4
+    }
+  },
+  "style_only": {
+    "scores": {
+      "specific": 4,
+      "root_cause": 3,
+      "motif_fit": 3,
+      "natural": 4,
+      "style_cover": 4
+    }
+  },
+  "motif_only": {
+    "scores": {
+      "specific": 4,
+      "root_cause": 3,
+      "motif_fit": 3,
+      "natural": 4,
+      "style_cover": 4
+    }
+  }
+}
