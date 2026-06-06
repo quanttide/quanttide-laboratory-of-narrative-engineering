@@ -92,8 +92,8 @@ def build_style_prompt(style: dict, samples_dir: Path, n_samples: int = 3, inclu
             parts.append(f"  {d.get('description','')}")
             if d.get("clues"):
                 parts.append(f"  线索: {'; '.join(d['clues'][:2])}")
-            if d.get("contradictions"):
-                parts.append(f"  反例: {'; '.join(d['contradictions'][:2])}")
+            if d.get("tensions"):
+                parts.append(f"  内部张力: {'; '.join(d['tensions'][:2])}")
             parts.append("")
 
     if n_samples > 0 and samples_dir.exists():
