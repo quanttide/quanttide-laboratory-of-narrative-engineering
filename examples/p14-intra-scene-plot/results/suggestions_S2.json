@@ -1,0 +1,38 @@
+{
+  "suggestions": [
+    {
+      "location": "seq 6: 林远亭心里吃醋但表面附和店员帅",
+      "issue_type": "boundary_shift",
+      "fix_A": null,
+      "fix_B": null,
+      "fix_C": {
+        "category": "边界校准",
+        "direction": "调近",
+        "description": "将林远亭的附和改为带有轻微占有欲的回应，例如：‘确实帅，不过我觉得他看你的眼神有点多。’ 这样既保留掩饰，又通过微妙的警告拉近他与陆知微的边界，让醋意更可感。",
+        "expected_effect": "读者能更清晰地感知林远亭的内心矛盾，避免表面附和带来的社交距离模糊，增强角色真实感。"
+      }
+    },
+    {
+      "location": "seq 10: 林远亭回忆醉酒后说喜欢她十年",
+      "issue_type": "emotional_jump",
+      "fix_A": {
+        "category": "因果补链",
+        "description": "在seq 9与seq 10之间插入一个过渡句，例如：‘她问完，他沉默了几秒，眼神忽然飘向远处，像是被什么拽回了某个夜晚。’ 然后自然引出回忆中的醉酒告白。",
+        "expected_effect": "为情感跳跃提供心理锚点，让读者跟随林远亭的思绪从平静过渡到强烈情感，减少突兀感。"
+      },
+      "fix_B": null,
+      "fix_C": null
+    },
+    {
+      "location": "seq 16: 林远亭沉默后说“我们都原谅自己”",
+      "issue_type": "causal_gap",
+      "fix_A": {
+        "category": "因果补链",
+        "description": "在沉默与哲理式安慰之间补充一句承接遗憾的内心活动或对话，例如：‘他低头看着酒杯，轻声说：’有些事，遗憾也是它的一部分。‘ 然后才抬头说：’我们都原谅自己吧。‘’",
+        "expected_effect": "使林远亭的回应从沉默到安慰的逻辑链条完整，读者能理解他如何从遗憾情绪中提炼出哲理，增强对话的自然感。"
+      },
+      "fix_B": null,
+      "fix_C": null
+    }
+  ]
+}

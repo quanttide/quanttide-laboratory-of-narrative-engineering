@@ -3,112 +3,92 @@
     {
       "seq": 1,
       "actor": "林远亭",
-      "action": "坐在咖啡店修改PPT，感到焦虑，然后空虚，翻看手机相册中黎初晓的照片，写日记表达对陆知微的执念",
-      "outward_motivation": "准备明天的演讲，缓解上台前的焦虑",
-      "inward_motivation": "通过回忆和书写来宣泄对陆知微的思念和孤独感",
-      "tension": "有张力：表面是工作准备，内心是情感宣泄",
-      "reaction": "无直接反应（内心活动）",
+      "action": "坐在咖啡店修改PPT，感到空虚后打开手机相册看陆知微的照片，并在日记中写下对她的执念",
+      "outward_motivation": "准备明天的演讲，放松心情",
+      "inward_motivation": "思念陆知微，通过看照片和写日记缓解孤独和焦虑",
+      "tension": "是张力所在",
+      "reaction": "放下手机，看着窗外放松神经",
       "chain_status": "完整"
     },
     {
       "seq": 2,
       "actor": "陆知微",
-      "action": "下火车后，根据黎初晓推荐，导航前往沙发咖啡店，忘记带伞，冒雨快步走去",
-      "outward_motivation": "去看看林远亭常去的咖啡店",
-      "inward_motivation": "想偶遇林远亭，验证黎初晓所说他喜欢自己的消息",
-      "tension": "有张力：表面是探店，内心是试探和期待",
-      "reaction": "无直接反应（行动中）",
+      "action": "出火车站后，根据黎初晓推荐定位寻找“沙发咖啡”店，忘记带伞但冒雨前往",
+      "outward_motivation": "去一家朋友推荐的咖啡店",
+      "inward_motivation": "想看看林远亭常去的地方，因为得知他喜欢自己",
+      "tension": "是张力所在",
+      "reaction": "拖着行李箱快步走向咖啡店",
       "chain_status": "完整"
     },
     {
       "seq": 3,
       "actor": "林远亭",
-      "action": "远远望见一个窈窕身影走近，认出是陆知微后怔住，心跳加速，手发抖",
-      "outward_motivation": "被窗外身影吸引目光",
-      "inward_motivation": "认出暗恋对象，内心震惊和激动",
-      "tension": "有张力：表面是随意观望，内心是强烈情感冲击",
-      "reaction": "无直接反应（内心活动）",
+      "action": "远远望见陆知微的身影，认出后怔住，心跳加速、手发抖",
+      "outward_motivation": "无（内心活动）",
+      "inward_motivation": "震惊和激动，因为暗恋多年的人突然出现",
+      "tension": "是张力所在",
+      "reaction": "陆知微推门进入，四目相对",
       "chain_status": "完整"
     },
     {
       "seq": 4,
       "actor": "陆知微",
-      "action": "推开咖啡店门，看到林远亭后愣住，不自觉地拖着行李箱走向他",
-      "outward_motivation": "进入咖啡店",
-      "inward_motivation": "被林远亭的存在震惊，本能地靠近",
-      "tension": "有张力：表面是自然进入，内心是紧张和期待",
-      "reaction": "林远亭：从背包掏出新毛巾，伸手擦她湿头发",
+      "action": "推门进入咖啡店，看到林远亭后愣住，然后不自觉地拖着行李箱走过去",
+      "outward_motivation": "想找个座位",
+      "inward_motivation": "惊讶于他真在，紧张不知如何打招呼",
+      "tension": "是张力所在",
+      "reaction": "林远亭掏出毛巾擦她头发",
       "chain_status": "完整"
     },
     {
       "seq": 5,
       "actor": "林远亭",
-      "action": "看到陆知微湿头发，激动被担忧取代，拿出新毛巾擦她头发",
+      "action": "看到陆知微湿漉漉的头发，从背包掏出新毛巾，伸手轻轻擦她的头发",
       "outward_motivation": "关心她淋湿了",
-      "inward_motivation": "想借机亲近她，表达关心",
-      "tension": "有张力：表面是善意帮助，内心是亲密渴望",
-      "reaction": "陆知微：怔住，忘记拒绝或邀请，任由他擦",
-      "chain_status": "完整"
+      "inward_motivation": "冲动想亲近她，担忧被激动取代",
+      "tension": "是张力所在",
+      "reaction": "陆知微怔住，忘记拒绝或邀请",
+      "chain_status": "有意断裂"
     },
     {
       "seq": 6,
       "actor": "林远亭",
-      "action": "擦了两下后回过神来，意识到自己不该认识她，停下动作，把毛巾递给她",
+      "action": "擦了两下后突然缩回手，把毛巾递给她",
       "outward_motivation": "意识到行为越界",
-      "inward_motivation": "害怕暴露自己的暗恋，维持陌生人的社交距离",
-      "tension": "有张力：表面是礼貌退让，内心是矛盾和不舍",
-      "reaction": "陆知微：不舍地回过神，慢慢接过毛巾，手指触碰时心弦被拨动",
-      "chain_status": "完整"
+      "inward_motivation": "害怕暴露自己认识她，保持距离",
+      "tension": "是张力所在",
+      "reaction": "陆知微不舍地回过神，慢慢接过毛巾",
+      "chain_status": "有意断裂"
     },
     {
       "seq": 7,
       "actor": "陆知微",
       "action": "低头用毛巾擦头发，不敢抬头，擦完后递回毛巾",
       "outward_motivation": "擦干头发",
-      "inward_motivation": "掩饰内心的羞怯和紧张，不敢直视林远亭",
-      "tension": "有张力：表面是正常擦干，内心是情感波动",
-      "reaction": "林远亭：笑着摆手说“你拿着吧，我等会再买一条”，并主动问她喝焦糖玛奇朵吗",
+      "inward_motivation": "害羞，怕眼神暴露内心",
+      "tension": "是张力所在",
+      "reaction": "林远亭摆手让她留着，并帮她点焦糖玛奇朵",
       "chain_status": "完整"
     },
     {
       "seq": 8,
       "actor": "林远亭",
-      "action": "帮她点焦糖玛奇朵，并帮她把行李箱放到桌子角落",
-      "outward_motivation": "招待她，提供帮助",
-      "inward_motivation": "想继续和她相处，创造更多互动机会",
-      "tension": "有张力：表面是礼貌服务，内心是渴望接近",
-      "reaction": "陆知微：点头同意，内心着急不知如何开口",
-      "chain_status": "完整"
+      "action": "笑着摆手让陆知微留着毛巾，帮她点焦糖玛奇朵，并帮她拉行李箱到桌角",
+      "outward_motivation": "礼貌照顾她",
+      "inward_motivation": "想继续和她相处，制造机会",
+      "tension": "是张力所在",
+      "reaction": "陆知微点头，咖啡端来后两人沉默",
+      "chain_status": "无意断裂"
     },
     {
       "seq": 9,
       "actor": "林远亭",
-      "action": "尝试打破尴尬，说自己最近爱喝焦糖玛奇朵，并介绍这家咖啡店是他的摸鱼圣地",
-      "outward_motivation": "缓解沉默的尴尬",
-      "inward_motivation": "想拉近距离，展示自己的日常，让她了解自己",
-      "tension": "有张力：表面是闲聊，内心是试探和吸引",
-      "reaction": "陆知微：解释自己是初晓和喻明推荐来的，刚下火车",
+      "action": "尝试打破尴尬，说自己最近爱喝焦糖玛奇朵，并介绍这家店是他的摸鱼圣地",
+      "outward_motivation": "找话题聊天",
+      "inward_motivation": "缓解紧张，拉近距离",
+      "tension": "是张力所在",
+      "reaction": "陆知微解释是黎初晓推荐她来的，并说自己刚下火车",
       "chain_status": "完整"
-    }
-  ],
-  "weak_points": [
-    {
-      "location": "seq 5: 林远亭拿出新毛巾擦陆知微头发",
-      "issue_type": "boundary_shift",
-      "severity": 2,
-      "reasoning": "两人在文本中从未正式认识，林远亭在陆知微记忆中只是‘知名陌生校友’。直接伸手擦头发属于亲密行为，超出了社交陌生人的边界。虽然林远亭内心有暗恋动机，但行为在陌生人关系下显得突兀，亲密度过高。"
-    },
-    {
-      "location": "seq 6: 林远亭擦了两下后突然停下，意识到‘不应该认识她’",
-      "issue_type": "emotional_jump",
-      "severity": 1,
-      "reasoning": "林远亭从激动担忧到突然意识到越界，情感变化缺少中间过渡。文本未描述他如何从本能行动到理性反思的过程，跳跃较快。"
-    },
-    {
-      "location": "seq 7: 陆知微擦完头发后递回毛巾，林远亭让她留着并主动点咖啡",
-      "issue_type": "boundary_shift",
-      "severity": 1,
-      "reasoning": "林远亭刚意识到越界并退让，但紧接着又主动提供帮助（点咖啡、放行李箱），行为在‘保持距离’和‘继续亲近’之间摇摆，边界感不稳定。"
     }
   ]
 }
