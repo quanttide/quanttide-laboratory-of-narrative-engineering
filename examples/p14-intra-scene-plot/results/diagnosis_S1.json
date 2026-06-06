@@ -1,0 +1,46 @@
+{
+  "suggestions": [
+    {
+      "location": "seq 5: 林远亭拿出新毛巾擦陆知微头发",
+      "issue_type": "boundary_shift",
+      "chain_status": "boundary_shift",
+      "fix_A": null,
+      "fix_B": null,
+      "fix_C": {
+        "category": "边界校准",
+        "direction": "调远",
+        "description": "将擦头发行为改为递毛巾并口头提醒，例如：林远亭从包里拿出一条新毛巾，递给陆知微说：‘头发湿了，先擦一下吧，别着凉。’然后退后半步，保持社交距离。",
+        "expected_effect": "行为从亲密接触变为礼貌帮助，符合陌生人之间的边界，同时保留善意和暗恋的细腻感。"
+      }
+    },
+    {
+      "location": "seq 6: 林远亭擦了两下后突然停下，意识到‘不应该认识她’",
+      "issue_type": "emotional_jump",
+      "chain_status": "emotional_jump",
+      "fix_A": {
+        "category": "因果补链",
+        "description": "在擦头发动作和意识到越界之间插入一个外部触发事件，例如：陆知微因突然被擦头发而身体微微一僵，或她下意识地侧头躲了一下，林远亭看到她的反应才猛然意识到自己越界了。",
+        "expected_effect": "通过外部反馈让林远亭的反思有明确触发点，情感转折更自然，避免跳跃感。"
+      },
+      "fix_B": {
+        "category": "动机刻深",
+        "description": "改写林远亭擦头发时的内心活动，突出其性格中的谨慎和自省：他擦头发时内心反复挣扎——‘我这样会不会太冒昧？但她头发湿着容易感冒……算了，就擦一下，然后立刻解释。’擦了两下后，他因性格中的自我怀疑而主动停下。",
+        "expected_effect": "行为由性格驱动（谨慎与善意冲突），而非本能冲动，使后续反思更连贯。"
+      },
+      "fix_C": null
+    },
+    {
+      "location": "seq 7: 陆知微擦完头发后递回毛巾，林远亭让她留着并主动点咖啡",
+      "issue_type": "boundary_shift",
+      "chain_status": "boundary_shift",
+      "fix_A": null,
+      "fix_B": null,
+      "fix_C": {
+        "category": "边界校准",
+        "direction": "调远",
+        "description": "将‘主动点咖啡’改为更被动的帮助，例如：林远亭说‘毛巾你留着用吧’，然后指向吧台方向补充道‘如果需要点单，那边有二维码。’之后他回到自己座位，不再主动介入。",
+        "expected_effect": "帮助行为保持在陌生人可接受的范围内（提供物品、指引），避免过度亲近，同时保留善意。"
+      }
+    }
+  ]
+}

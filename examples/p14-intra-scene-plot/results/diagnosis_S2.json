@@ -1,0 +1,53 @@
+{
+  "suggestions": [
+    {
+      "location": "seq 9 到 seq 10 的过渡",
+      "issue_type": "causal_gap",
+      "chain_status": "断裂",
+      "fix_A": {
+        "category": "因果补链",
+        "description": "在seq 9末尾或seq 10开头插入一个感官触发点，例如：酒吧音乐切换到某首老歌，或她身上熟悉的香水味，让他瞬间被拉回回忆。",
+        "expected_effect": "让现实→回忆的跳跃有明确的物理/心理锚点，读者无需自行推断，因果链闭合。"
+      },
+      "fix_B": null,
+      "fix_C": null
+    },
+    {
+      "location": "seq 10 中“xx”的身份",
+      "issue_type": "motivation_blind",
+      "chain_status": "完整但动机模糊",
+      "fix_A": null,
+      "fix_B": {
+        "category": "动机刻深",
+        "description": "将“xx”替换为具体角色（如“室友小陈”或“另一个朋友”），或通过林远亭的内心独白补充：“那个追问的人是我自己——醉后的另一个我。”",
+        "expected_effect": "对话背景清晰，读者立刻理解提问者身份，动机从‘恰好出现’变为‘性格驱动（自我拷问/分裂）’。"
+      },
+      "fix_C": null
+    },
+    {
+      "location": "seq 14 中从音乐沉浸到回答“原谅自己”",
+      "issue_type": "emotional_jump",
+      "chain_status": "断裂",
+      "fix_A": {
+        "category": "因果补链",
+        "description": "在沉默与回答之间加入一个微动作或内心过渡，例如：他低头看着酒杯，指尖摩挲杯沿，想起十年前自己不敢表白的夜晚，然后才抬头说出答案。",
+        "expected_effect": "情绪从难过→挣扎→释然有了可见的递进链条，哲学回答不再突兀。"
+      },
+      "fix_B": null,
+      "fix_C": null
+    },
+    {
+      "location": "seq 5 她评价店员帅",
+      "issue_type": "boundary_shift",
+      "chain_status": "完整但边界偏移",
+      "fix_A": null,
+      "fix_B": null,
+      "fix_C": {
+        "category": "边界校准",
+        "direction": "调远",
+        "description": "将评价改为更中性的表达，例如：“这个店员小哥哥有点腼腆，服务挺周到的。”保留观察但去掉“帅帅的”这一亲密评价。",
+        "expected_effect": "保持她观察敏锐的性格，但社交距离更符合暧昧期谨慎，避免过早暴露随意评价异性的习惯。"
+      }
+    }
+  ]
+}
