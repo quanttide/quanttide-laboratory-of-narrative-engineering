@@ -1,0 +1,34 @@
+{
+  "wins": {
+    "0": {
+      "rationality": 2,
+      "creativity": 2,
+      "motif_fit": 4,
+      "narrative_value": 4
+    },
+    "1": {
+      "rationality": 2,
+      "creativity": 3,
+      "motif_fit": 2,
+      "narrative_value": 3
+    },
+    "2": {
+      "rationality": 3,
+      "creativity": 2,
+      "motif_fit": 3,
+      "narrative_value": 1
+    },
+    "3": {
+      "rationality": 2,
+      "creativity": 2,
+      "motif_fit": 1,
+      "narrative_value": 1
+    },
+    "4": {
+      "rationality": 1,
+      "creativity": 1,
+      "motif_fit": 0,
+      "narrative_value": 1
+    }
+  }
+}
