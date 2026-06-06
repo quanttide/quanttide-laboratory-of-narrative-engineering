@@ -16,6 +16,8 @@
 | **p05** 母题可提取性 | LLM 可从文本中提取母题，且与人工标注的 motif.yaml 高度吻合 | 🔴 高 | [`p05-motif-extraction/`](p05-motif-extraction/) |
 | **p06** 母题跨作品识别 | 同一母题在不同作品中的表现可被 LLM 识别和关联 | 🟡 中 | [`p06-cross-work-motif/`](p06-cross-work-motif/) |
 | **p07** 母题一致性检验 | 以母题为约束生成多场景文本，检测母题是否在整个叙事中保持一致性 | 🟢 低 | [`p07-motif-consistency/`](p07-motif-consistency/) |
+| **p08** 母题缝隙分析 | 检测初稿母题缝隙，从 6 个方向（增强/引入/借用/转化/克制/反向）提出差异化改进建议 | 🔴 高 | [`p08-motif-gap-analysis/`](p08-motif-gap-analysis/) |
+| **p09** 复刻作者审美评审 | LLM 内化 style.yaml 中的人类作者审美框架，以该作者的审美标准评审新场景 | 🟡 中 | [`p09-aesthetic-review/`](p09-aesthetic-review/) |
 
 ## 已封装到 CLI
 
