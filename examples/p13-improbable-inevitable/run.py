@@ -55,6 +55,7 @@ def main():
         if dc.exists(): direction = json.loads(dc.read_text("utf-8"))
         else:
             direction = json.loads(call_llm(f"""写一个150-200字的场景延续，刻意让情节依赖巧合。使用"恰好"、"正巧"、"突然"等词。
+约束：保持都市言情风格，不要引入反派、暴力、奇幻等元素。人物仍然是林远亭和陆知微。
 场景原文：{text[:2000]}
 JSON:{{"title":"..","what":"含巧合的情节走向","coincidence_elements":[]}}""","小说创作顾问。只输出 JSON。",0.7))
             dc.write_text(json.dumps(direction,ensure_ascii=False,indent=2),"utf-8")

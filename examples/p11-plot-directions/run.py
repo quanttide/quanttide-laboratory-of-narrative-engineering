@@ -137,7 +137,18 @@ JSON:{{"scores":[{{"dimension":"..","score":8,"note":".."}}]}}""","文学评审�
             print(f"  {ok} {d.get('title','?'):<12} {d.get('what','')[:60]}...")
             if issue: print(f"     issues: {'; '.join(issue[:2])}")
 
-    (RESULTS_DIR/"full_report.json").write_text(json.dumps({"directions":{}, "validations":{}, "reviews":{}, "pairwise":{}}, ensure_ascii=False, indent=2), "utf-8")
+    (RESULTS_DIR/"full_report.json").write_text(json.dumps({
+        "directions": {s["id"]: [d for d in all_dirs.get(s["id"],[])] for s in SCENES},
+        "validations": {s["id"]: json.loads((RESULTS_DIR/f"validate_{s['id']}.json").read_text("utf-8")) 
+                        if (RESULTS_DIR/f"validate_{s['id']}.json").exists() else [] 
+                        for s in SCENES},
+        "style_reviews": {s["id"]: json.loads((RESULTS_DIR/f"style_review_{s['id']}.json").read_text("utf-8"))
+                         if (RESULTS_DIR/f"style_review_{s['id']}.json").exists() else []
+                         for s in SCENES},
+        "pairwise": {s["id"]: json.loads((RESULTS_DIR/f"pairwise_{s['id']}.json").read_text("utf-8"))
+                    if (RESULTS_DIR/f"pairwise_{s['id']}.json").exists() else {}
+                    for s in SCENES},
+    }, ensure_ascii=False, indent=2), "utf-8")
     print(f"\n结果: {RESULTS_DIR}")
 
 if __name__=="__main__": main()
