@@ -1,9 +1,0 @@
-[
-  {
-    "rule": "pacing_imbalance",
-    "location": "8_2 → 10_3",
-    "detail": "tension_type='mutual' 连续出现 5 场",
-    "severity": 3,
-    "narrative_meaning": "连续 'mutual'5 场 场戏都在做同一种情感动作——张力方向没有变化，可能会让读者感到节奏重复。"
-  }
-]
