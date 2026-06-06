@@ -1,0 +1,56 @@
+[
+  {
+    "direction": "[amplify] 强化已存在的音乐元素",
+    "scores": {
+      "feasibility": 5,
+      "motif_fit": 4,
+      "naturalness": 4,
+      "actionable": 5
+    }
+  },
+  {
+    "direction": "[introduce] 引入全新母题“歌声”",
+    "scores": {
+      "feasibility": 3,
+      "motif_fit": 4,
+      "naturalness": 3,
+      "actionable": 4
+    }
+  },
+  {
+    "direction": "[borrow] 从同系列其他场景借用",
+    "scores": {
+      "feasibility": 2,
+      "motif_fit": 3,
+      "naturalness": 2,
+      "actionable": 3
+    }
+  },
+  {
+    "direction": "[transform] 将现有场景元素改造成母题载体",
+    "scores": {
+      "feasibility": 4,
+      "motif_fit": 3,
+      "naturalness": 4,
+      "actionable": 5
+    }
+  },
+  {
+    "direction": "[restraint] 建议不做修改",
+    "scores": {
+      "feasibility": 5,
+      "motif_fit": 3,
+      "naturalness": 5,
+      "actionable": 5
+    }
+  },
+  {
+    "direction": "[reverse] 有意违抗母题制造张力",
+    "scores": {
+      "feasibility": 5,
+      "motif_fit": 4,
+      "naturalness": 5,
+      "actionable": 5
+    }
+  }
+]

@@ -1,0 +1,56 @@
+[
+  {
+    "direction": "amplify",
+    "scores": {
+      "feasibility": 5,
+      "motif_fit": 5,
+      "naturalness": 4,
+      "actionable": 5
+    }
+  },
+  {
+    "direction": "introduce",
+    "scores": {
+      "feasibility": 5,
+      "motif_fit": 5,
+      "naturalness": 4,
+      "actionable": 5
+    }
+  },
+  {
+    "direction": "borrow",
+    "scores": {
+      "feasibility": 5,
+      "motif_fit": 4,
+      "naturalness": 5,
+      "actionable": 5
+    }
+  },
+  {
+    "direction": "transform",
+    "scores": {
+      "feasibility": 5,
+      "motif_fit": 5,
+      "naturalness": 5,
+      "actionable": 5
+    }
+  },
+  {
+    "direction": "restrain",
+    "scores": {
+      "feasibility": 5,
+      "motif_fit": 1,
+      "naturalness": 5,
+      "actionable": 5
+    }
+  },
+  {
+    "direction": "reverse",
+    "scores": {
+      "feasibility": 5,
+      "motif_fit": 5,
+      "naturalness": 4,
+      "actionable": 5
+    }
+  }
+]

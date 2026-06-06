@@ -1,0 +1,56 @@
+[
+  {
+    "direction": "[amplify] 在火锅场景中，窦逸为林栀递纸巾的细节可以强化：林栀辣得吸气时，窦逸已从外套内袋取出纸巾，动作自然得仿佛排练过。这呼应了“随身携带的温柔”母题，展现他时刻准备照顾人的性格，与论坛照片中的侧耳倾听形成内外一致的温柔形象。",
+    "scores": {
+      "feasibility": 5,
+      "motif_fit": 5,
+      "naturalness": 5,
+      "actionable": 5
+    }
+  },
+  {
+    "direction": "[introduce] 可在林栀回忆火锅讨论的场景中加入：林栀因辣而眼眶泛红时，窦逸默默从包里翻出一瓶常温矿泉水，拧开递给她。这个动作被闺蜜捕捉并调侃“他连你怕辣都知道”，突出他随身携带所需物品的细心，补全母题的缺失。",
+    "scores": {
+      "feasibility": 4,
+      "motif_fit": 5,
+      "naturalness": 4,
+      "actionable": 5
+    }
+  },
+  {
+    "direction": "[borrow] 借鉴都市变体中“超市新买的毛巾→擦头发”的结构，在结尾处加入：林栀因熬夜看论坛而头晕，窦逸不知何时已站在她身后，递上一件叠好的外套。他解释“晚上风大，怕你着凉”，这外套如同纸巾一样，是他随身携带的温柔象征。",
+    "scores": {
+      "feasibility": 3,
+      "motif_fit": 4,
+      "naturalness": 3,
+      "actionable": 4
+    }
+  },
+  {
+    "direction": "[transform] 将闺蜜C递酸奶的细节改造成母题载体：她递给林栀的酸奶插着吸管，动作利落。林栀接过时想起窦逸也曾这样递过饮料，动作如出一辙。这暗示窦逸的温柔已潜移默化影响身边人，母题通过行为传递而强化。",
+    "scores": {
+      "feasibility": 4,
+      "motif_fit": 4,
+      "naturalness": 4,
+      "actionable": 5
+    }
+  },
+  {
+    "direction": "[restraint] 当前场景已通过火锅合作、论坛发帖、眼神细节等展现了窦逸的关怀，母题“随身携带的温柔”虽未直接呈现，但通过“点菜时不断询问”等间接体现。建议保持现有节奏，避免过度添加，以免破坏自然感。",
+    "scores": {
+      "feasibility": 5,
+      "motif_fit": 2,
+      "naturalness": 5,
+      "actionable": 5
+    }
+  },
+  {
+    "direction": "[reverse] 有意让窦逸在关键时刻未能提供所需物品，如林栀被辣到时，窦逸翻遍口袋却只找到空纸巾盒。他尴尬道歉，林栀反而笑他“原来你也会没准备”。这种反转让母题暂时缺席，制造张力，突出人物成长空间。",
+    "scores": {
+      "feasibility": 5,
+      "motif_fit": 3,
+      "naturalness": 4,
+      "actionable": 5
+    }
+  }
+]
