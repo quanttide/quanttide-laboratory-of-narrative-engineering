@@ -1,3 +1,10 @@
 {
-  "links": []
+  "links": [
+    {
+      "weak_dimension": "时代质感",
+      "related_missing_motif": "十年",
+      "confidence": "high",
+      "reasoning": "时代质感依赖于时间跨度的具体呈现，缺少‘十年’这一母题，无法通过时间流逝的细节（如环境变化、人物状态）来营造特定时代的氛围，导致场景缺乏历史纵深和真实感。"
+    }
+  ]
 }

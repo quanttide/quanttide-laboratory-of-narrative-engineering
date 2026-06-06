@@ -19,11 +19,11 @@
   },
   "motif_only": {
     "scores": {
-      "specific": 5,
-      "root_cause": 4,
-      "motif_fit": 5,
+      "specific": 4,
+      "root_cause": 3,
+      "motif_fit": 3,
       "natural": 4,
-      "style_cover": 3
+      "style_cover": 4
     }
   }
 }

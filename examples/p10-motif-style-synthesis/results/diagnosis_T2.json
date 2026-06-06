@@ -1,3 +1,52 @@
 {
-  "links": []
+  "links": [
+    {
+      "weak_dimension": "叙事视角",
+      "related_missing_motif": "孤独",
+      "confidence": "high",
+      "reasoning": "叙事视角的薄弱可能源于缺乏孤独母题，因为孤独常通过内聚焦视角展现人物内心世界，缺失此母题导致视角单一或缺乏深度。"
+    },
+    {
+      "weak_dimension": "时间结构",
+      "related_missing_motif": "十年",
+      "confidence": "high",
+      "reasoning": "时间结构的弱点与缺失十年母题直接相关，十年作为时间跨度能构建非线性或对比性时间结构，缺失则使时间线扁平化。"
+    },
+    {
+      "weak_dimension": "语言风格",
+      "related_missing_motif": "歌声",
+      "confidence": "high",
+      "reasoning": "语言风格薄弱可能因缺少歌声母题，歌声能赋予语言韵律感和诗意，缺失导致风格缺乏音乐性与感染力。"
+    },
+    {
+      "weak_dimension": "细节美学",
+      "related_missing_motif": "雨",
+      "confidence": "high",
+      "reasoning": "细节美学与雨母题紧密相关，雨能提供丰富的感官细节（如雨声、湿气），缺失则削弱场景的细腻刻画。"
+    },
+    {
+      "weak_dimension": "人物塑造",
+      "related_missing_motif": "手势",
+      "confidence": "high",
+      "reasoning": "人物塑造的弱点可能源于缺失手势母题，手势是人物性格和情感的外化，缺失导致人物行为缺乏标志性动作。"
+    },
+    {
+      "weak_dimension": "对话模式",
+      "related_missing_motif": "手势",
+      "confidence": "high",
+      "reasoning": "对话模式薄弱与手势母题缺失有关，手势常替代或补充对话，缺失使对话缺乏非语言互动，显得单调。"
+    },
+    {
+      "weak_dimension": "叙事节奏",
+      "related_missing_motif": "雨",
+      "confidence": "high",
+      "reasoning": "叙事节奏的弱点可能因缺少雨母题，雨能调节节奏（如暴雨加速、细雨舒缓），缺失则节奏缺乏自然起伏。"
+    },
+    {
+      "weak_dimension": "时代质感",
+      "related_missing_motif": "十年",
+      "confidence": "high",
+      "reasoning": "时代质感薄弱与缺失十年母题直接相关，十年能体现时代变迁和年代细节，缺失则缺乏历史纵深感。"
+    }
+  ]
 }

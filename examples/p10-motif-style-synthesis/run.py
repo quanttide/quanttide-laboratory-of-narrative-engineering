@@ -139,8 +139,12 @@ def style_review(text: str, article_name: str, style_prompt: str) -> dict:
     prompt = f"""{style_prompt}
 
 请用以上审美框架评审下面名为《{article_name}》的场景。
-对每个维度评分（1-10），附原文证据和简要理由。
-输出 JSON：{{"dimension_scores": [{{"dimension":"维度名","score":8,"evidence":["原文"],"note":"理由"}}]}}
+严格评分标准：
+- 8-10分：该场景在此维度上执行出色，明显超越系列平均水平
+- 5-7分：场景符合维度定义，但只是"执行了"而非"执行好了"
+- 1-4分：场景在此维度上明显不足
+请对每个维度评分（1-10），必须附原文引用作为证据，指出好在哪里或差在哪里。
+只输出 JSON：{{"dimension_scores": [{{"dimension":"维度名","score":8,"evidence":["原文"],"note":"理由"}}]}}
 场景文本：{sample}"""
     raw = call_llm(prompt, temperature=0.0)
     return json.loads(clean_json(raw))
@@ -158,7 +162,7 @@ def extract_motifs(text: str, article_name: str) -> dict:
 
 
 def diagnose_style_motif_links(style_scores: list[dict], extracted_motifs: list[dict], target_motifs: list[dict], article_name: str) -> dict:
-    weak_dims = [d for d in style_scores if d.get("score", 10) <= 5]
+    weak_dims = [d for d in style_scores if d.get("score", 10) <= 7]
     dim_names = [d["dimension"] for d in weak_dims]
     ext_titles = [m["title"] for m in extracted_motifs]
     target_titles = [m["title"] for m in target_motifs]
@@ -170,9 +174,9 @@ def diagnose_style_motif_links(style_scores: list[dict], extracted_motifs: list[
 
 请推断风格维度弱点与母题缺失之间的关联：
 对每个弱维度，判断"最可能与缺少哪个母题有关"并说明理由。
-如果弱维度与母题缺失无关也请说明。
+如果弱维度与母题缺失无关，设置 confidence 为 low。
 
-输出JSON：{{"links":[{{"weak_dimension":"情感表达","related_missing_motif":"手势","reasoning":"因为该维度强调动作先于语言..."}}]}}"""
+输出JSON：{{"links":[{{"weak_dimension":"情感表达","related_missing_motif":"手势","confidence":"high","reasoning":"因为该维度强调动作先于语言..."}}]}}"""
     raw = call_llm(prompt, "你是一个叙事诊断专家。只输出 JSON。", temperature=0.2)
     return json.loads(clean_json(raw))
 
@@ -193,8 +197,9 @@ def generate_style_only_fix(article_name: str, text_sample: str, weak_dim: str, 
     prompt = f"""场景《{article_name}》在「{weak_dim}」维度偏低。
 该维度描述：{dim_desc}
 请给出一条具体的改写建议（80-150字）来加强这个维度。不要泛泛而谈。
+约束：不要提及任何母题名称（如"手势""十年""雨""歌声"等）——只从风格角度诊断弱点并提出改写方案。
 场景文本：{text_sample[:2000]}"""
-    raw = call_llm_text(prompt, "你是一个创作顾问。只输出建议文本，不要JSON包装。", temperature=0.3)
+    raw = call_llm_text(prompt, "你是一个创作顾问。只输出建议文本。", temperature=0.3)
     return raw.strip()
 
 
