@@ -78,7 +78,7 @@ def main():
     # Load YAMLs
     style_text = read_file(GALLERY_ROOT / "style.yaml")[:3000]
     motif_text = read_file(GALLERY_ROOT / "motif.yaml")[:2000]
-    story_text = read_file(GALLERY_ROOT / "story.yaml")[:5000]
+    story_text = read_file(GALLERY_ROOT / "story.yaml")[:8000]
 
     for sc in SCENES:
         sid = sc["id"]
@@ -125,7 +125,7 @@ def main():
 ## 结构难点
 
 [从 story.tensions 中提取结构层面条目，每条约50字]
-- 标注来源（哪条 tension）
+- 每条标注来源为 story.yaml 中对应的 tension 原文（用引号引用），不是 "seq X"
 - 说明该难点在当前场景中的具体表现
 
 ## 边界提醒
@@ -133,11 +133,14 @@ def main():
 [从 style.boundaries 中聚合适用的规则]
 - 每条标注维度名
 - 语言为执行式： "注意：……" "不要……"
+- 说明判断标准（boundaries 中的 "判断标准" 部分）
+- 注意：逐条评估所有 11 个维度的 boundaries，判断是否与当前场景相关。对话密度高的场景（如 8.2）必须包含"对话模式"和"叙事视角"的边界规则。
 
 ## 薄弱点与建议
 
 [从 p14 diagnosis + suggestions 合并]
 各条展开：位置 → 问题（类型+严重度） → 策略A / 策略B / 策略C
+注意：策略C（替代行为）不应降级情感信号。如果原行为承载了关键情感，替代方案应保留同等的情感重量，而非退到最安全的选项。例如：原文他直接点了焦糖玛奇朵（情感信号："他记得她"），改成"问她喝什么"会丢失这个信号。
 
 ---
 
