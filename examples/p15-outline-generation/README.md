@@ -54,17 +54,25 @@
     # {id} {title} — 写作备忘
 
     ## 行为序列
-    [从 chain 中提取]
+
+    [从 chain 中提取，每个行为用→连接]
 
     ## 边界提醒
-    [从 style.boundaries 中聚合适用的部分，标注维度名]
+
+    [从 style.boundaries 中聚合适用的部分]
+    - 每条标注适用维度名
+    - 语言为执行式： "注意：……""不要……"
 
     ## 薄弱点与建议
+
     [从 p14 diagnosis + suggestions 中合并]
-    - 位置 | 类型 | 问题 | 策略A/B/C
+    每条展开：位置 → 问题（issue_type+severity） → 策略A / 策略B / 策略C
 
     ## 结构难点
+
     [从 story.tensions 中提取结构层面条目]
+    - 每条标注来源（哪条 tension）
+    - 说明该难点在当前场景中的具体表现
 
 步骤 3: 质量评估
   └─ 对比自动生成的提纲 vs 原有人工提纲（assets/fiction/2_提纲/*.md）
