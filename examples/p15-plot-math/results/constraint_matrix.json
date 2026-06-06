@@ -1,0 +1,128 @@
+[
+  {
+    "id": "1_1",
+    "title": "咖啡厅重逢",
+    "social_distance": 2,
+    "tension_type": "approach",
+    "action_dominant": "mixed",
+    "info_revealed": "partial",
+    "core_tension": 5
+  },
+  {
+    "id": "1_2",
+    "title": "深夜失眠",
+    "social_distance": 1,
+    "tension_type": "retreat",
+    "action_dominant": "internal",
+    "info_revealed": "none",
+    "core_tension": 4
+  },
+  {
+    "id": "2_1",
+    "title": "展会再遇",
+    "social_distance": 2,
+    "tension_type": "mutual",
+    "action_dominant": "dialogue",
+    "info_revealed": "partial",
+    "core_tension": 4
+  },
+  {
+    "id": "2_3",
+    "title": "傍晚小龙虾",
+    "social_distance": 3,
+    "tension_type": "approach",
+    "action_dominant": "dialogue",
+    "info_revealed": "partial",
+    "core_tension": 3
+  },
+  {
+    "id": "4_1",
+    "title": "便利店谈心",
+    "social_distance": 3,
+    "tension_type": "approach",
+    "action_dominant": "mixed",
+    "info_revealed": "hint",
+    "core_tension": 5
+  },
+  {
+    "id": "4_2",
+    "title": "夜市约会",
+    "social_distance": 3,
+    "tension_type": "mutual",
+    "action_dominant": "mixed",
+    "info_revealed": "partial",
+    "core_tension": 4
+  },
+  {
+    "id": "4_3",
+    "title": "互相问早",
+    "social_distance": 3,
+    "tension_type": "approach",
+    "action_dominant": "dialogue",
+    "info_revealed": "hint",
+    "core_tension": 3
+  },
+  {
+    "id": "6_2",
+    "title": "海边散步",
+    "social_distance": 4,
+    "tension_type": "mutual",
+    "action_dominant": "mixed",
+    "info_revealed": "partial",
+    "core_tension": 4
+  },
+  {
+    "id": "7_2",
+    "title": "公园拥抱",
+    "social_distance": 4,
+    "tension_type": "approach",
+    "action_dominant": "physical",
+    "info_revealed": "hint",
+    "core_tension": 3
+  },
+  {
+    "id": "8_2",
+    "title": "酒吧表白",
+    "social_distance": 4,
+    "tension_type": "mutual",
+    "action_dominant": "dialogue",
+    "info_revealed": "full",
+    "core_tension": 5
+  },
+  {
+    "id": "9_1",
+    "title": "家里吃火锅",
+    "social_distance": 5,
+    "tension_type": "mutual",
+    "action_dominant": "mixed",
+    "info_revealed": "none",
+    "core_tension": 1
+  },
+  {
+    "id": "10_1",
+    "title": "书房陪伴",
+    "social_distance": 5,
+    "tension_type": "mutual",
+    "action_dominant": "mixed",
+    "info_revealed": "full",
+    "core_tension": 2
+  },
+  {
+    "id": "10_2",
+    "title": "客厅看剧",
+    "social_distance": 5,
+    "tension_type": "mutual",
+    "action_dominant": "mixed",
+    "info_revealed": "none",
+    "core_tension": 1
+  },
+  {
+    "id": "10_3",
+    "title": "阳台看星星",
+    "social_distance": 5,
+    "tension_type": "mutual",
+    "action_dominant": "dialogue",
+    "info_revealed": "none",
+    "core_tension": 1
+  }
+]

@@ -1,0 +1,10 @@
+{
+  "p12_s1_weak_points": 3,
+  "p12_s2_weak_points": 3,
+  "matrix_anomalies_total": 1,
+  "matrix_anomaly_plots": [
+    "10_3",
+    "8_2"
+  ],
+  "note": "p12 诊断的是虚构走向而非实际场景文本，重叠比对仅供参考"
+}
