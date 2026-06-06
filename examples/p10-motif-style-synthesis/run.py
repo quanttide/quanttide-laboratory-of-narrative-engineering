@@ -197,6 +197,7 @@ def diagnose_style_motif_links(style_scores: list[dict], extracted_motifs: list[
 
 对每个假设，判断它最接近哪个已知母题（如有）。
 如果假设与任何已知母题都不匹配，related_missing_motif 留空。
+约束：每个母题在一篇文章中最多关联 2 个弱维度——避免过度泛化。
 输出JSON：{{"links":[{{"weak_dimension":"情感表达","related_missing_motif":"手势","confidence":"high","hypothesis":"..."}}]}}"""
 
     raw = call_llm(match_prompt, "你是一个叙事编辑。只输出 JSON。", temperature=0.2)
@@ -249,28 +250,6 @@ def evaluate_pairwise(fix_a: str, fix_b: str, weak_dim: str, related_motif: str)
 输出JSON：{{"winners":{{"specific":"A","root_cause":"B","motif_fit":"tie","natural":"A","style_cover":"B"}}}}"""
     raw = call_llm(prompt, "你是一个叙事编辑。只输出 JSON。", temperature=0.1)
     return json.loads(clean_json(raw))
-
-
-def score_pairwise_results(pairwise_results: list[dict]) -> dict:
-    """Convert pairwise winners to per-group scores (win=2, tie=1, lose=0)."""
-    scores = {}
-    for r in pairwise_results:
-        winners = r.get("winners", {})
-        for result in r.get("mapping", []):
-            group = result["group"]
-            label = result["label"]
-            if group not in scores:
-                scores[group] = {k: 0 for k in ["specific", "root_cause", "motif_fit", "natural", "style_cover"]}
-                scores[group]["count"] = 0
-            for dim in ["specific", "root_cause", "motif_fit", "natural", "style_cover"]:
-                w = winners.get(dim, "tie")
-                if w == label:
-                    scores[group][dim] += 2
-                elif w == "tie":
-                    scores[group][dim] += 1
-                # else: loss = 0
-            scores[group]["count"] += 1
-    return scores
 
 
 def main():
@@ -524,8 +503,10 @@ def main():
     }
     (RESULTS_DIR / "full_report.json").write_text(json.dumps(report, ensure_ascii=False, indent=2), "utf-8")
     (RESULTS_DIR / "style_motif_mapping.json").write_text(json.dumps({
-        "human": {k: list(v) for k, v in HUMAN_STYLE_MOTIF_MAP.items()},
+        "human_annotated": {k: list(v) for k, v in HUMAN_STYLE_MOTIF_MAP.items()},
         "llm_inferred": {k: list(v) for k, v in llm_inferred.items()},
+        "llm_discoveries": {k: list(v) for k, v in llm_inferred.items()
+                           if k not in HUMAN_STYLE_MOTIF_MAP or v - set(HUMAN_STYLE_MOTIF_MAP.get(k, []))},
     }, ensure_ascii=False, indent=2), "utf-8")
     print(f"\n结果已保存到: {RESULTS_DIR}")
 
