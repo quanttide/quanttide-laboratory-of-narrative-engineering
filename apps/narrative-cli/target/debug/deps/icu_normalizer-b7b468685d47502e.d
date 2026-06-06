@@ -1,0 +1,10 @@
+/home/iguo/repos/quanttide/domains/quanttide-write/examples/default/apps/narrative-cli/target/debug/deps/icu_normalizer-b7b468685d47502e.d: /home/iguo/.cargo/registry/src/mirrors.ustc.edu.cn-38d0e5eb5da2abae/icu_normalizer-2.2.0/src/lib.rs /home/iguo/.cargo/registry/src/mirrors.ustc.edu.cn-38d0e5eb5da2abae/icu_normalizer-2.2.0/src/properties.rs /home/iguo/.cargo/registry/src/mirrors.ustc.edu.cn-38d0e5eb5da2abae/icu_normalizer-2.2.0/src/provider.rs /home/iguo/.cargo/registry/src/mirrors.ustc.edu.cn-38d0e5eb5da2abae/icu_normalizer-2.2.0/src/uts46.rs
+
+/home/iguo/repos/quanttide/domains/quanttide-write/examples/default/apps/narrative-cli/target/debug/deps/libicu_normalizer-b7b468685d47502e.rlib: /home/iguo/.cargo/registry/src/mirrors.ustc.edu.cn-38d0e5eb5da2abae/icu_normalizer-2.2.0/src/lib.rs /home/iguo/.cargo/registry/src/mirrors.ustc.edu.cn-38d0e5eb5da2abae/icu_normalizer-2.2.0/src/properties.rs /home/iguo/.cargo/registry/src/mirrors.ustc.edu.cn-38d0e5eb5da2abae/icu_normalizer-2.2.0/src/provider.rs /home/iguo/.cargo/registry/src/mirrors.ustc.edu.cn-38d0e5eb5da2abae/icu_normalizer-2.2.0/src/uts46.rs
+
+/home/iguo/repos/quanttide/domains/quanttide-write/examples/default/apps/narrative-cli/target/debug/deps/libicu_normalizer-b7b468685d47502e.rmeta: /home/iguo/.cargo/registry/src/mirrors.ustc.edu.cn-38d0e5eb5da2abae/icu_normalizer-2.2.0/src/lib.rs /home/iguo/.cargo/registry/src/mirrors.ustc.edu.cn-38d0e5eb5da2abae/icu_normalizer-2.2.0/src/properties.rs /home/iguo/.cargo/registry/src/mirrors.ustc.edu.cn-38d0e5eb5da2abae/icu_normalizer-2.2.0/src/provider.rs /home/iguo/.cargo/registry/src/mirrors.ustc.edu.cn-38d0e5eb5da2abae/icu_normalizer-2.2.0/src/uts46.rs
+
+/home/iguo/.cargo/registry/src/mirrors.ustc.edu.cn-38d0e5eb5da2abae/icu_normalizer-2.2.0/src/lib.rs:
+/home/iguo/.cargo/registry/src/mirrors.ustc.edu.cn-38d0e5eb5da2abae/icu_normalizer-2.2.0/src/properties.rs:
+/home/iguo/.cargo/registry/src/mirrors.ustc.edu.cn-38d0e5eb5da2abae/icu_normalizer-2.2.0/src/provider.rs:
+/home/iguo/.cargo/registry/src/mirrors.ustc.edu.cn-38d0e5eb5da2abae/icu_normalizer-2.2.0/src/uts46.rs:
