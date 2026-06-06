@@ -138,7 +138,8 @@ pub fn read_scene(path: &str) -> Result<String, Box<dyn std::error::Error>> {
     let text = std::fs::read_to_string(path)?;
     let body: Vec<&str> = text
         .lines()
-        .filter(|l| !l.starts_with("# ") && !l.trim().is_empty())
+        .filter(|l| !l.starts_with("# "))
+        .map(|l| if l.trim().is_empty() { " " } else { l })
         .collect();
     Ok(body.join("\n"))
 }

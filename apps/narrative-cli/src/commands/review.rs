@@ -38,12 +38,20 @@ pub fn run(
         })
         .unwrap_or_default();
 
-    // Step 2: Cross-diagnosis (if motif profile provided)
+    // Step 2: Two-step cross-diagnosis (if motif profile provided)
     let diagnosis = if let Some(motif_path) = motif_profile_path {
         let motif_profile = crate::contract::load_motif_profile(motif_path)?;
-        println!("  交叉诊断中...");
-        let diag_prompt = prompts::build_diagnose_prompt(&scene, article_name, &scores, &motif_profile);
-        match llm::call_llm_json(&diag_prompt, "你是一个叙事诊断专家。只输出 JSON。", 0.2) {
+
+        // Step 2a: Free inference (no motif list)
+        println!("  交叉诊断(1/2) 自由推断...");
+        let free_prompt = prompts::build_free_inference_prompt(&scene, article_name, &scores);
+        let free_json = llm::call_llm_json(&free_prompt, "你是一个叙事诊断专家。只输出 JSON。", 0.2)?;
+
+        // Step 2b: Match against motif pool
+        println!("  交叉诊断(2/2) 母题匹配...");
+        let hypotheses = serde_json::to_string(&free_json)?;
+        let match_prompt = prompts::build_motif_match_prompt(&hypotheses, &motif_profile);
+        match llm::call_llm_json(&match_prompt, "你是一个叙事编辑。只输出 JSON。", 0.2) {
             Ok(diag_json) => {
                 let links = diag_json["links"]
                     .as_array()

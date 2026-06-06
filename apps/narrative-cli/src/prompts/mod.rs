@@ -1,7 +1,3 @@
-pub mod extract;
-pub mod gap;
-pub mod review;
-
 use crate::contract::{MotifProfile, StyleProfile};
 
 pub fn build_motif_extract_prompt(scene: &str, article_name: &str) -> String {
@@ -113,6 +109,64 @@ pub fn build_gap_analysis_prompt(
         name = article_name,
         targets = target_titles.join(", "),
         dirs = dir_list,
+    )
+}
+
+pub fn build_free_inference_prompt(
+    scene: &str,
+    article_name: &str,
+    style_scores: &[crate::contract::DimensionScore],
+) -> String {
+    let scores_text: String = style_scores
+        .iter()
+        .filter(|s| s.score <= 7)
+        .map(|s| format!("- {} (score={}): {}", s.dimension, s.score, s.note))
+        .collect::<Vec<_>>()
+        .join("\n");
+
+    let sample = scene.chars().take(2000).collect::<String>();
+    format!(
+        r#"场景《{name}》风格评审中以下维度偏低：
+{scores_text}
+
+请分析每个弱维度的根因可能是什么（自由文本，不要参考任何预定义母题列表）。
+对每个弱维度，描述"该维度偏弱最可能是因为缺少什么叙事元素"。
+如果某个弱维度与叙事元素缺失无关（如纯技巧问题），说明原因。
+
+输出JSON：{{"free_analysis":[{{"weak_dimension":"维度名","root_cause_hypothesis":"...","confidence":"high|medium|low"}}]}}
+
+场景文本：
+{sample}"#,
+        name = article_name,
+        scores_text = scores_text,
+    )
+}
+
+pub fn build_motif_match_prompt(
+    hypotheses_json: &str,
+    motif_profile: &MotifProfile,
+) -> String {
+    let _target_titles: Vec<&str> = motif_profile.motifs.iter().map(|m| m.title.as_str()).collect();
+    let motif_pool = motif_profile
+        .motifs
+        .iter()
+        .map(|m| format!("- {}: {}", m.title, m.description))
+        .collect::<Vec<_>>()
+        .join("\n");
+
+    format!(
+        r#"以下是叙事元素缺失假设：
+{hypotheses_json}
+
+已知该系列的母题库：
+{motif_pool}
+
+对每个假设，判断它最接近哪个已知母题（如有）。
+如果假设与任何已知母题都不匹配，related_missing_motif 留空。
+约束：每个母题在一篇文章中最多关联 2 个弱维度。
+输出JSON：{{{{"links":[{{"weak_dimension":"情感表达","related_missing_motif":"手势","confidence":"high","hypothesis":"...","combined_fix":"具体的改写建议(80-150字)"}}]}}}}"#,
+        hypotheses_json = hypotheses_json,
+        motif_pool = motif_pool,
     )
 }
 

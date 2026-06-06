@@ -4,6 +4,7 @@ use std::env;
 use std::time::Duration;
 
 const API_URL: &str = "https://api.deepseek.com/chat/completions";
+const MAX_RETRIES: u32 = 3;
 
 fn api_key() -> String {
     env::var("DEEPSEEK_API_KEY").unwrap_or_default()
@@ -47,9 +48,20 @@ pub fn call_llm_json(
     system: &str,
     temperature: f64,
 ) -> Result<Value, Box<dyn std::error::Error>> {
-    let raw = call_llm(prompt, system, temperature)?;
-    let cleaned = clean_json(&raw);
-    Ok(serde_json::from_str(&cleaned)?)
+    for attempt in 0..MAX_RETRIES {
+        let raw = call_llm(prompt, system, temperature)?;
+        let cleaned = clean_json(&raw);
+        match serde_json::from_str(&cleaned) {
+            Ok(v) => return Ok(v),
+            Err(e) => {
+                if attempt == MAX_RETRIES - 1 {
+                    return Err(Box::new(e));
+                }
+                eprintln!("  (JSON解析失败, 重试 {}/{})", attempt + 1, MAX_RETRIES);
+            }
+        }
+    }
+    unreachable!()
 }
 
 fn clean_json(raw: &str) -> String {
