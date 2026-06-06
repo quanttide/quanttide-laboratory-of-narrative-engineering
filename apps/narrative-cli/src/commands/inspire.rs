@@ -7,6 +7,7 @@ pub fn run(
     motif_profile_path: &str,
     output_path: Option<&str>,
     directions: &[String],
+    compare: bool,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let scene = crate::contract::read_scene(scene_path)?;
     let profile = crate::contract::load_motif_profile(motif_profile_path)?;
@@ -61,6 +62,10 @@ pub fn run(
 
     let report = GapReport { gaps };
     let output = serde_json::to_string_pretty(&report)?;
+
+    if compare {
+        println!("  --compare 已启用（pairwise 排序在 v0.2 实现）");
+    }
 
     if let Some(path) = output_path {
         std::fs::write(path, &output)?;
