@@ -74,12 +74,15 @@ def compute_weight_ratios(results_dir: Path) -> dict:
             reg.fit(Xs, ys)
             w = reg.coef_  # 标准化回归系数
             weights_per_field[field] = [round(float(v), 4) for v in w]
-            field_weights.append(np.abs(w))
+            field_weights.append(w)
 
-        # 平均权重（绝对值平均归一化）
+        # 平均权重（带符号归一化）
         avg_w = np.mean(field_weights, axis=0)
-        w_sum = avg_w.sum()
-        norm_w = [round(float(v / w_sum), 4) if w_sum > 0 else 0.25 for v in avg_w]
+        w_abs_sum = np.abs(avg_w).sum()
+        if w_abs_sum > 0:
+            norm_w = [round(float(v / w_abs_sum), 4) for v in avg_w]
+        else:
+            norm_w = [0.3333, 0.3333, 0.3333]
 
         result[pid] = {
             "weights_per_field": weights_per_field,
