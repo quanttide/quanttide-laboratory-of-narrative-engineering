@@ -8,15 +8,15 @@ import json, os, sys
 from pathlib import Path
 import requests
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from src.config import REPO_ROOT, FICTION_ROOT, DATA_DIR
+
 DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY", "")
 if not DEEPSEEK_API_KEY:
     sys.exit("请设置 DEEPSEEK_API_KEY")
 API_URL = "https://api.deepseek.com/chat/completions"
-REPO_ROOT = Path(__file__).resolve().parents[5]
-FICTION_ROOT = REPO_ROOT / "assets" / "fiction"
-RESULTS_DIR = Path(__file__).parent / "results"
-
-GALLERY_ROOT = REPO_ROOT / "docs" / "gallery" / "fiction" / "urban-romance"
+RESULTS_DIR = DATA_DIR
+URBAN_GALLERY = GALLERY_ROOT / "urban-romance"
 
 SCENES = [
     {"id": "S1", "name": "咖啡厅重逢", "path": "职场言情/4_成稿/1_1_咖啡厅重逢.md"},
@@ -28,7 +28,7 @@ def load_yamls():
     """Read story.yaml, motif.yaml, style.yaml as raw text."""
     texts = {}
     for name in ("story", "motif", "style"):
-        fpath = GALLERY_ROOT / f"{name}.yaml"
+        fpath = URBAN_GALLERY / f"{name}.yaml"
         if fpath.exists():
             texts[name] = fpath.read_text("utf-8")
     return texts

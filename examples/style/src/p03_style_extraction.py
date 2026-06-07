@@ -13,14 +13,16 @@ from pathlib import Path
 
 import requests
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from src.config import FICTION_ROOT, DATA_DIR
+
 DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY", "")
 if not DEEPSEEK_API_KEY:
     print("错误：请设置 DEEPSEEK_API_KEY 环境变量")
     sys.exit(1)
 
 API_URL = "https://api.deepseek.com/chat/completions"
-FICTION_ROOT = Path(__file__).resolve().parents[5] / "assets" / "fiction"
-RESULTS_DIR = Path(__file__).parent / "results"
+RESULTS_DIR = DATA_DIR / "p03"
 
 ARTICLES = [
     # 作者 A：职场言情

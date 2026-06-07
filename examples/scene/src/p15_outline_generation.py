@@ -11,14 +11,13 @@ DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY", "")
 if not DEEPSEEK_API_KEY:
     sys.exit("请设置 DEEPSEEK_API_KEY")
 API_URL = "https://api.deepseek.com/chat/completions"
-REPO_ROOT = Path(__file__).resolve().parents[5]
-GALLERY_ROOT = REPO_ROOT / "docs" / "gallery" / "fiction" / "urban-romance"
-P14_RESULTS = (
-    Path(__file__).parent.parent
-    / "p14-intra-scene-plot"
-    / "results"
-)
-RESULTS_DIR = Path(__file__).parent / "results"
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from src.config import REPO_ROOT, GALLERY_ROOT, DATA_DIR
+URBAN_GALLERY = GALLERY_ROOT / "urban-romance"
+
+P14_RESULTS = DATA_DIR
+RESULTS_DIR = DATA_DIR / "outlines"
 
 SCENES = [
     {
@@ -76,9 +75,9 @@ def main():
     RESULTS_DIR.mkdir(exist_ok=True)
 
     # Load YAMLs
-    style_text = read_file(GALLERY_ROOT / "style.yaml")[:3000]
-    motif_text = read_file(GALLERY_ROOT / "motif.yaml")[:2000]
-    story_text = read_file(GALLERY_ROOT / "story.yaml")[:8000]
+    style_text = read_file(URBAN_GALLERY / "style.yaml")[:3000]
+    motif_text = read_file(URBAN_GALLERY / "motif.yaml")[:2000]
+    story_text = read_file(URBAN_GALLERY / "story.yaml")[:8000]
 
     for sc in SCENES:
         sid = sc["id"]

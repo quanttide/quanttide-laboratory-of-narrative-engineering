@@ -13,15 +13,16 @@ from pathlib import Path
 import requests
 import yaml
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from src.config import REPO_ROOT, GALLERY_ROOT, DATA_DIR
+
 DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY", "")
 if not DEEPSEEK_API_KEY:
     print("错误：请设置 DEEPSEEK_API_KEY 环境变量")
     sys.exit(1)
 
 API_URL = "https://api.deepseek.com/chat/completions"
-REPO_ROOT = Path(__file__).resolve().parents[5]
-GALLERY_ROOT = REPO_ROOT / "docs" / "gallery" / "fiction"
-RESULTS_DIR = Path(__file__).parent / "results"
+RESULTS_DIR = DATA_DIR / "p07"
 
 TEMPERATURE = 0.8  # 生成与检测统一使用
 

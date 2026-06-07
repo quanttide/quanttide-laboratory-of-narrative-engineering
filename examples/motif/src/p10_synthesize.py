@@ -14,16 +14,16 @@ import yaml
 
 import random
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from src.config import REPO_ROOT, FICTION_ROOT, GALLERY_ROOT, DATA_DIR
+
 DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY", "")
 if not DEEPSEEK_API_KEY:
     print("错误：请设置 DEEPSEEK_API_KEY 环境变量")
     sys.exit(1)
 
 API_URL = "https://api.deepseek.com/chat/completions"
-REPO_ROOT = Path(__file__).resolve().parents[5]
-FICTION_ROOT = REPO_ROOT / "assets" / "fiction"
-GALLERY_ROOT = REPO_ROOT / "docs" / "gallery" / "fiction"
-RESULTS_DIR = Path(__file__).parent / "results"
+RESULTS_DIR = DATA_DIR / "p10"
 
 ARTICLES = [
     {"id": "T1", "name": "咖啡厅重逢", "path": "职场言情/3_初稿/1_1_咖啡厅重逢.md", "type": "初稿"},

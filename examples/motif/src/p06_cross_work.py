@@ -14,16 +14,17 @@ from pathlib import Path
 import requests
 import yaml
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from src.config import REPO_ROOT, GALLERY_ROOT, DATA_DIR
+
 DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY", "")
 if not DEEPSEEK_API_KEY:
     print("错误：请设置 DEEPSEEK_API_KEY 环境变量")
     sys.exit(1)
 
 API_URL = "https://api.deepseek.com/chat/completions"
-REPO_ROOT = Path(__file__).resolve().parents[5]
-P05_RESULTS = REPO_ROOT / "examples" / "default" / "examples" / "p05-motif-extraction" / "results"
-GALLERY_ROOT = REPO_ROOT / "docs" / "gallery" / "fiction"
-RESULTS_DIR = Path(__file__).parent / "results"
+P05_RESULTS = DATA_DIR / "p05"
+RESULTS_DIR = DATA_DIR / "p06"
 
 # 跨作品母题镜像对（来自 gallery fiction/motif.yaml）
 CROSS_WORK_MOTIFS = [
