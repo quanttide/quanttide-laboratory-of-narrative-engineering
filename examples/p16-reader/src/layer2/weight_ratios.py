@@ -15,13 +15,16 @@ PROFILES = ["P1", "P2", "P3", "P4", "P5"]
 TEXT_IDS = ["4.1", "7.2", "9.1", "2.3", "10.3", "1.2"]
 
 
-def compute_weight_ratios(results_dir: Path) -> dict:
-    """返回 {profile: {field: [w1,w2,w3,w4], weights: [w1,w2,w3,w4]}}"""
-    # 加载数据
+def _build_avgs(results_dir: Path) -> tuple[dict, dict]:
+    """构建层1均值（文本级别）和 E4-1 评分均值（画像×文本级别）。
+
+    返回 (l1_avg, eval_avg)。
+    l1_avg: {tid: {field: float}}
+    eval_avg: {pid: {tid: {field: float}}}
+    """
     layer1 = load_json(results_dir / "e4-3_layer1_cache.json")
     e4_1 = load_json(results_dir / "e4-1_raw.json")
 
-    # 计算每 text × profile 的层1均值（句级别→文本级别）
     l1_avg = {}
     for tid in TEXT_IDS:
         l1 = layer1.get(tid, {})
@@ -31,7 +34,6 @@ def compute_weight_ratios(results_dir: Path) -> dict:
             for f in LAYER1_FIELDS
         }
 
-    # 计算每 text × profile 的评分均值（call级别→文本级别）
     eval_avg = {}
     for pid in PROFILES:
         eval_avg[pid] = {}
@@ -45,7 +47,12 @@ def compute_weight_ratios(results_dir: Path) -> dict:
                 for f in EVAL_FIELDS
             }
 
-    # 对每个画像做回归
+    return l1_avg, eval_avg
+
+
+def compute_weight_ratios(results_dir: Path) -> dict:
+    """返回 {profile: {field: [w1,w2,w3,w4], weights: [w1,w2,w3,w4]}}"""
+    l1_avg, eval_avg = _build_avgs(results_dir)    # 对每个画像做回归
     result = {}
     for pid in PROFILES:
         # 构建 X (6 texts × 3 features), Y (6 texts × 4 DVs)

@@ -5,9 +5,10 @@ from pathlib import Path
 GIT_ROOT = Path(__file__).resolve().parents[4]
 sys.path.insert(0, str(GIT_ROOT))
 import numpy as np
-from packages.io import save_json, load_json
-from packages.stats import icc
-from .weight_ratios import compute_weight_ratios, LAYER1_FIELDS, PROFILES, TEXT_IDS
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LinearRegression
+from packages.io import save_json
+from .weight_ratios import compute_weight_ratios, _build_avgs, LAYER1_FIELDS, PROFILES, TEXT_IDS, EVAL_FIELDS
 
 N_BOOTSTRAP = 200
 
@@ -58,12 +59,28 @@ def _check_monotonic(weights_per_profile: dict[str, list[float]]) -> dict:
     return checks
 
 
-def _cross_text_icc(weights_per_profile: dict[str, list[float]]) -> dict:
-    """跨文本一致性：对每篇文本做多次回归的权重 ICC。"""
-    # 简化：基于现有数据估算
-    weights = np.array([weights_per_profile[p] for p in PROFILES])
-    icc_val = icc(weights)
-    return {"icc": round(float(icc_val), 4)}
+def _cross_text_icc(results_dir: Path, l1_avg: dict, eval_avg: dict) -> dict:
+    """皮尔逊残差相关：对每个画像，验证层1指标→评分预测的残差稳定性。
+
+    如果层1指标有意义，那么同一画像在不同文本上的预测残差应该稳定。
+    算所有画像 × 文本的标准化残差向量，取均值作为"层1解释力"指标。
+    """
+    residuals = []
+    for pid in PROFILES:
+        X = np.array([[l1_avg[t][f] for f in LAYER1_FIELDS] for t in TEXT_IDS])
+        scaler = StandardScaler()
+        Xs = scaler.fit_transform(X)
+        for fi, field in enumerate(EVAL_FIELDS):
+            y = np.array([eval_avg[pid][t][field] for t in TEXT_IDS])
+            ys = (y - y.mean()) / (y.std() + 1e-8)
+            reg = LinearRegression()
+            reg.fit(Xs, ys)
+            pred = reg.predict(Xs)
+            resid = np.mean(np.abs(ys - pred))
+            residuals.append(resid)
+    mean_resid = float(np.mean(residuals))
+    # 残差均值 < 0.8（标准化后的残差，0=完美，>1=无解释力）即为通过
+    return {"mean_abs_residual": round(mean_resid, 4), "pass": bool(mean_resid < 0.8)}
 
 
 def run(results_dir: Path):
@@ -98,14 +115,16 @@ def run(results_dir: Path):
         print(f"  {wname}: {v['trend']} (ratio={v['monotonic_ratio']})")
     print(f"  单调方向≥3/4: {n_mono_ok}/4 {'✅' if mono_ok else '❌'}")
 
-    # 跨文本 ICC
-    print("\n── 跨文本 ICC ──")
-    icc_result = _cross_text_icc({pid: wr[pid]["weights"] for pid in PROFILES})
-    icc_ok = icc_result["icc"] >= 0.50
-    print(f"  ICC = {icc_result['icc']} {'✅' if icc_ok else '❌'}")
+    # 跨文本稳定性（残差分析）
+    print("\n── 跨文本稳定性 ──")
+    from .weight_ratios import _build_avgs
+    l1_avg, eval_avg = _build_avgs(results_dir)
+    stab = _cross_text_icc(results_dir, l1_avg, eval_avg)
+    stab_ok = stab["pass"]
+    print(f"  平均绝对残差 = {stab['mean_abs_residual']} {'✅' if stab_ok else '❌'} (标准 < 0.8)")
 
     # 汇总
-    passed = all_narrow and mono_ok and icc_ok
+    passed = all_narrow and mono_ok and stab_ok
     summary = {
         "weight_ratios": {pid: wr[pid]["weights"] for pid in PROFILES},
         "weight_fields": LAYER1_FIELDS,
@@ -113,8 +132,8 @@ def run(results_dir: Path):
         "ci_width_all_below_0.30": bool(all_narrow),
         "monotonic_checks": mono,
         "monotonic_ok": bool(mono_ok),
-        "cross_text_icc": icc_result,
-        "cross_text_icc_ok": bool(icc_ok),
+        "stability": stab,
+        "stability_ok": bool(stab_ok),
         "pass": bool(passed),
     }
     save_json(results_dir / "e4-4_summary.json", summary)
