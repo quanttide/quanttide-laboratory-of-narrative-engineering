@@ -217,15 +217,82 @@ def consistency_check(scene_text: str, profile: dict) -> dict:
     return json.loads(call_llm(prompt, temperature=0.1))
 
 
-# ─── 零假设：交换角色特质 ────────────────────────────
+# ─── 零假设：错位时间窗 ────────────────────────────────
 
-def swap_profile(profile: dict) -> dict:
-    """交换两个角色的核心特质，用于零假设检验。"""
-    p = json.loads(json.dumps(profile))
-    for key in ["personality", "internal_world", "behavior"]:
-        p["林远亭"][key], p["陆知微"][key] = p["陆知微"][key], p["林远亭"][key]
-    p["relationship_dynamic"]["stage"] = "不相干的两个陌生人"
-    return p
+def null_misaligned_window(results: list[dict], scene_texts: dict, all_pairs: list) -> list:
+    """零假设：用结尾的 profile 推断开头的情节，用开头的 profile 推断结尾的情节。
+
+    如果角色状态确实随叙事时间变化，则错位时间窗的准确率应显著低于对齐的时间窗。
+    这是对"角色状态编码情节方向"的直接检验——如果结果无差异，说明 profile 不包含时序信息。
+    """
+    null_pairs = []
+
+    # Null 1: 用结尾 profile 推第一对
+    early_pair = all_pairs[0]
+    late_pair_key = id_from_name(all_pairs[-1][0])  # 用最后一对的当前场景 profile
+    late_prof = json.loads((RESULTS_DIR / f"profile_{late_pair_key}.json").read_text("utf-8"))
+    inf = infer_next(late_prof, scene_texts[early_pair[0]], early_pair[0], early_pair[1])
+
+    story_yaml = FICTION_ROOT / "story.yaml"
+    if story_yaml.exists():
+        raw = story_yaml.read_text("utf-8")
+        raw = "\n".join(l for l in raw.splitlines() if l.strip() and not l.strip().startswith("# "))
+        story = yaml.safe_load(raw) or {}
+        plots = {p["id"]: p for p in story.get("plots", [])}
+        actual = plots.get(id_from_name(early_pair[1]), {})
+        actual_desc = actual.get("description", "")
+    else:
+        actual_desc = scene_texts[early_pair[1]][:600]
+
+    ev = evaluate(
+        inf["inferred_next"]["core_beat"],
+        inf["alternative_path"]["core_beat"],
+        actual_desc,
+        late_prof,
+    )
+    normal = results[0]
+    null_pairs.append({
+        "pair": f"{early_pair[0][:12]}→{early_pair[1][:12]}",
+        "null_profile_from": all_pairs[-1][0][:12],
+        "null_motivation": ev.get("motivation_accuracy", 0),
+        "normal_motivation": normal.get("motivation_accuracy", 0),
+        "drop": round(normal.get("motivation_accuracy", 0) - ev.get("motivation_accuracy", 0), 2),
+        "design": "用结尾 profile 推开头",
+    })
+
+    # Null 2: 用开头 profile 推最后一对
+    late_pair = all_pairs[-1]
+    early_profile_key = id_from_name(all_pairs[0][0])
+    early_prof = json.loads((RESULTS_DIR / f"profile_{early_profile_key}.json").read_text("utf-8"))
+    inf2 = infer_next(early_prof, scene_texts[late_pair[0]], late_pair[0], late_pair[1])
+
+    if story_yaml.exists():
+        raw = story_yaml.read_text("utf-8")
+        raw = "\n".join(l for l in raw.splitlines() if l.strip() and not l.strip().startswith("# "))
+        story = yaml.safe_load(raw) or {}
+        plots = {p["id"]: p for p in story.get("plots", [])}
+        actual = plots.get(id_from_name(late_pair[1]), {})
+        actual_desc2 = actual.get("description", "")
+    else:
+        actual_desc2 = scene_texts[late_pair[1]][:600]
+
+    ev2 = evaluate(
+        inf2["inferred_next"]["core_beat"],
+        inf2["alternative_path"]["core_beat"],
+        actual_desc2,
+        early_prof,
+    )
+    normal2 = results[-1]
+    null_pairs.append({
+        "pair": f"{late_pair[0][:12]}→{late_pair[1][:12]}",
+        "null_profile_from": all_pairs[0][0][:12],
+        "null_motivation": ev2.get("motivation_accuracy", 0),
+        "normal_motivation": normal2.get("motivation_accuracy", 0),
+        "drop": round(normal2.get("motivation_accuracy", 0) - ev2.get("motivation_accuracy", 0), 2),
+        "design": "用开头 profile 推结尾",
+    })
+
+    return null_pairs
 
 
 # ─── 叙事节奏分析 ─────────────────────────────────────
@@ -338,34 +405,11 @@ def main():
         a = ev.get("alternative_accuracy", 0)
         print(f"     动机={m:.1f}  张力={t:.1f}  替代={a:.1f}")
 
-    # ── Step 3: 零假设（仅对部分样本运行） ──
-    print(f"\n[3/5] 零假设检验（交换角色特质，跑 3 组样本）...")
-    null_indices = [0, 7, 9]  # 首、中、尾各一
-    null_results = []
-    for idx in null_indices:
-        curr, nxt = ALL_PAIRS[idx]
-        curr_id = id_from_name(curr)
-        prof = json.loads((RESULTS_DIR / f"profile_{curr_id}.json").read_text("utf-8"))
-        swapped = swap_profile(prof)
-        inference = infer_next(swapped, scene_texts[curr], curr, nxt)
-        story_yaml = FICTION_ROOT / "story.yaml"
-        if story_yaml.exists():
-            raw = story_yaml.read_text("utf-8")
-            raw = "\n".join(l for l in raw.splitlines() if l.strip() and not l.strip().startswith("# "))
-            story = yaml.safe_load(raw) or {}
-            plots = {p["id"]: p for p in story.get("plots", [])}
-            actual = plots.get(id_from_name(nxt), {})
-            actual_desc = actual.get("description", "")
-        else:
-            actual_desc = scene_texts[nxt][:600]
-        ev = evaluate(
-            inference["inferred_next"]["core_beat"],
-            inference["alternative_path"]["core_beat"],
-            actual_desc,
-            swapped,
-        )
-        null_results.append({"pair": f"{curr[:12]}→{nxt[:12]}", "scores": ev})
-        print(f"   {curr[:16]}→{nxt[:16]}: 动机={ev.get('motivation_accuracy',0):.1f} (正常={results[idx].get('motivation_accuracy',0):.1f})")
+    # ── Step 3: 零假设（错位时间窗） ──
+    print(f"\n[3/5] 零假设检验（错位时间窗——用结尾 profile 推开头，反之亦然）...")
+    null_results = null_misaligned_window(results, scene_texts, ALL_PAIRS)
+    for n in null_results:
+        print(f"   {n['pair']:26s}: 零假设={n['null_motivation']:.1f} (正常={n['normal_motivation']:.1f}) 下降={n['drop']:+.1f}  [{n['design']}]")
 
     # ── Step 4: 叙事节奏分析 ──
     print(f"\n[4/5] 叙事节奏分析...")
@@ -403,10 +447,10 @@ def main():
             "avg_tension": round(statistics.mean([r.get("tension_carryover", 0) for r in results]), 2),
             "avg_alternative": round(statistics.mean([r.get("alternative_accuracy", 0) for r in results]), 2),
             "null_motivation_drop": round(
-                statistics.mean([r.get("motivation_accuracy", 0) for r in results[::7]]) -
-                statistics.mean([n["scores"].get("motivation_accuracy", 0) for n in null_results]),
+                statistics.mean([n["normal_motivation"] for n in null_results]) -
+                statistics.mean([n["null_motivation"] for n in null_results]),
                 2
-            ),
+            ) if null_results else 0,
         }
     }
     (RESULTS_DIR / "report.json").write_text(json.dumps(report, ensure_ascii=False, indent=2), "utf-8")
@@ -417,7 +461,7 @@ def main():
     print(f"  平均动机准确率: {report['summary']['avg_motivation']}")
     print(f"  平均张力延续:   {report['summary']['avg_tension']}")
     print(f"  平均替代合理率: {report['summary']['avg_alternative']}")
-    print(f"  零假设动机下降: {report['summary']['null_motivation_drop']}")
+    print(f"  零假设平均下降:  {report['summary']['null_motivation_drop']}")
     print(f"\n  节奏: 高信号={len(rhythm['high_signal_pairs'])} 低信号={len(rhythm['low_signal_pairs'])} 跳跃={len(rhythm.get('detected_jumps',[]))}")
     print(f"\n结果: {RESULTS_DIR}")
 
