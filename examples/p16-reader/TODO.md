@@ -84,30 +84,27 @@
 ## Phase II：系统集成与校准（无外部依赖方案）
 
 > Phase I 已验证"LLM 能通过 prompt 模拟分化读者"。Phase II 的目标是给已验证的能力加可解释性层。
-> **关键变更**：层1验证不依赖 E1/E2 手动标注，改用 LLM 自身作为金标准。
+> **变更**：层1认知负荷指标改用 LLM 直接产出（规则公式与 LLM 标注不一致，ρ 仅 0.041 不可信）。
 
-### □ E4-3 — 层1认知负荷指标实现与自验证
+### □ E4-3 — 层1认知负荷指标（LLM 直接产出）
 
 **前置条件**：无（p16 自有数据）
 
-- [ ] **3.1 创建层1目录结构**
-  - 创建 `src/layer1/__init__.py`
-  - 创建 `src/layer1/inference_demand.py` — 推理需求密度（规则驱动）
-  - 创建 `src/layer1/working_memory.py` — 工作记忆负载（规则驱动）
-  - 创建 `src/layer1/backtracking.py` — 回溯重读预测（规则驱动）
-  - 创建 `src/layer1/situation_model.py` — 情境模型五维度（规则驱动）
-- [ ] **3.2 创建 LLM 标注函数**
-  - 创建 `src/layer1/llm_labels.py` — LLM 对逐句标注推理需求/阅读难度/回读概率/连贯性
-- [ ] **3.3 创建验证入口**
-  - 创建 `src/layer1/validate.py` — 对 6 篇 Phase I 文本，公式 vs LLM 标注的 Spearman ρ
-  - 成功标准：4 项 ρ 全部 ≥ 0.60
-- [ ] **3.4 运行 E4-3**
-  - 更新 `src/__main__.py` 注册 `e4-3`
-  - 运行 `python -m src e4-3`
-  - 输出 `data/output/e4-3_summary.json`
+- [x] **3.1 创建层1目录结构**
+  - 已创建 `src/layer1/__init__.py`、`inference_demand.py`、`working_memory.py`、`backtracking.py`、`situation_model.py`
+- [x] **3.2 创建 LLM 标注函数**
+  - 已创建 `src/layer1/llm_labels.py`
+- [x] **3.3 运行 E4-3 验证**
+  - **结果：规则公式与 LLM 标注 Spearman ρ = 0.041 ❌**
+  - **结论**：基于简单规则的认知负荷公式无法反映 LLM 理解的文本特征，放弃规则方案
+- [ ] **3.4 改用 LLM 直接产出层1指标**
+  - 修改 `src/layer1/inference_demand.py` 等模块：不再使用规则公式，改为调用 LLM 对逐句标注认知负荷
+  - 保留函数签名不变，内部实现改为调用 `llm_labels.py` 中的 LLM 标注函数
+  - 缓存结果到 `data/output/e4-3_layer1_cache.json`（避免重复调用）
 - [ ] **3.5 门控判定**
-  - 全部通过 → E4-4
-  - 任一未通过 → 调试公式后重试；仍不过则跳过（层1降级为实验性功能）
+  - 层1由"规则公式"降级为"LLM 直接产出"
+  - 可解释性降低，但指标本身仍然可用
+  - 进入 E4-4
 
 ### □ E4-4 — 权重映射标定
 
