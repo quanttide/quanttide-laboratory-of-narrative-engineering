@@ -61,50 +61,58 @@ def _analyze(raw: list[dict], results_dir: Path, prompt_type: str) -> dict:
 
     texts = [r["text"] for r in raw]
     labels = [r["profile"] for r in raw]
+    n_total = len(texts)
+    profile_ids = sorted(set(labels))
 
     print("  生成 embedding（fastembed BAAI/bge-small-zh-v1.5）...")
     model = TextEmbedding(model_name="BAAI/bge-small-zh-v1.5")
     embeddings = np.array(list(model.embed(texts)))
     print(f"    shape: {embeddings.shape}")
 
+    # ── 指标 1：轮廓系数 ──
     sil = silhouette_score(embeddings, labels)
-    print(f"   轮廓系数: {sil:.4f}  (标准 ≥ 0.25)")
+    print(f"   轮廓系数: {sil:.4f}  (≥0.25)")
 
+    # ── 指标 2：P0 vs P1 距离 ──
     dist_matrix = cosine_distances(embeddings)
+    p0_idx = [i for i, l in enumerate(labels) if l == "P0"]
+    p1_idx = [i for i, l in enumerate(labels) if l == "P1"]
+    p0_p1_dist = float(np.mean([dist_matrix[i, j] for i in p0_idx for j in p1_idx]))
+    print(f"   P0 vs P1: {p0_p1_dist:.4f}  (≥0.1)")
 
+    # ── 指标 3：最近邻一致性 ──
+    np.fill_diagonal(dist_matrix, np.inf)  # 排除自身
+    nn_label = [labels[np.argmin(dist_matrix[i])] for i in range(n_total)]
+    nn_hits = sum(1 for i in range(n_total) if nn_label[i] == labels[i])
+    nn_accuracy = nn_hits / n_total
+    baseline = 1.0 / len(profile_ids)
+    print(f"   最近邻一致性: {nn_accuracy:.1%} ({nn_hits}/{n_total})  (基线 {baseline:.0%}, 标准 ≥30%)")
+
+    # ── 类内距离（辅助诊断） ──
     within = {}
-    for pid in ["P0", "P1", "P2", "P3", "P4", "P5"]:
+    for pid in profile_ids:
         idx = [i for i, l in enumerate(labels) if l == pid]
         if len(idx) > 1:
             d = np.mean([dist_matrix[i, j] for i in idx for j in idx if i != j])
             within[pid] = round(float(d), 4)
-
-    p0_idx = [i for i, l in enumerate(labels) if l == "P0"]
-    p1_idx = [i for i, l in enumerate(labels) if l == "P1"]
-    p2_idx = [i for i, l in enumerate(labels) if l == "P2"]
-    p4_idx = [i for i, l in enumerate(labels) if l == "P4"]
-    p0_p1_dist = float(np.mean([dist_matrix[i, j] for i in p0_idx for j in p1_idx]))
-    p2_p4_dist = float(np.mean([dist_matrix[i, j] for i in p2_idx for j in p4_idx]))
-
     print(f"   类内距离: {within}")
-    print(f"   P0 vs P1: {p0_p1_dist:.4f}  (≥0.1)")
-    print(f"   P2 vs P4: {p2_p4_dist:.4f}  (>P0vsP1?)")
 
+    # ── 门控判定 ──
     passed_sil = sil >= 0.25
     passed_dist = p0_p1_dist >= 0.1
-    passed_sep = p2_p4_dist > p0_p1_dist
-    overall = passed_sil and passed_dist and passed_sep
+    passed_nn = nn_accuracy >= 0.30
+    overall = passed_sil and passed_dist and passed_nn
 
     result = {
         "prompt_type": prompt_type,
         "silhouette_score": round(float(sil), 4),
-        "within_profile_distances": within,
-        "p0_vs_p1_cosine_dist": round(p0_p1_dist, 4),
-        "p2_vs_p4_cosine_dist": round(p2_p4_dist, 4),
-        "p2_vs_p4_greater_than_p0_p1": bool(passed_sep),
         "silhouette_pass": bool(passed_sil),
+        "p0_vs_p1_cosine_dist": round(p0_p1_dist, 4),
         "p0_vs_p1_pass": bool(passed_dist),
-        "p2_vs_p4_pass": bool(passed_sep),
+        "nn_accuracy": round(float(nn_accuracy), 4),
+        "nn_baseline": round(float(baseline), 4),
+        "nn_pass": bool(passed_nn),
+        "within_profile_distances": within,
         "overall_pass": bool(overall),
     }
     save_json(results_dir / f"e4-0_result_{prompt_type}.json", result)
