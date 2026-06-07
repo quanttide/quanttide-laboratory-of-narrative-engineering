@@ -37,7 +37,7 @@ def main():
         "e4-2-a": "src.phase1.e4_2_anchoring",
         "e4-3": "src.layer1.validate",
         "e4-4": "src.layer2.validate",
-        "e4-5": "src.e4_5_pipeline",
+        "e4-5": "src.pipeline",
     }
 
     if command not in commands:
