@@ -118,23 +118,11 @@
 
 ---
 
-## Phase III：读者视角的诊断与修复（P3）
+## Phase III：读者视角的修改建议（P3）
 
-> 从"描述读者差异"到"利用读者差异诊断文本并修复"。
-> 设计文档见 `docs/experiments/E4-6-reflect-design.md` 和 `E4-7-rewrite-design.md`。
-
-### □ E4-6 — 多画像评价的视角译码（Reflect）
-
-> 不是文本诊断，而是将评分差异翻译为读者视角差异。
-> 设计文档：`docs/experiments/E4-6-reflect-design.md`
-
-- [ ] **6.1 差异识别** — 对每篇 Phase I 文本，找差异最大的 3 个画像对 × 维度
-- [ ] **6.2 实现视角译码 prompt** — 输入文本+画像定义+评分差异 → 输出 divergence + key_moment + low/high_view
-- [ ] **6.3 运行验证** — 6 篇 × 3 差异对 × 3 prompt 风格 = 54 次 LLM 调用
-  - 一致性：≥ 2/3 差异对的 key_moment 一致
-  - 画像对称性：真实 vs 假译码，≥ 2/3 评委判为"不同解释"
-  - 可读性：≥ 80% 译码判为"有帮助"
-- [ ] **6.4 输出汇总** — `data/output/e4-6_reflect_summary.json`
+> E4-6（Reflect/视角译码）已在设计阶段被砍掉。根因：画像差异本身没有因果信息，"视角译码"本质是 LLM 角色扮演能力的重复验证。
+> Phase III 直接推进 E4-7（基于多画像评价的修改建议）。
+> 设计文档：`docs/experiments/E4-7-rewrite-design.md`
 
 ### □ E4-7 — 读者视角的局部修改建议（Rewrite）
 
