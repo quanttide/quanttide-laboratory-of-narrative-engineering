@@ -119,15 +119,8 @@ function _card(id, d, idx) {{
   var p = d.point||{{}};
   var ops = (d.reader&&d.reader.reader_opinions)||{{}};
   var c = d.contract||{{}};
-  var dims = (c.style&&c.style.touched_dimensions)||[];
-  var t3 = dims.filter(function(v){{return v.nature==='违反';}});
-  var key_dim = (t3.length?t3[0]:dims[0])||{{}};
-  var nature_label = key_dim.nature||'';
-  var ncolor = nature_label==='违反'?'#991b1b':nature_label==='边缘'?'#854d0e':'#166534';
+  var co = c.co_author||'';
   var sbs = (d.side_by_side&&d.side_by_side.output)||'';
-  var intent = '';
-  var m = sbs.match(/作者原意[：:]([^]*?)(?=契约立场|$)/);
-  if (m) intent = m[1].trim().replace(/\n.*/,'');
   var p3 = ops.P3||'';
   var p1 = ops.P1||'';
   var fv = FB[id]||'';
@@ -135,22 +128,17 @@ function _card(id, d, idx) {{
     '<div class="meta">'+id+' '+p.location+'（'+p.type+'）</div>'+
     '<div class="quote">'+p.quote+'</div>'+
     '<div style="display:flex;gap:12px;margin-bottom:8px">'+
-      // 左列：作者意图
+      // 左列：共同作者
       '<div style="flex:1;background:#f0f7ff;border-radius:6px;padding:10px 12px;font-size:13px;line-height:1.5">'+
-        '<div style="font-size:11px;font-weight:600;color:#0066cc;margin-bottom:4px">作者原意</div>'+
-        (intent||'<span style="color:#999">（待推断）</span>')+
-      '</div>'+
-      // 中列：契约
-      '<div style="flex:1;background:#fafafa;border-radius:6px;padding:10px 12px;font-size:13px;line-height:1.5">'+
-        '<div style="font-size:11px;font-weight:600;color:#888;margin-bottom:4px">契约判断</div>'+
-        '<span style="color:'+ncolor+';font-weight:500">'+nature_label+'</span>「'+key_dim.dimension+'」'+
+        '<div style="font-size:11px;font-weight:600;color:#0066cc;margin-bottom:4px">共同作者</div>'+
+        (co||'<span style="color:#999">（待生成）</span>')+
       '</div>'+
       // 右列：读者感受
       '<div style="flex:1;background:#f5f5f5;border-radius:6px;padding:10px 12px;font-size:13px;line-height:1.5">'+
-        '<div style="font-size:11px;font-weight:600;color:#888;margin-bottom:4px">读者感受</div>'+
-        (p3?'P3读：'+p3:'')+
+        '<div style="font-size:11px;font-weight:600;color:#888;margin-bottom:4px">读者</div>'+
+        (p3?'P3：'+p3:'')+
         (p3&&p1?'<br>':'')+
-        (p1?'P1读：'+p1:'')+
+        (p1?'P1：'+p1:'')+
         (!p3&&!p1?'<span style="color:#999">（待生成）</span>':'')+
       '</div>'+
     '</div>'+

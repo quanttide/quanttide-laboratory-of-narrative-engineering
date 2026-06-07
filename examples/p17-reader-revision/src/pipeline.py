@@ -118,6 +118,10 @@ def run_batch():
         side_by_side_output = generate_side_by_side(
             tp, contract_result, reader_response, profile_map, contracts
         )
+        # generate_side_by_side 在 contract_result 和 reader_response 中
+        # 追加了 co_author 和 reader_opinions，重新保存
+        save_json(DATA_OUTPUT / f"{tp['id']}_contract.json", contract_result)
+        save_json(DATA_OUTPUT / f"{tp['id']}_reader.json", reader_response)
         print(f"    输出: {len(side_by_side_output)} 字符")
 
         violations = check_no_overstepping(side_by_side_output)
