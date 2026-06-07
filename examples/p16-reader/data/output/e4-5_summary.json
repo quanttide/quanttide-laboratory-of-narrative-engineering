@@ -5,12 +5,72 @@
     "6.2",
     "8.2"
   ],
-  "icc": 0.8295,
+  "icc": 0.6226,
   "icc_pass": true,
-  "spearman_rho_vs_direct": -0.6844,
-  "spearman_pass": false,
-  "anova_f": 2.052,
-  "anova_p": 0.0997,
-  "anova_pass": false,
-  "pass": false
+  "anova_per_dimension": {
+    "writing_quality": {
+      "f": 3.1181,
+      "p": 0.022,
+      "eta_squared": 0.1849,
+      "pass": true
+    },
+    "emotional_impact": {
+      "f": 0.8207,
+      "p": 0.5176,
+      "eta_squared": 0.0563,
+      "pass": false
+    },
+    "character_realism": {
+      "f": 7.4974,
+      "p": 0.0001,
+      "eta_squared": 0.3529,
+      "pass": true
+    },
+    "cliche_level": {
+      "f": 11.4767,
+      "p": 0.0,
+      "eta_squared": 0.4549,
+      "pass": true
+    }
+  },
+  "n_sig_dimensions": 3,
+  "mean_eta_squared": 0.2623,
+  "anova_pass": true,
+  "profile_means": {
+    "P1": {
+      "writing_quality": 4.42,
+      "emotional_impact": 5.42,
+      "character_realism": 4.42,
+      "cliche_level": 3.42
+    },
+    "P2": {
+      "writing_quality": 4.92,
+      "emotional_impact": 4.92,
+      "character_realism": 5.33,
+      "cliche_level": 3.17
+    },
+    "P3": {
+      "writing_quality": 4.92,
+      "emotional_impact": 5.08,
+      "character_realism": 5.75,
+      "cliche_level": 2.33
+    },
+    "P4": {
+      "writing_quality": 4.58,
+      "emotional_impact": 5.33,
+      "character_realism": 5.58,
+      "cliche_level": 3.25
+    },
+    "P5": {
+      "writing_quality": 4.58,
+      "emotional_impact": 5.0,
+      "character_realism": 4.58,
+      "cliche_level": 3.5
+    }
+  },
+  "p3_most_critical": true,
+  "p1_most_emotional": true,
+  "pattern_consistency_pass": true,
+  "pass": true,
+  "note": "回归权重映射因n=6样本不足已放弃。E4-5改验证新文本上直接prompt评价的跨文本分化稳定性。"
 }

@@ -19,7 +19,7 @@
     "writing_quality": 4,
     "emotional_impact": 5,
     "character_realism": 4,
-    "cliche_level": 4,
+    "cliche_level": 3,
     "reading_difficulty": 2,
     "logic_break": {
       "detected": false,
@@ -83,7 +83,7 @@
     "writing_quality": 5,
     "emotional_impact": 6,
     "character_realism": 5,
-    "cliche_level": 4,
+    "cliche_level": 3,
     "reading_difficulty": 2,
     "logic_break": {
       "detected": false,
@@ -112,9 +112,9 @@
     "call": 0
   },
   {
-    "writing_quality": 4,
-    "emotional_impact": 5,
-    "character_realism": 4,
+    "writing_quality": 5,
+    "emotional_impact": 6,
+    "character_realism": 5,
     "cliche_level": 3,
     "reading_difficulty": 2,
     "logic_break": {
@@ -128,9 +128,9 @@
     "call": 1
   },
   {
-    "writing_quality": 5,
-    "emotional_impact": 6,
-    "character_realism": 5,
+    "writing_quality": 4,
+    "emotional_impact": 5,
+    "character_realism": 4,
     "cliche_level": 3,
     "reading_difficulty": 2,
     "logic_break": {
@@ -154,15 +154,15 @@
       "positions": []
     },
     "structure_label": "正常",
-    "aesthetic_grade": "B",
+    "aesthetic_grade": "A-",
     "profile": "P1",
     "text_id": "8.2",
     "call": 0
   },
   {
-    "writing_quality": 4,
-    "emotional_impact": 5,
-    "character_realism": 4,
+    "writing_quality": 5,
+    "emotional_impact": 6,
+    "character_realism": 5,
     "cliche_level": 4,
     "reading_difficulty": 2,
     "logic_break": {
@@ -170,7 +170,7 @@
       "positions": []
     },
     "structure_label": "正常",
-    "aesthetic_grade": "B",
+    "aesthetic_grade": "A-",
     "profile": "P1",
     "text_id": "8.2",
     "call": 1
@@ -194,14 +194,14 @@
   {
     "writing_quality": 4,
     "emotional_impact": 3,
-    "character_realism": 3,
+    "character_realism": 4,
     "cliche_level": 4,
     "reading_difficulty": 2,
     "logic_break": {
       "detected": true,
       "positions": [
-        "王助理作为下属，对上司的私事过于主动和八卦，职业逻辑不合理",
-        "陆知微作为十年暗恋者，内心活动过于直白和幼稚，与职场精英人设不符"
+        "王助理作为下属，直接对陆总说‘我老公也是他的粉’并讨论程序员审美，显得过于随意，不符合职场层级和初次见面的氛围。",
+        "林远亭听到王助理发消息的内容，但王助理未察觉他走近，且林远亭直接脸红并内心独白‘要给他们加鸡腿’，情绪转折略显突兀。"
       ]
     },
     "structure_label": "逻辑断裂",
@@ -211,29 +211,26 @@
     "call": 0
   },
   {
-    "writing_quality": 4,
-    "emotional_impact": 3,
-    "character_realism": 3,
-    "cliche_level": 4,
+    "writing_quality": 5,
+    "emotional_impact": 5,
+    "character_realism": 6,
+    "cliche_level": 3,
     "reading_difficulty": 2,
     "logic_break": {
-      "detected": true,
-      "positions": [
-        "王助理作为下属，对上司的私事过于主动和八卦，且直接发消息说‘双箭头’，职业边界感缺失，逻辑上不合理。",
-        "陆知微作为职场精英，在初次见面的场合反复走神、脸红、自嘲，人设与行为脱节。"
-      ]
+      "detected": false,
+      "positions": []
     },
-    "structure_label": "逻辑断裂",
-    "aesthetic_grade": "C",
+    "structure_label": "正常",
+    "aesthetic_grade": "B",
     "profile": "P2",
     "text_id": "2.1",
     "call": 1
   },
   {
-    "writing_quality": 4,
+    "writing_quality": 5,
     "emotional_impact": 4,
     "character_realism": 5,
-    "cliche_level": 4,
+    "cliche_level": 3,
     "reading_difficulty": 2,
     "logic_break": {
       "detected": false,
@@ -248,7 +245,7 @@
   {
     "writing_quality": 5,
     "emotional_impact": 5,
-    "character_realism": 5,
+    "character_realism": 6,
     "cliche_level": 3,
     "reading_difficulty": 2,
     "logic_break": {
@@ -280,22 +277,6 @@
   {
     "writing_quality": 5,
     "emotional_impact": 5,
-    "character_realism": 5,
-    "cliche_level": 3,
-    "reading_difficulty": 2,
-    "logic_break": {
-      "detected": false,
-      "positions": []
-    },
-    "structure_label": "正常",
-    "aesthetic_grade": "B",
-    "profile": "P2",
-    "text_id": "4.2",
-    "call": 2
-  },
-  {
-    "writing_quality": 5,
-    "emotional_impact": 5,
     "character_realism": 6,
     "cliche_level": 3,
     "reading_difficulty": 2,
@@ -304,26 +285,10 @@
       "positions": []
     },
     "structure_label": "正常",
-    "aesthetic_grade": "B",
+    "aesthetic_grade": "A-",
     "profile": "P2",
-    "text_id": "6.2",
-    "call": 0
-  },
-  {
-    "writing_quality": 5,
-    "emotional_impact": 5,
-    "character_realism": 5,
-    "cliche_level": 3,
-    "reading_difficulty": 2,
-    "logic_break": {
-      "detected": false,
-      "positions": []
-    },
-    "structure_label": "正常",
-    "aesthetic_grade": "B",
-    "profile": "P2",
-    "text_id": "6.2",
-    "call": 1
+    "text_id": "4.2",
+    "call": 2
   },
   {
     "writing_quality": 5,
@@ -339,7 +304,55 @@
     "aesthetic_grade": "A-",
     "profile": "P2",
     "text_id": "6.2",
+    "call": 0
+  },
+  {
+    "writing_quality": 5,
+    "emotional_impact": 6,
+    "character_realism": 6,
+    "cliche_level": 3,
+    "reading_difficulty": 2,
+    "logic_break": {
+      "detected": false,
+      "positions": []
+    },
+    "structure_label": "正常",
+    "aesthetic_grade": "A-",
+    "profile": "P2",
+    "text_id": "6.2",
+    "call": 1
+  },
+  {
+    "writing_quality": 5,
+    "emotional_impact": 6,
+    "character_realism": 6,
+    "cliche_level": 3,
+    "reading_difficulty": 2,
+    "logic_break": {
+      "detected": false,
+      "positions": []
+    },
+    "structure_label": "正常",
+    "aesthetic_grade": "A-",
+    "profile": "P2",
+    "text_id": "6.2",
     "call": 2
+  },
+  {
+    "writing_quality": 5,
+    "emotional_impact": 5,
+    "character_realism": 5,
+    "cliche_level": 3,
+    "reading_difficulty": 2,
+    "logic_break": {
+      "detected": false,
+      "positions": []
+    },
+    "structure_label": "正常",
+    "aesthetic_grade": "B",
+    "profile": "P2",
+    "text_id": "8.2",
+    "call": 0
   },
   {
     "writing_quality": 5,
@@ -350,29 +363,13 @@
     "logic_break": {
       "detected": true,
       "positions": [
-        "酒吧对话中，男主先指了靠里桌子说常坐，后又改口坐外面，理由牵强；回忆中男主说‘喜欢了十年’与后文‘执念’的补充略显重复，且醉酒后直接重复相同台词，略显刻意"
+        "回忆中对话的插入方式略显突兀，从现实场景切换到回忆再切回，过渡不够自然"
       ]
     },
     "structure_label": "逻辑断裂",
     "aesthetic_grade": "B",
     "profile": "P2",
     "text_id": "8.2",
-    "call": 0
-  },
-  {
-    "writing_quality": 5,
-    "emotional_impact": 6,
-    "character_realism": 6,
-    "cliche_level": 3,
-    "reading_difficulty": 2,
-    "logic_break": {
-      "detected": false,
-      "positions": []
-    },
-    "structure_label": "正常",
-    "aesthetic_grade": "A-",
-    "profile": "P2",
-    "text_id": "8.2",
     "call": 1
   },
   {
@@ -382,20 +379,17 @@
     "cliche_level": 3,
     "reading_difficulty": 2,
     "logic_break": {
-      "detected": true,
-      "positions": [
-        "对话中‘你喜不喜欢她？’的提问者身份未交代，导致上下文断裂",
-        "‘那次他一杯就醉了’与后文‘她好像也醉了’时间线模糊"
-      ]
+      "detected": false,
+      "positions": []
     },
-    "structure_label": "逻辑断裂",
+    "structure_label": "正常",
     "aesthetic_grade": "B",
     "profile": "P2",
     "text_id": "8.2",
     "call": 2
   },
   {
-    "writing_quality": 4,
+    "writing_quality": 5,
     "emotional_impact": 4,
     "character_realism": 5,
     "cliche_level": 3,
@@ -412,8 +406,8 @@
   },
   {
     "writing_quality": 5,
-    "emotional_impact": 4,
-    "character_realism": 5,
+    "emotional_impact": 5,
+    "character_realism": 6,
     "cliche_level": 3,
     "reading_difficulty": 2,
     "logic_break": {
@@ -421,15 +415,15 @@
       "positions": []
     },
     "structure_label": "正常",
-    "aesthetic_grade": "B",
+    "aesthetic_grade": "A-",
     "profile": "P3",
     "text_id": "2.1",
     "call": 1
   },
   {
     "writing_quality": 4,
-    "emotional_impact": 4,
-    "character_realism": 5,
+    "emotional_impact": 3,
+    "character_realism": 4,
     "cliche_level": 3,
     "reading_difficulty": 2,
     "logic_break": {
@@ -492,7 +486,7 @@
   },
   {
     "writing_quality": 5,
-    "emotional_impact": 5,
+    "emotional_impact": 6,
     "character_realism": 6,
     "cliche_level": 2,
     "reading_difficulty": 2,
@@ -524,7 +518,7 @@
   },
   {
     "writing_quality": 5,
-    "emotional_impact": 6,
+    "emotional_impact": 5,
     "character_realism": 6,
     "cliche_level": 2,
     "reading_difficulty": 2,
@@ -585,38 +579,6 @@
     "profile": "P3",
     "text_id": "8.2",
     "call": 2
-  },
-  {
-    "writing_quality": 4,
-    "emotional_impact": 5,
-    "character_realism": 5,
-    "cliche_level": 3,
-    "reading_difficulty": 2,
-    "logic_break": {
-      "detected": false,
-      "positions": []
-    },
-    "structure_label": "正常",
-    "aesthetic_grade": "B",
-    "profile": "P4",
-    "text_id": "2.1",
-    "call": 0
-  },
-  {
-    "writing_quality": 4,
-    "emotional_impact": 5,
-    "character_realism": 5,
-    "cliche_level": 3,
-    "reading_difficulty": 2,
-    "logic_break": {
-      "detected": false,
-      "positions": []
-    },
-    "structure_label": "正常",
-    "aesthetic_grade": "B",
-    "profile": "P4",
-    "text_id": "2.1",
-    "call": 1
   },
   {
     "writing_quality": 4,
@@ -632,103 +594,7 @@
     "aesthetic_grade": "B",
     "profile": "P4",
     "text_id": "2.1",
-    "call": 2
-  },
-  {
-    "writing_quality": 5,
-    "emotional_impact": 5,
-    "character_realism": 6,
-    "cliche_level": 3,
-    "reading_difficulty": 2,
-    "logic_break": {
-      "detected": false,
-      "positions": []
-    },
-    "structure_label": "正常",
-    "aesthetic_grade": "A-",
-    "profile": "P4",
-    "text_id": "4.2",
     "call": 0
-  },
-  {
-    "writing_quality": 5,
-    "emotional_impact": 6,
-    "character_realism": 6,
-    "cliche_level": 3,
-    "reading_difficulty": 2,
-    "logic_break": {
-      "detected": false,
-      "positions": []
-    },
-    "structure_label": "正常",
-    "aesthetic_grade": "A-",
-    "profile": "P4",
-    "text_id": "4.2",
-    "call": 1
-  },
-  {
-    "writing_quality": 5,
-    "emotional_impact": 5,
-    "character_realism": 6,
-    "cliche_level": 3,
-    "reading_difficulty": 2,
-    "logic_break": {
-      "detected": false,
-      "positions": []
-    },
-    "structure_label": "正常",
-    "aesthetic_grade": "A-",
-    "profile": "P4",
-    "text_id": "4.2",
-    "call": 2
-  },
-  {
-    "writing_quality": 5,
-    "emotional_impact": 6,
-    "character_realism": 6,
-    "cliche_level": 3,
-    "reading_difficulty": 2,
-    "logic_break": {
-      "detected": false,
-      "positions": []
-    },
-    "structure_label": "正常",
-    "aesthetic_grade": "A-",
-    "profile": "P4",
-    "text_id": "6.2",
-    "call": 0
-  },
-  {
-    "writing_quality": 5,
-    "emotional_impact": 6,
-    "character_realism": 6,
-    "cliche_level": 3,
-    "reading_difficulty": 2,
-    "logic_break": {
-      "detected": false,
-      "positions": []
-    },
-    "structure_label": "正常",
-    "aesthetic_grade": "A-",
-    "profile": "P4",
-    "text_id": "6.2",
-    "call": 1
-  },
-  {
-    "writing_quality": 5,
-    "emotional_impact": 6,
-    "character_realism": 6,
-    "cliche_level": 3,
-    "reading_difficulty": 2,
-    "logic_break": {
-      "detected": false,
-      "positions": []
-    },
-    "structure_label": "正常",
-    "aesthetic_grade": "A-",
-    "profile": "P4",
-    "text_id": "6.2",
-    "call": 2
   },
   {
     "writing_quality": 4,
@@ -743,7 +609,87 @@
     "structure_label": "正常",
     "aesthetic_grade": "B",
     "profile": "P4",
-    "text_id": "8.2",
+    "text_id": "2.1",
+    "call": 1
+  },
+  {
+    "writing_quality": 4,
+    "emotional_impact": 4,
+    "character_realism": 5,
+    "cliche_level": 3,
+    "reading_difficulty": 2,
+    "logic_break": {
+      "detected": false,
+      "positions": []
+    },
+    "structure_label": "正常",
+    "aesthetic_grade": "B",
+    "profile": "P4",
+    "text_id": "2.1",
+    "call": 2
+  },
+  {
+    "writing_quality": 5,
+    "emotional_impact": 6,
+    "character_realism": 6,
+    "cliche_level": 3,
+    "reading_difficulty": 2,
+    "logic_break": {
+      "detected": false,
+      "positions": []
+    },
+    "structure_label": "正常",
+    "aesthetic_grade": "A-",
+    "profile": "P4",
+    "text_id": "4.2",
+    "call": 0
+  },
+  {
+    "writing_quality": 5,
+    "emotional_impact": 5,
+    "character_realism": 6,
+    "cliche_level": 3,
+    "reading_difficulty": 2,
+    "logic_break": {
+      "detected": false,
+      "positions": []
+    },
+    "structure_label": "正常",
+    "aesthetic_grade": "A-",
+    "profile": "P4",
+    "text_id": "4.2",
+    "call": 1
+  },
+  {
+    "writing_quality": 5,
+    "emotional_impact": 5,
+    "character_realism": 6,
+    "cliche_level": 3,
+    "reading_difficulty": 2,
+    "logic_break": {
+      "detected": false,
+      "positions": []
+    },
+    "structure_label": "正常",
+    "aesthetic_grade": "A-",
+    "profile": "P4",
+    "text_id": "4.2",
+    "call": 2
+  },
+  {
+    "writing_quality": 5,
+    "emotional_impact": 6,
+    "character_realism": 6,
+    "cliche_level": 3,
+    "reading_difficulty": 2,
+    "logic_break": {
+      "detected": false,
+      "positions": []
+    },
+    "structure_label": "正常",
+    "aesthetic_grade": "A-",
+    "profile": "P4",
+    "text_id": "6.2",
     "call": 0
   },
   {
@@ -758,6 +704,54 @@
     },
     "structure_label": "正常",
     "aesthetic_grade": "A-",
+    "profile": "P4",
+    "text_id": "6.2",
+    "call": 1
+  },
+  {
+    "writing_quality": 5,
+    "emotional_impact": 6,
+    "character_realism": 6,
+    "cliche_level": 3,
+    "reading_difficulty": 2,
+    "logic_break": {
+      "detected": false,
+      "positions": []
+    },
+    "structure_label": "正常",
+    "aesthetic_grade": "A-",
+    "profile": "P4",
+    "text_id": "6.2",
+    "call": 2
+  },
+  {
+    "writing_quality": 5,
+    "emotional_impact": 6,
+    "character_realism": 6,
+    "cliche_level": 3,
+    "reading_difficulty": 2,
+    "logic_break": {
+      "detected": false,
+      "positions": []
+    },
+    "structure_label": "正常",
+    "aesthetic_grade": "A-",
+    "profile": "P4",
+    "text_id": "8.2",
+    "call": 0
+  },
+  {
+    "writing_quality": 4,
+    "emotional_impact": 5,
+    "character_realism": 5,
+    "cliche_level": 4,
+    "reading_difficulty": 2,
+    "logic_break": {
+      "detected": false,
+      "positions": []
+    },
+    "structure_label": "正常",
+    "aesthetic_grade": "B",
     "profile": "P4",
     "text_id": "8.2",
     "call": 1
@@ -787,10 +781,10 @@
     "logic_break": {
       "detected": true,
       "positions": [
-        "王助理发消息时未注意林远亭走近，但林远亭听到消息内容后反应合理，但王助理作为职场人，在客户面前发消息并提及‘双箭头’略显突兀"
+        "王助理发消息时未注意林远亭走近，但林远亭听到对话后却未立即反应，略显刻意"
       ]
     },
-    "structure_label": "正常",
+    "structure_label": "逻辑断裂",
     "aesthetic_grade": "C",
     "profile": "P5",
     "text_id": "2.1",
@@ -799,18 +793,15 @@
   {
     "writing_quality": 4,
     "emotional_impact": 4,
-    "character_realism": 3,
-    "cliche_level": 4,
+    "character_realism": 4,
+    "cliche_level": 3,
     "reading_difficulty": 2,
     "logic_break": {
-      "detected": true,
-      "positions": [
-        "陆知微内心独白中突然意识到说漏嘴，但前文未明确她说了什么",
-        "王助理发消息提到‘双箭头’，但陆知微和林远亭尚未互动，信息来源不明"
-      ]
+      "detected": false,
+      "positions": []
     },
-    "structure_label": "逻辑断裂",
-    "aesthetic_grade": "C",
+    "structure_label": "正常",
+    "aesthetic_grade": "B",
     "profile": "P5",
     "text_id": "2.1",
     "call": 1
@@ -824,7 +815,7 @@
     "logic_break": {
       "detected": true,
       "positions": [
-        "王助理发消息时未注意林远亭走近，但林远亭能听到她说话，场景合理性存疑"
+        "王助理发消息时未注意林远亭走近，但林远亭听到消息内容后反应过于巧合"
       ]
     },
     "structure_label": "逻辑断裂",
@@ -836,22 +827,24 @@
   {
     "writing_quality": 5,
     "emotional_impact": 5,
-    "character_realism": 5,
+    "character_realism": 4,
     "cliche_level": 3,
     "reading_difficulty": 2,
     "logic_break": {
-      "detected": false,
-      "positions": []
+      "detected": true,
+      "positions": [
+        "两人吃完麻辣烫后，他看手机消息，她偷看屏幕并互动，但之前他哼歌、递纸巾等互动已显亲密，此处偷看动机略显突兀"
+      ]
     },
-    "structure_label": "正常",
-    "aesthetic_grade": "A-",
+    "structure_label": "逻辑断裂",
+    "aesthetic_grade": "B",
     "profile": "P5",
     "text_id": "4.2",
     "call": 0
   },
   {
     "writing_quality": 5,
-    "emotional_impact": 5,
+    "emotional_impact": 6,
     "character_realism": 6,
     "cliche_level": 3,
     "reading_difficulty": 2,
@@ -868,15 +861,15 @@
   {
     "writing_quality": 5,
     "emotional_impact": 5,
-    "character_realism": 6,
-    "cliche_level": 3,
+    "character_realism": 4,
+    "cliche_level": 4,
     "reading_difficulty": 2,
     "logic_break": {
       "detected": false,
       "positions": []
     },
     "structure_label": "正常",
-    "aesthetic_grade": "A-",
+    "aesthetic_grade": "B",
     "profile": "P5",
     "text_id": "4.2",
     "call": 2
@@ -900,7 +893,7 @@
   {
     "writing_quality": 5,
     "emotional_impact": 6,
-    "character_realism": 5,
+    "character_realism": 6,
     "cliche_level": 3,
     "reading_difficulty": 2,
     "logic_break": {
@@ -938,7 +931,7 @@
     "logic_break": {
       "detected": true,
       "positions": [
-        "酒吧对话中突然插入回忆片段，且回忆中人物名称用'xx'代替，显得突兀；'那次他一杯就醉了'与前后文衔接不自然"
+        "对话中突然插入回忆，且回忆内容与当前场景重复，导致时间线混乱"
       ]
     },
     "structure_label": "逻辑断裂",
@@ -956,7 +949,7 @@
     "logic_break": {
       "detected": true,
       "positions": [
-        "酒吧对话中突然插入回忆段落，人称代词‘xx’未明确指代，导致叙事混乱"
+        "对话中突然插入回忆，且回忆内容与当前场景重复，导致时间线混乱"
       ]
     },
     "structure_label": "逻辑断裂",
@@ -966,18 +959,16 @@
     "call": 1
   },
   {
-    "writing_quality": 4,
-    "emotional_impact": 5,
-    "character_realism": 4,
+    "writing_quality": 5,
+    "emotional_impact": 6,
+    "character_realism": 5,
     "cliche_level": 4,
     "reading_difficulty": 2,
     "logic_break": {
-      "detected": true,
-      "positions": [
-        "酒吧对话中突然插入回忆片段，时间线跳跃略显突兀"
-      ]
+      "detected": false,
+      "positions": []
     },
-    "structure_label": "逻辑断裂",
+    "structure_label": "正常",
     "aesthetic_grade": "B",
     "profile": "P5",
     "text_id": "8.2",
