@@ -10,8 +10,8 @@ GIT_ROOT = Path(__file__).resolve().parents[4]
 REPO_ROOT = Path(__file__).resolve().parents[6]
 sys.path.insert(0, str(GIT_ROOT))
 
-from packages.io import save_json
-from packages.llm import call_llm
+from packages.python.io import save_json
+from packages.python.llm import call_llm
 
 FICTION_ROOT = REPO_ROOT / "assets" / "fiction"
 TEXT_PATHS = {
@@ -58,7 +58,7 @@ def run(data_dir: Path, results_dir: Path):
 
     # 缓存（逐文本保存，避免全量超时丢失）
     cache = results_dir / "e4-3_layer1_cache.json"
-    from packages.io import load_json
+    from packages.python.io import load_json
     data = load_json(cache) if cache.exists() else {}
 
     for tid in texts:

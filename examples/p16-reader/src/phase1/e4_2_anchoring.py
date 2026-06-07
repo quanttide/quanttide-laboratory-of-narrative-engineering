@@ -12,8 +12,8 @@ REPO_ROOT = Path(__file__).resolve().parents[6]
 sys.path.insert(0, str(GIT_ROOT))
 
 import numpy as np
-from packages.io import load_json, save_json
-from packages.stats import spearman_rho, kendall_tau
+from packages.python.io import load_json, save_json
+from packages.python.stats import spearman_rho, kendall_tau
 
 
 def run(data_dir: Path, results_dir: Path):

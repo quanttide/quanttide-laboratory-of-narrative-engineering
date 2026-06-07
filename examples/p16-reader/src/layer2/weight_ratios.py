@@ -7,7 +7,7 @@ sys.path.insert(0, str(GIT_ROOT))
 import numpy as np
 from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import StandardScaler
-from packages.io import load_json
+from packages.python.io import load_json
 
 LAYER1_FIELDS = ["inference_demand", "working_memory", "backtracking"]
 EVAL_FIELDS = ["writing_quality", "emotional_impact", "character_realism", "cliche_level"]

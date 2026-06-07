@@ -4,7 +4,7 @@
 返回 JSON 格式的字典，包含推理需求、阅读难度、回读概率。
 """
 import json
-from packages.llm import call_llm, clean_json
+from packages.python.llm import call_llm, clean_json
 
 
 def llm_label_all(sentence: str, prev_sentence: str = "") -> dict:

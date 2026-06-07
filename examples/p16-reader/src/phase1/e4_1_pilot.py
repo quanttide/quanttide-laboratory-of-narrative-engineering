@@ -11,9 +11,9 @@ REPO_ROOT = Path(__file__).resolve().parents[6]
 sys.path.insert(0, str(GIT_ROOT))
 
 import numpy as np
-from packages.llm import call_llm
-from packages.io import save_json, load_json
-from packages.stats import icc, cohens_d
+from packages.python.llm import call_llm
+from packages.python.io import save_json, load_json
+from packages.python.stats import icc, cohens_d
 
 FICTION_ROOT = REPO_ROOT / "assets" / "fiction"
 

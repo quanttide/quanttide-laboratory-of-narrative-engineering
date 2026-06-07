@@ -19,8 +19,8 @@ REPO_ROOT = Path(__file__).resolve().parents[5]
 sys.path.insert(0, str(GIT_ROOT))
 
 import numpy as np
-from packages.io import save_json, load_json
-from packages.stats import icc
+from packages.python.io import save_json, load_json
+from packages.python.stats import icc
 
 FICTION_ROOT = REPO_ROOT / "assets" / "fiction"
 
@@ -129,7 +129,7 @@ def run(data_dir: Path, results_dir: Path):
                 text = _read_text(path)
                 for c in range(N_CALLS):
                     prompt = build_evaluation_prompt(prof, text)
-                    from packages.llm import call_llm
+                    from packages.python.llm import call_llm
                     raw = call_llm(prompt, temperature=TEMPERATURE)
                     try:
                         resp = json.loads(raw)
@@ -150,7 +150,7 @@ def run(data_dir: Path, results_dir: Path):
     print("── 验证 ──")
 
     # 1. 稳定性：同一 text × profile 的 call 间 ICC
-    from packages.stats import icc as icc_func
+    from packages.python.stats import icc as icc_func
     icc_vals = []
     for pid in PROFILES:
         for tid in TEXTS:

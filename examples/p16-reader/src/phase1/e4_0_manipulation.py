@@ -12,8 +12,8 @@ import numpy as np
 GIT_ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(GIT_ROOT))
 
-from packages.llm import call_llm
-from packages.io import save_json, load_json
+from packages.python.llm import call_llm
+from packages.python.io import save_json, load_json
 
 
 def load_profiles(data_dir: Path) -> list[dict]:

@@ -13,7 +13,7 @@ import numpy as np
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, confusion_matrix
 
-from packages.io import load_json, save_json
+from packages.python.io import load_json, save_json
 
 
 FEATURES = ["writing_quality", "emotional_impact", "character_realism", "cliche_level", "reading_difficulty"]

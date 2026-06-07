@@ -7,7 +7,7 @@ sys.path.insert(0, str(GIT_ROOT))
 import numpy as np
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LinearRegression
-from packages.io import save_json
+from packages.python.io import save_json
 from .weight_ratios import compute_weight_ratios, _build_avgs, LAYER1_FIELDS, PROFILES, TEXT_IDS, EVAL_FIELDS
 
 N_BOOTSTRAP = 200
