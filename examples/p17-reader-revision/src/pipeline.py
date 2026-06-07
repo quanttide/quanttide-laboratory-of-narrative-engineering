@@ -6,7 +6,8 @@
    a. Step 1: 契约标注（LLM）
    b. Step 2: 读者回响映射（数据处理）
    c. Step 3: 材料并排（LLM，无分析句）
-3. 运行验证（引用准确率、不越界检查）
+   d. Step 4: 作者反馈（交互式）
+3. 运行验证
 4. 输出结果
 """
 import sys, json, re
@@ -21,6 +22,7 @@ from config import TEXT_POINTS, FICTION_ROOT, P16_OUTPUT, DATA_OUTPUT
 from contract import load_contracts, annotate as contract_annotate
 from reader_mapping import load_p16_data, load_profiles, map_reader_response
 from side_by_side import generate_side_by_side
+from feedback import collect_feedback
 
 
 def read_scene_text(scene_file):
@@ -167,6 +169,12 @@ def run():
             "no_overstepping": len(violations) == 0,
             "violations": violations,
         })
+
+        # Step 4: 作者反馈（交互式）
+        feedback = collect_feedback(
+            tp, side_by_side_output,
+            DATA_OUTPUT / f"{tp['id']}_feedback.json"
+        )
 
         # 收集验证结果
         verification = {
