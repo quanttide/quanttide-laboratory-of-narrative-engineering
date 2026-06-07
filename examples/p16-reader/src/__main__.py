@@ -33,6 +33,8 @@ def main():
         "e4-1-pilot": "src.phase1.e4_1_pilot",
         "e4-1": "src.phase1.e4_1_differentiation",
         "e4-2": "src.phase1.e4_2_generalization",
+        "e4-2-g": "src.phase1.e4_2_generalization",
+        "e4-2-a": "src.phase1.e4_2_anchoring",
         "e4-3": "src.e4_3_layer1",
         "e4-4": "src.e4_4_weight_mapping",
         "e4-5": "src.e4_5_pipeline",
