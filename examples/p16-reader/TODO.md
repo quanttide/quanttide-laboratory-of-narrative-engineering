@@ -118,34 +118,6 @@
 
 ---
 
-## Phase III：读者视角的修改建议（P3）
+## Phase III：已取消
 
-> E4-6（Reflect/视角译码）已在设计阶段被砍掉。根因：画像差异本身没有因果信息，"视角译码"本质是 LLM 角色扮演能力的重复验证。
-> Phase III 直接推进 E4-7（基于多画像评价的修改建议）。
-> 设计文档：`docs/experiments/E4-7-rewrite-design.md`
-
-### □ E4-7 — 基于多画像评价的局部修改建议（Rewrite）
-
-> 自包含 Reflect+Rewrite，不依赖 E4-6。用 E4-1 评价引擎做 before/after 对比。
-> 设计文档：`docs/experiments/E4-7-rewrite-design.md`
-
-- [ ] **7.1 实现薄弱点定位** — 对比目标画像评分 vs 历史均值，按差距大小排序，阈值筛选
-- [ ] **7.2 统计噪声基线** — 计算各画像×维度 call 间 SD，动态调整验证门槛
-- [ ] **7.3 实现 Rewrite prompt** — 2 种风格，输入文本+薄弱点+目标画像 → 输出修改版本
-- [ ] **7.4 运行生成** — 6 篇 × 2 目标画像（P1, P3）× 2 prompt = ~24 次
-- [ ] **7.5 核心验证** — 用 E4-1 评价引擎对每个修改版本重新评分
-  - 目标维度提升：≥ 2/3 版本提升 ≥ 2×SD
-  - 非目标维度不受损：降幅 > 2×SD 的维度 ≤ 1
-- [ ] **7.6 可选验证** — 画像特异性交叉评价（P3改→P1评）
-- [ ] **7.7 输出汇总** — `data/output/e4-7_rewrite_summary.json`
-
----
-
-## 交付物清单（Phase III）
-
-- [ ] `docs/experiments/E4-6-reflect-design.md` ✅
-- [ ] `docs/experiments/E4-7-rewrite-design.md` ✅
-- [ ] `data/output/e4-6_reflect_summary.json`
-- [ ] `data/output/e4-7_rewrite_summary.json`
-- [ ] 更新 ROADMAP.md ✅
-- [ ] 更新 TODO.md ✅
+> E4-6（Reflect/视角译码）和 E4-7（Rewrite）均已终止。方向判断：多画像评价差异是 prompt 行为产物而非真实的读者阅读差异，不能用作文本修改的依据。Phase III 不继续推进。
