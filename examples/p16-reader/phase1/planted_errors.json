@@ -1,0 +1,12 @@
+{
+  "4.1": [
+    {"type": "grammar", "position": "第2段第3句", "description": "主谓不一致", "expected": "语法错误"},
+    {"type": "grammar", "position": "第5段第1句", "description": "缺少宾语"},
+    {"type": "factual_contradiction", "position": "第8段", "description": "前文说下雨，后文说地面干燥"}
+  ],
+  "7.2": [],
+  "9.1": [],
+  "2.3": [],
+  "10.3": [],
+  "1.2": []
+}

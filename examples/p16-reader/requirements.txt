@@ -1,0 +1,10 @@
+# p16-reader 实验依赖
+# 仅 p16 使用，不影响 examples/ 下其他 PoC。
+# 安装：pip install -r requirements.txt
+
+numpy>=1.26
+scipy>=1.13
+scikit-learn>=1.5
+sentence-transformers>=3.0
+requests>=2.31
+pyyaml>=6.0
