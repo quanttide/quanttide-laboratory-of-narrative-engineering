@@ -6,12 +6,14 @@
 |------|------|------|
 | `p14_scene_diagnosis.py` | p14 | 行为链标注 → 薄弱点诊断 → 三类修改建议 |
 | `p15_outline_generation.py` | p15 | YAML + p14 JSON → 场景写作备忘 |
+| `p18_character_plot.py` | p18 | 角色状态提取 → 情节推理 → 反向验证 |
 
 ## 用法
 
 ```bash
 uv run python src/p14_scene_diagnosis.py
 uv run python src/p15_outline_generation.py
+uv run python src/p18_character_plot.py
 ```
 
 ## 扩展
