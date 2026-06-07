@@ -14,11 +14,11 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO_ROOT))
 
 from packages.io import save_json, load_yaml
-from config import TEXT_POINTS, FICTION_ROOT, P16_OUTPUT, DATA_OUTPUT
-from contract import load_contracts, annotate as contract_annotate
-from reader_mapping import load_p16_data, load_profiles, map_reader_response
-from side_by_side import generate_side_by_side
-from feedback import collect_feedback
+from src.config import TEXT_POINTS, FICTION_ROOT, P16_OUTPUT, DATA_OUTPUT
+from src.contract import load_contracts, annotate as contract_annotate
+from src.reader_mapping import load_p16_data, load_profiles, map_reader_response
+from src.side_by_side import generate_side_by_side
+from src.feedback import collect_feedback
 
 
 def read_scene_text(scene_file):
@@ -187,7 +187,7 @@ def run_feedback():
         data = json.loads(f.read_text())
         output = data["output"]
 
-        feedback = collect_feedback(tp, output, DATA_OUTPUT / f"{tp['id']}_feedback.json")
+        feedback = collect_feedback(tp, output, DATA_OUTPUT / f"{tp['id']}_feedback.json", data_dir=DATA_OUTPUT)
         feedback_results.append(feedback)
         print()
 

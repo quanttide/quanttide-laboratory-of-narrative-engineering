@@ -18,10 +18,10 @@ def main():
         command = "batch"
 
     if command == "batch" or command == "all":
-        from pipeline import run_batch
+        from .pipeline import run_batch
         run_batch()
     elif command == "feedback":
-        from pipeline import run_feedback
+        from .pipeline import run_feedback
         run_feedback()
     else:
         print(f"未知命令: {command}")
