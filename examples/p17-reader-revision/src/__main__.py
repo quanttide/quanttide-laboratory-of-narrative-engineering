@@ -1,10 +1,8 @@
 """p17-reader-revision — 写作契约 vs 读者回响：单点反思
 
 用法：
-    python -m src               # 运行完整管线
-    python -m src step1         # 仅契约标注
-    python -m src step2         # 仅读者回响映射（数据处理）
-    python -m src step3         # 仅材料并排（需要 step1 + step2 的缓存）
+    python -m src               # 批处理模式：Step 1-3（无反馈）
+    python -m src feedback      # 反馈模式：逐点展示已保存的材料并收集反馈
 """
 import sys
 from pathlib import Path
@@ -17,19 +15,14 @@ def main():
     if len(sys.argv) >= 2:
         command = sys.argv[1]
     else:
-        command = "all"
+        command = "batch"
 
-    if command == "all":
-        from pipeline import run
-        run()
-    elif command == "step1":
-        from pipeline import run
-        # 仅执行 step1
-        print("仅执行 Step 1: 契约标注")
-    elif command == "step2":
-        print("仅执行 Step 2: 读者回响映射")
-    elif command == "step3":
-        print("仅执行 Step 3: 材料并排")
+    if command == "batch" or command == "all":
+        from pipeline import run_batch
+        run_batch()
+    elif command == "feedback":
+        from pipeline import run_feedback
+        run_feedback()
     else:
         print(f"未知命令: {command}")
         print(__doc__)
