@@ -26,10 +26,10 @@ API_URL = "https://api.deepseek.com/chat/completions"
 RESULTS_DIR = DATA_DIR / "p18"
 
 SCENES = [
-    {"id": "T1", "name": "咖啡厅重逢", "file": "1_1_咖啡厅重逢.md", "next_id": "1_2"},
-    {"id": "T2", "name": "便利店谈心", "file": "4_1_便利店谈心.md", "next_id": "4_2"},
-    {"id": "T3", "name": "海边散步", "file": "6_2_海边散步.md", "next_id": "7_2"},
-    {"id": "T4", "name": "公园拥抱", "file": "7_2_公园拥抱.md", "next_id": "8_2"},
+    {"id": "T1", "name": "咖啡厅重逢", "file": "职场言情/4_成稿/1_1_咖啡厅重逢.md", "next_id": "1_2"},
+    {"id": "T2", "name": "便利店谈心", "file": "职场言情/4_成稿/4_1_便利店谈心.md", "next_id": "4_2"},
+    {"id": "T3", "name": "海边散步", "file": "职场言情/4_成稿/6_2_海边散步.md", "next_id": "7_2"},
+    {"id": "T4", "name": "公园拥抱", "file": "职场言情/4_成稿/7_2_公园拥抱.md", "next_id": "8_2"},
 ]
 
 
@@ -127,8 +127,36 @@ def step2_infer_plot(char_state: dict, scene_name: str) -> dict:
     return json.loads(call_llm(prompt, temperature=0.7))
 
 
-def step3_compare_with_story(inference: dict, actual_next: str, actual_tensions: list) -> dict:
-    pass  # TODO: 对比推理与实际的下一场景
+def step3_compare_with_story(inference: dict, actual_next: str, actual_next_name: str) -> dict:
+    """对比推理结果与实际的下一场景。"""
+    prompt = f"""对比以下两个情节描述，判断它们在核心事件上的吻合程度。
+
+推理的下一个情节：
+{inference['inferred_next']['core_beat']}
+
+替代推理：
+{inference['alternative']['core_beat']}
+
+实际的下一场景（{actual_next_name}）：
+{actual_next[:500]}
+
+输出 JSON（严格按此格式）：
+{{
+  "beat_match": "吻合|部分吻合|不吻合",
+  "explanation": "一句话解释判断理由",
+  "main_vs_actual": "推理主事件 vs 实际事件的一致性 0-1",
+  "alt_vs_actual": "替代推理 vs 实际事件的一致性 0-1"
+}}"""
+    return json.loads(call_llm(prompt))
+
+
+def load_story_yaml() -> dict:
+    path = Path(__file__).resolve().parents[3] / "assets" / "fiction" / "story.yaml"
+    if not path.exists():
+        raise FileNotFoundError(f"story.yaml 不存在: {path}")
+    raw = path.read_text("utf-8")
+    raw = "\n".join(line for line in raw.splitlines() if line.strip() and not line.strip().startswith("# "))
+    return yaml.safe_load(raw) or {}
 
 
 def step4_reverse_validation(next_text: str, prev_state: dict) -> dict:
@@ -138,6 +166,11 @@ def step4_reverse_validation(next_text: str, prev_state: dict) -> dict:
 def main():
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
     print("p18 — 角色驱动的母题推理实验\n")
+
+    story = load_story_yaml()
+    plots_by_id = {p["id"]: p for p in story.get("plots", [])}
+
+    comparisons = []
 
     for scene in SCENES:
         sid = scene["id"]
@@ -163,6 +196,21 @@ def main():
             inf_cache.write_text(json.dumps(inference, ensure_ascii=False, indent=2), "utf-8")
             print(f"    ✓ 情节推理")
             print(f"      主: {inference['inferred_next']['core_beat'][:60]}")
+
+        actual = plots_by_id.get(scene["next_id"])
+        if actual:
+            comp = step3_compare_with_story(inference, actual.get("description", ""), actual.get("title", ""))
+            comp["scene_id"] = sid
+            comp["actual_next"] = actual.get("title", "")
+            comparisons.append(comp)
+            print(f"      vs {actual.get('title', '')}: {comp['beat_match']}")
+
+    comp_file = RESULTS_DIR / "comparison.json"
+    comp_file.write_text(json.dumps(comparisons, ensure_ascii=False, indent=2), "utf-8")
+
+    print(f"\n=== 对比汇总 ===")
+    for c in comparisons:
+        print(f"  {c['scene_id']} → {c.get('actual_next', '?'):<8}: {c['beat_match']}  (主={c.get('main_vs_actual','?')}, 替={c.get('alt_vs_actual','?')})")
 
     print(f"\n结果: {RESULTS_DIR}")
 
