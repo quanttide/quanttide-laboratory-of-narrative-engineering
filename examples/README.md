@@ -36,16 +36,11 @@
 | p03 风格可提取性 | 结论支持 StyleStore 策略，未封装 | [`style/p03-style-extraction/`](style/p03-style-extraction/) |
 | p09 复刻作者审美评审 | 风格内化评估基准 | [`style/p09-aesthetic-review/`](style/p09-aesthetic-review/) |
 
-### story/ — 叙事写作辅助管线
+## 已迁移到 apps/
 
-| PoC | 保留理由 | 目录 |
-|-----|---------|------|
-| p14 片段内部情节建议 | 场景内行为因果链的诊断与三类建议 | [`story/p14-intra-scene-plot/`](story/p14-intra-scene-plot/) |
-| p15 提纲生成 | 从 YAML+JSON 自动生成写作提纲 | [`story/p15-outline-generation/`](story/p15-outline-generation/) |
-| p18 角色驱动的母题推理 | 角色档案提取 → 情节推理 → 角色一致性检查 | [`story/p18-character-plot/`](story/p18-character-plot/) |
+以下实验已从 `examples/` 迁移到 `apps/`，作为可独立运行的工具：
 
-### review/ — 模拟读者系统
-
-| PoC | 保留理由 | 目录 |
-|-----|---------|------|
-| p16 模拟读者 | 多画像读者模拟系统（Phase I 完成） | [`review/p16-reader/`](review/p16-reader/) |
+| 目录 | 内容 |
+|------|------|
+| [`apps/story/`](../apps/story/) | p18 角色驱动的母题推理（check / infer / outline） |
+| [`apps/review/`](../apps/review/) | p16 模拟读者系统（多画像仿真） |
