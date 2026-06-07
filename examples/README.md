@@ -22,16 +22,34 @@
 
 p02 和 p04 的实验代码已迁移到 `apps/cli/`，原始实验数据已删除。
 
-## 保留的实验
+## 保留的实验（按管线分组）
+
+### motif/ — 母题分析管线
 
 | PoC | 保留理由 | 目录 |
 |-----|---------|------|
-| ~~p01 叙事框架对比~~ | 已归档 | ~~`p01-narrative-frameworks/`~~ |
-| p03 风格可提取性 | 结论支持 StyleStore 策略，未封装 | [`p03-style-extraction/`](p03-style-extraction/) |
-| p05 母题可提取性 | 母题提取基准数据 | [`p05-motif-extraction/`](p05-motif-extraction/) |
-| p06 母题跨作品识别 | 跨作品母题映射验证 | [`p06-cross-work-motif/`](p06-cross-work-motif/) |
-| p07 母题一致性检验 | 母题约束生成验证 | [`p07-motif-consistency/`](p07-motif-consistency/) |
-| p08 母题缝隙分析 | 6 方向改法生成验证 | [`p08-motif-gap-analysis/`](p08-motif-gap-analysis/) |
-| p09 复刻作者审美评审 | 风格内化评估基准 | [`p09-aesthetic-review/`](p09-aesthetic-review/) |
-| p10 母题驱动的风格改进 | 组合改法 vs 单层改法对比数据 | [`p10-motif-style-synthesis/`](p10-motif-style-synthesis/) |
-| p14 片段内部情节建议 | 场景内行为因果链的诊断与三类建议 | [`p14-intra-scene-plot/`](p14-intra-scene-plot/) |
+| p05 母题可提取性 | 母题提取基准数据 | [`motif/p05-motif-extraction/`](motif/p05-motif-extraction/) |
+| p06 母题跨作品识别 | 跨作品母题映射验证 | [`motif/p06-cross-work-motif/`](motif/p06-cross-work-motif/) |
+| p07 母题一致性检验 | 母题约束生成验证 | [`motif/p07-motif-consistency/`](motif/p07-motif-consistency/) |
+| p08 母题缝隙分析 | 6 方向改法生成验证 | [`motif/p08-motif-gap-analysis/`](motif/p08-motif-gap-analysis/) |
+| p10 母题驱动的风格改进 | 组合改法 vs 单层改法对比数据 | [`motif/p10-motif-style-synthesis/`](motif/p10-motif-style-synthesis/) |
+
+### style/ — 风格提取与评审管线
+
+| PoC | 保留理由 | 目录 |
+|-----|---------|------|
+| p03 风格可提取性 | 结论支持 StyleStore 策略，未封装 | [`style/p03-style-extraction/`](style/p03-style-extraction/) |
+| p09 复刻作者审美评审 | 风格内化评估基准 | [`style/p09-aesthetic-review/`](style/p09-aesthetic-review/) |
+
+### scene/ — 场景写作辅助管线
+
+| PoC | 保留理由 | 目录 |
+|-----|---------|------|
+| p14 片段内部情节建议 | 场景内行为因果链的诊断与三类建议 | [`scene/p14-intra-scene-plot/`](scene/p14-intra-scene-plot/) |
+| p15 提纲生成 | 从 YAML+JSON 自动生成写作提纲 | [`scene/p15-outline-generation/`](scene/p15-outline-generation/) |
+
+### reader/ — 模拟读者系统
+
+| PoC | 保留理由 | 目录 |
+|-----|---------|------|
+| p16 模拟读者 | 多画像读者模拟系统（Phase I 完成） | [`reader/p16-reader/`](reader/p16-reader/) |
