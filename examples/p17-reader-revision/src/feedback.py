@@ -117,30 +117,43 @@ function init() {{
 
 function _card(id, d, idx) {{
   var p = d.point||{{}};
-  var ops = (d.reader&&d.reader.reader_opinions)||{{}};
-  var c = d.contract||{{}};
-  var co = c.co_author||'';
-  var sbs = (d.side_by_side&&d.side_by_side.output)||'';
-  var p3 = ops.P3||'';
-  var p1 = ops.P1||'';
+  var r = d.reader||{{}};
+  var ratings = r.scene_ratings||{{}};
+  var ks = r.key_signals||{{}};
+
+  // 从评分数据生成创作者可读的读者反馈
+  function rd(pid, field) {{ var v=ratings[pid]; return v?v[field]:null; }}
+  var p3cl = rd('P3','cliche_level');
+  var p1cl = rd('P1','cliche_level');
+  var p3cr = rd('P3','character_realism');
+  var p1cr = rd('P1','character_realism');
+  var pair = ks.max_divergence_pair||[];
+  var anom = (ks.anomalies||[])[0]||{{}};
+
+  var lines = [];
+  // cliche 对比：最直观的维度
+  if (p3cl!=null && p1cl!=null) {{
+    var diff = Math.abs(p3cl - p1cl);
+    lines.push('P3（老书虫）套路感='+p3cl.toFixed(1)+' — '+ (p3cl<2?'不太套路':p3cl<3?'中等':p3cl>=3?'觉得偏套路':''));
+    lines.push('P1（甜宠）套路感='+p1cl.toFixed(1)+' — '+ (p1cl<2?'不太套路':p1cl<3?'中等':p1cl>=3?'觉得偏套路':''));
+    if (diff>1) lines.push('差 '+diff.toFixed(1)+' 分，分歧明显');
+  }}
+  // 角色真实感对比
+  if (p3cr!=null && p1cr!=null && Math.abs(p3cr-p1cr)>1.5) {{
+    lines.push('角色真实感：P3打'+p3cr.toFixed(1)+' vs P1打'+p1cr.toFixed(1)+'，差 '+Math.abs(p3cr-p1cr).toFixed(1)+' 分');
+  }}
+  // 异常值
+  if (anom.profile) {{
+    lines.push(anom.profile+' 觉得「'+anom.field+'」='+anom.value+'（其余画像平均 '+anom.mean.toFixed(1)+'）');
+  }}
+  var readerHtml = lines.length ? lines.join('<br>') : '<span style="color:#999">评分数据加载中</span>';
+
   var fv = FB[id]||'';
   return '<div class="card'+(idx===0?' active':'')+'" id="cd-'+idx+'">'+
     '<div class="meta">'+id+' '+p.location+'（'+p.type+'）</div>'+
     '<div class="quote">'+p.quote+'</div>'+
-    '<div style="display:flex;gap:12px;margin-bottom:8px">'+
-      // 左列：共同作者
-      '<div style="flex:1;background:#f0f7ff;border-radius:6px;padding:10px 12px;font-size:13px;line-height:1.5">'+
-        '<div style="font-size:11px;font-weight:600;color:#0066cc;margin-bottom:4px">共同作者</div>'+
-        (co||'<span style="color:#999">（待生成）</span>')+
-      '</div>'+
-      // 右列：读者感受
-      '<div style="flex:1;background:#f5f5f5;border-radius:6px;padding:10px 12px;font-size:13px;line-height:1.5">'+
-        '<div style="font-size:11px;font-weight:600;color:#888;margin-bottom:4px">读者</div>'+
-        (p3?'P3：'+p3:'')+
-        (p3&&p1?'<br>':'')+
-        (p1?'P1：'+p1:'')+
-        (!p3&&!p1?'<span style="color:#999">（待生成）</span>':'')+
-      '</div>'+
+    '<div style="background:#f5f5f5;border-radius:6px;padding:12px;margin-bottom:8px;font-size:13px;line-height:1.6">'+
+      readerHtml+
     '</div>'+
     '<div class="fb">'+
     '<button class="'+(fv==='acc'?'sel':'')+'" onclick="fb(\\''+id+'\\',\\'acc\\')">准确</button>'+
