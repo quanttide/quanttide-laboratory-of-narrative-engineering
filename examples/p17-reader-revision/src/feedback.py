@@ -36,10 +36,44 @@ def _load_all():
 
 
 def _build_html(data):
-    """生成独立 HTML（所有数据内嵌，无外部依赖）。"""
-    tp_ids = [tp["id"] for tp in TEXT_POINTS]
-    json_data = json.dumps(data, ensure_ascii=False)
+    """生成独立 HTML（数据通过 JSON script 标签嵌入，JS 逻辑独立）。"""
+    json_str = json.dumps(data, ensure_ascii=False)
+    # 替换 </script> 防止 HTML 解析中断
+    json_str = json_str.replace("</script>", "<\\/script>")
     server_ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    CSS = """
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif; background:#f5f5f5; color:#222; padding:20px; }
+.container { max-width:720px; margin:0 auto; }
+h1 { font-size:18px; margin-bottom:4px; }
+.sub { color:#666; font-size:13px; margin-bottom:20px; }
+.nav { display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap; }
+.nav button { padding:6px 16px; border:1px solid #ccc; border-radius:6px; background:#fff; cursor:pointer; font-size:13px; }
+.nav button.active { background:#0066cc; color:#fff; border-color:#0066cc; }
+.nav button.done { border-color:#22c55e; }
+.card { background:#fff; border-radius:8px; padding:20px; margin-bottom:16px; display:none; }
+.card.active { display:block; }
+.meta { font-size:13px; color:#666; margin-bottom:12px; }
+.quote { background:#f8f8f8; border-left:3px solid #0066cc; padding:12px 16px; margin-bottom:16px; font-size:14px; line-height:1.7; border-radius:0 6px 6px 0; }
+.section { margin-bottom:12px; }
+.stitle { font-size:12px; font-weight:600; color:#888; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px; }
+.tag { display:inline-block; font-size:11px; padding:1px 8px; border-radius:10px; margin:2px 4px 2px 0; }
+.tag.ok { background:#dcfce7; color:#166534; }
+.tag.err { background:#fee2e2; color:#991b1b; }
+.tag.warn { background:#fef9c3; color:#854d0e; }
+.signal { font-size:13px; color:#444; line-height:1.6; }
+.fb { margin-top:16px; padding-top:16px; border-top:1px solid #eee; display:flex; gap:12px; align-items:center; }
+.fb button { padding:6px 20px; border:2px solid #ccc; border-radius:6px; background:#fff; cursor:pointer; font-size:14px; }
+.fb button.sel { border-color:#0066cc; background:#e8f0fe; font-weight:600; }
+.fb .saved { color:#22c55e; font-size:13px; display:none; }
+.actions { margin-top:20px; text-align:center; display:flex; gap:8px; justify-content:center; }
+.actions button { padding:8px 20px; border:none; border-radius:6px; cursor:pointer; font-size:13px; }
+.btn1 { background:#0066cc; color:#fff; }
+.btn2 { background:#eee; color:#666; }
+#done-msg { text-align:center; padding:40px; color:#22c55e; display:none; }
+#done-msg.show { display:block; }
+"""
 
     return f"""<!DOCTYPE html>
 <html lang="zh-CN">
@@ -47,209 +81,146 @@ def _build_html(data):
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>p17 作者反馈</title>
-<style>
-  * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-  body {{ font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; background: #f5f5f5; color: #222; padding: 20px; }}
-  .container {{ max-width: 720px; margin: 0 auto; }}
-  h1 {{ font-size: 18px; margin-bottom: 4px; }}
-  .sub {{ color: #666; font-size: 13px; margin-bottom: 20px; }}
-  .nav {{ display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }}
-  .nav button {{ padding: 6px 16px; border: 1px solid #ccc; border-radius: 6px; background: #fff; cursor: pointer; font-size: 13px; }}
-  .nav button.active {{ background: #0066cc; color: #fff; border-color: #0066cc; }}
-  .nav button.done {{ border-color: #22c55e; }}
-  .nav button .badge {{ font-size: 11px; margin-left: 4px; color: #22c55e; }}
-  .card {{ background: #fff; border-radius: 8px; padding: 20px; margin-bottom: 16px; display: none; }}
-  .card.active {{ display: block; }}
-  .meta {{ font-size: 13px; color: #666; margin-bottom: 12px; }}
-  .quote {{ background: #f8f8f8; border-left: 3px solid #0066cc; padding: 12px 16px; margin-bottom: 16px; font-size: 14px; line-height: 1.7; border-radius: 0 6px 6px 0; }}
-  .section {{ margin-bottom: 12px; }}
-  .section-title {{ font-size: 12px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }}
-  .tag {{ display: inline-block; font-size: 11px; padding: 1px 8px; border-radius: 10px; margin: 2px 4px 2px 0; }}
-  .tag.compliant {{ background: #dcfce7; color: #166534; }}
-  .tag.violation {{ background: #fee2e2; color: #991b1b; }}
-  .tag.borderline {{ background: #fef9c3; color: #854d0e; }}
-  .tag.aligned {{ background: #dcfce7; color: #166534; }}
-  .tag.deviated {{ background: #fee2e2; color: #991b1b; }}
-  .signal {{ font-size: 13px; color: #444; line-height: 1.6; }}
-  .feedback-area {{ margin-top: 16px; padding-top: 16px; border-top: 1px solid #eee; }}
-  .feedback-btn {{ padding: 8px 24px; border: 2px solid #ccc; border-radius: 6px; background: #fff; cursor: pointer; font-size: 14px; margin-right: 8px; }}
-  .feedback-btn.selected {{ border-color: #0066cc; background: #e8f0fe; font-weight: 600; }}
-  .feedback-btn.saved {{ border-color: #22c55e; }}
-  .status {{ font-size: 13px; color: #22c55e; margin-top: 8px; display: none; }}
-  .actions {{ margin-top: 20px; text-align: center; }}
-  .actions button {{ padding: 8px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; }}
-  .btn-export {{ background: #0066cc; color: #fff; }}
-  .btn-reset {{ background: #eee; color: #666; margin-left: 8px; }}
-  #all-done {{ text-align: center; padding: 40px; color: #22c55e; display: none; }}
-  #all-done.show {{ display: block; }}
-</style>
+<style>{CSS}</style>
 </head>
 <body>
 <div class="container">
   <h1>p17 写作契约 vs 读者回响</h1>
   <p class="sub">对每个文本点判断：契约解读是否准确？</p>
-
   <div class="nav" id="nav"></div>
-  <div id="all-done">🎉 所有文本点已反馈完毕</div>
+  <div id="done-msg">所有文本点已反馈完毕</div>
   <div id="cards"></div>
-
   <div class="actions">
-    <button class="btn-export" onclick="exportFeedback()">⬇ 导出反馈</button>
-    <button class="btn-reset" onclick="resetAll()">重置</button>
+    <button class="btn1" onclick="doExport()">导出反馈</button>
+    <button class="btn2" onclick="doReset()">重置</button>
   </div>
-  <p class="sub" style="margin-top:12px">服务器数据时间：{server_ts}</p>
+  <p class="sub" style="margin-top:12px">{server_ts}</p>
 </div>
-
+<script type="application/json" id="payload">{json_str}</script>
 <script>
-var ALL_DATA = {json_data};
-var TP_IDS = {json.dumps(tp_ids, ensure_ascii=False)};
-var FEEDBACK = {{}};
+var ALL = JSON.parse(document.getElementById('payload').textContent);
+var IDS = {json.dumps([tp["id"] for tp in TEXT_POINTS], ensure_ascii=False)};
+var FB = {{}};
 
-// 初始化：从 localStorage 恢复
-try {{
-  var saved = localStorage.getItem('p17_feedback');
-  if (saved) FEEDBACK = JSON.parse(saved);
-}} catch(e) {{}}
+try {{ var s = localStorage.getItem('p17fb'); if (s) FB = JSON.parse(s); }} catch(e) {{}}
 
 function init() {{
   var nav = document.getElementById('nav');
   var cards = document.getElementById('cards');
-  var htmlNav = '', htmlCards = '';
-  TP_IDS.forEach(function(id, i) {{
-    var d = ALL_DATA[id];
+  var hn = '', hc = '';
+  IDS.forEach(function(id, i) {{
+    var d = ALL[id];
     if (!d) return;
-    var fb = FEEDBACK[id] || null;
-    var doneClass = fb ? 'done' : '';
-    var badge = fb ? '✓' : '';
-    htmlNav += '<button class="' + doneClass + '" onclick="showCard(' + i + ')" id="nav-' + i + '">' + id + ' <span class="badge">' + badge + '</span></button>';
-    htmlCards += buildCard(id, d, i, fb);
+    hn += '<button class="'+(FB[id]?'done':'')+'" onclick="go('+i+')" id="nb-'+i+'">'+id+(FB[id]?' ✓':'')+'</button>';
+    hc += _card(id, d, i);
   }});
-  nav.innerHTML = htmlNav;
-  cards.innerHTML = htmlCards;
-  showCard(0);
-  updateAllDone();
+  nav.innerHTML = hn;
+  cards.innerHTML = hc;
+  go(0);
+  _done();
 }}
 
-function buildCard(id, d, idx, fb) {{
-  var c = d.contract || {{}};
-  var r = d.reader || {{}};
-  var s = d.side_by_side || {{}};
-  var p = d.point || {{}};
+function _card(id, d, idx) {{
+  var p = d.point||{{}}, c = d.contract||{{}}, r = d.reader||{{}};
+  var dims = c.style&&c.style.touched_dimensions||[];
+  var keeps = dims.filter(function(v){{return v.nature==='遵守'||v.nature==='对齐';}});
+  var breaks = dims.filter(function(v){{return v.nature==='违反'||v.nature==='偏离';}});
+  var mids = dims.filter(function(v){{return v.nature!=='遵守'&&v.nature!=='违反'&&v.nature!=='对齐'&&v.nature!=='偏离';}});
 
-  // 契约标签
+  // 一句话结论
+  var verdict = '';
+  if (breaks.length>0) {{
+    verdict = '<div style="margin-bottom:12px;padding:8px 12px;border-radius:6px;background:#fef2f2;color:#991b1b;font-size:13px;font-weight:500">⚠️ 契约判定：存在 '+breaks.length+' 处偏离/违反</div>';
+  }} else if (mids.length>0) {{
+    verdict = '<div style="margin-bottom:12px;padding:8px 12px;border-radius:6px;background:#fffbeb;color:#854d0e;font-size:13px;font-weight:500">📐 契约判定：边缘情况，需作者自行判断</div>';
+  }} else {{
+    verdict = '<div style="margin-bottom:12px;padding:8px 12px;border-radius:6px;background:#f0fdf4;color:#166534;font-size:13px;font-weight:500">✅ 契约判定：全部遵守</div>';
+  }}
+
+  function _tag(arr, cls) {{ return arr.map(function(v){{return '<span class="tag '+cls+'">'+v.dimension+'</span>';}}).join(''); }}
+
   var tags = '';
-  var dims = (c.style && c.style.touched_dimensions) || [];
-  dims.forEach(function(dim) {{
-    var n = dim.nature || '';
-    var cls = n === '遵守' ? 'compliant' : n === '违反' ? 'violation' : 'borderline';
-    tags += '<span class="tag ' + cls + '">' + dim.dimension + ' → ' + n + '</span>';
-  }});
-  var motifs = (c.motif && c.motif.touched_motifs) || [];
-  motifs.forEach(function(m) {{
-    var a = m.alignment || '';
-    var cls = a === '对齐' ? 'aligned' : a === '偏离' ? 'deviated' : 'borderline';
-    tags += '<span class="tag ' + cls + '">' + m.motif + ' → ' + a + '</span>';
-  }});
+  if (breaks.length) tags += '<div style="margin-bottom:4px">'+_tag(breaks,'err')+'</div>';
+  if (mids.length) tags += '<div style="margin-bottom:4px">'+_tag(mids,'warn')+'</div>';
+  if (keeps.length) tags += '<div>'+_tag(keeps,'ok')+'</div>';
 
-  // 读者信号
-  var signals = '';
-  var ks = (r.key_signals) || {{}};
-  if (ks.max_variance_dimension && ks.max_variance_dimension[0]) {{
-    signals += '<div class="signal">读者分歧最大维度：' + ks.max_variance_dimension[0] + '（方差 ' + ks.max_variance_dimension[1] + '）</div>';
+  // 母题简化为一行
+  var ms = (c.motif&&c.motif.touched_motifs||[]);
+  var mtxt = ms.length ? '<div style="font-size:12px;color:#666;margin-top:6px">母题：'+ms.map(function(m){{return m.motif+'→'+m.alignment;}}).join('、')+'</div>' : '';
+
+  // 读者信号：只列最关键的一条
+  var sig = '';
+  var ks = r.key_signals||{{}};
+  var pair = ks.max_divergence_pair;
+  if (pair) {{
+    var colors = {{P1:'#e8d5f5',P2:'#d5e8f5',P3:'#f5d5d5',P4:'#d5f5e8',P5:'#f5e8d5'}};
+    sig += '<div style="font-size:13px;line-height:1.6;padding:8px 0"><span style="font-weight:500">读者分歧</span>：'+pair[0]+' 和 '+pair[1]+' 在「'+pair[2]+'」上差距 <strong>'+pair[3]+'</strong></div>';
   }}
-  if (ks.max_divergence_pair) {{
-    var pair = ks.max_divergence_pair;
-    signals += '<div class="signal">最分歧画像对：' + pair[0] + ' vs ' + pair[1] + '（' + pair[2] + ' 差距 ' + pair[3] + '）</div>';
+  var anom = ks.anomalies||[];
+  if (anom.length) {{
+    var a=anom[0];
+    sig += '<div style="font-size:13px;color:#666">最异常：'+a.profile+' 给 '+a.field+' 打 '+a.value+'（均值 '+a.mean+'）</div>';
   }}
-  (ks.anomalies || []).forEach(function(a) {{
-    signals += '<div class="signal">异常：' + a.profile + ' ' + a.field + '=' + a.value + '（偏差 ' + a.deviation + '）</div>';
-  }});
 
-  var fbVal = FEEDBACK[id] || '';
-  var selA = fbVal === 'accurate' ? 'selected' : '';
-  var selB = fbVal === 'inaccurate' ? 'selected' : '';
-  var saved = fbVal ? 'saved' : '';
-
-  return '<div class="card' + (idx===0?' active':'') + '" id="card-' + idx + '">' +
-    '<div class="meta">' + id + ' ' + p.location + '（' + p.type + '）</div>' +
-    '<div class="quote">' + p.quote + '</div>' +
-    '<div class="section"><div class="section-title">契约判断</div>' + tags + '</div>' +
-    (signals ? '<div class="section"><div class="section-title">读者回响</div>' + signals + '</div>' : '') +
-    '<div class="feedback-area">' +
-      '<button class="feedback-btn ' + selA + ' ' + saved + '" onclick="setFeedback(\'' + id + '\',\'accurate\')">✅ 准确</button>' +
-      '<button class="feedback-btn ' + selB + ' ' + saved + '" onclick="setFeedback(\'' + id + '\',\'inaccurate\')">❌ 不准确</button>' +
-      '<div class="status" id="status-' + id + '">已保存 ✓</div>' +
-    '</div>' +
-  '</div>';
+  var fv = FB[id]||'';
+  return '<div class="card'+(idx===0?' active':'')+'" id="cd-'+idx+'">'+
+    '<div class="meta">'+id+' '+p.location+'（'+p.type+'）</div>'+
+    '<div class="quote">'+p.quote+'</div>'+
+    verdict+
+    (tags?'<div style="margin-bottom:8px">'+tags+mtxt+'</div>':'')+
+    (sig?'<div style="border-top:1px solid #eee;padding-top:8px;margin-top:8px">'+sig+'</div>':'')+
+    '<div class="fb">'+
+    '<button class="'+(fv==='acc'?'sel':'')+'" onclick="fb(\\''+id+'\\',\\'acc\\')">准确</button>'+
+    '<button class="'+(fv==='inacc'?'sel':'')+'" onclick="fb(\\''+id+'\\',\\'inacc\\')">不准确</button>'+
+    '<span class="saved" id="ok-'+id+'" style="display:'+(fv?'inline':'none')+'">已保存</span>'+
+    '</div></div>';
 }}
 
-function showCard(idx) {{
-  document.querySelectorAll('.card').forEach(function(c, i) {{ c.classList.toggle('active', i===idx); }});
-  document.querySelectorAll('.nav button').forEach(function(b, i) {{ b.classList.toggle('active', i===idx); }});
+function go(i) {{
+  document.querySelectorAll('.card').forEach(function(c,j){{c.classList.toggle('active',j===i);}});
+  document.querySelectorAll('.nav button').forEach(function(b,j){{b.classList.toggle('active',j===i);}});
 }}
 
-function setFeedback(id, val) {{
-  FEEDBACK[id] = val;
-  try {{ localStorage.setItem('p17_feedback', JSON.stringify(FEEDBACK)); }} catch(e) {{}}
-  // 刷新当前卡片
-  var idx = TP_IDS.indexOf(id);
-  if (idx >= 0) {{
-    var card = document.getElementById('card-' + idx);
-    var navBtn = document.getElementById('nav-' + idx);
-    if (card) {{
-      card.querySelectorAll('.feedback-btn').forEach(function(b) {{
-        b.classList.remove('selected', 'saved');
-        if (b.textContent.includes('准确') && val === 'accurate') b.classList.add('selected', 'saved');
-        if (b.textContent.includes('不准确') && val === 'inaccurate') b.classList.add('selected', 'saved');
-      }});
-      var st = card.querySelector('.status');
-      if (st) st.style.display = 'block';
-    }}
-    if (navBtn) {{
-      navBtn.classList.add('done');
-      var badge = navBtn.querySelector('.badge');
-      if (!badge) {{ badge = document.createElement('span'); badge.className = 'badge'; navBtn.appendChild(badge); }}
-      badge.textContent = '✓';
-    }}
-    updateAllDone();
+function fb(id, val) {{
+  FB[id] = val;
+  try {{ localStorage.setItem('p17fb', JSON.stringify(FB)); }} catch(e) {{}}
+  var i = IDS.indexOf(id);
+  if (i<0) return;
+  var cd = document.getElementById('cd-'+i);
+  if (cd) {{
+    cd.querySelectorAll('.fb button').forEach(function(b){{b.classList.remove('sel');}});
+    cd.querySelectorAll('.fb button').forEach(function(b){{
+      if ((b.textContent.trim()==='准确'&&val==='acc')||(b.textContent.trim()==='不准确'&&val==='inacc')) b.classList.add('sel');
+    }});
+    var st = cd.querySelector('.saved');
+    if (st) st.style.display = 'inline';
   }}
+  var nb = document.getElementById('nb-'+i);
+  if (nb) {{ nb.classList.add('done'); nb.textContent = id+' ✓'; }}
+  _done();
 }}
 
-function updateAllDone() {{
-  var done = Object.keys(FEEDBACK).length;
-  var el = document.getElementById('all-done');
-  if (el) el.classList.toggle('show', done >= TP_IDS.length);
+function _done() {{
+  var el = document.getElementById('done-msg');
+  if (el) el.classList.toggle('show', Object.keys(FB).length >= IDS.length);
 }}
 
-function exportFeedback() {{
-  var output = {{}};
-  TP_IDS.forEach(function(id) {{
-    if (FEEDBACK[id]) {{
-      output[id] = {{ text_point_id: id, choice: FEEDBACK[id], timestamp: new Date().toISOString() }};
-    }}
-  }});
-  var blob = new Blob([JSON.stringify(output, null, 2)], {{type: 'application/json'}});
-  var a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'p17_feedback_export.json';
-  a.click();
+function doExport() {{
+  var out = {{}};
+  IDS.forEach(function(id) {{ if (FB[id]) out[id] = {{text_point_id:id, choice:FB[id], timestamp:new Date().toISOString()}}; }});
+  var b = new Blob([JSON.stringify(out,null,2)], {{type:'application/json'}});
+  var a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'p17_feedback.json'; a.click();
 }}
 
-function resetAll() {{
+function doReset() {{
   if (!confirm('重置所有反馈？')) return;
-  FEEDBACK = {{}};
-  try {{ localStorage.removeItem('p17_feedback'); }} catch(e) {{}}
-  TP_IDS.forEach(function(id, i) {{
-    var card = document.getElementById('card-' + i);
-    if (card) {{
-      card.querySelectorAll('.feedback-btn').forEach(function(b) {{ b.classList.remove('selected', 'saved'); }});
-      var st = card.querySelector('.status');
-      if (st) st.style.display = 'none';
-    }}
-    var navBtn = document.getElementById('nav-' + i);
-    if (navBtn) navBtn.classList.remove('done');
+  FB = {{}};
+  try {{ localStorage.removeItem('p17fb'); }} catch(e) {{}}
+  IDS.forEach(function(id,i){{
+    var cd=document.getElementById('cd-'+i); if(cd){{cd.querySelectorAll('.fb button').forEach(function(b){{b.classList.remove('sel');}});var st=cd.querySelector('.saved');if(st)st.style.display='none';}}
+    var nb=document.getElementById('nb-'+i); if(nb){{nb.classList.remove('done');nb.textContent=id;}}
   }});
-  updateAllDone();
+  _done();
 }}
 
 window.onload = init;
