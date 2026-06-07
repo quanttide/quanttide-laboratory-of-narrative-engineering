@@ -73,5 +73,5 @@ def run(data_dir: Path, results_dir: Path):
 
 if __name__ == "__main__":
     import json
-    _base = GIT_ROOT / "examples" / "reader" / "p16-reader"
+    _base = GIT_ROOT / "examples" / "review"
     run(_base / "data" / "input", _base / "data" / "output")

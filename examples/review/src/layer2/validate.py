@@ -11,6 +11,6 @@ def run(data_dir: Path, results_dir: Path):
 
 
 if __name__ == "__main__":
-    _base = GIT_ROOT / "examples" / "reader" / "p16-reader"
+    _base = GIT_ROOT / "examples" / "review"
     from packages.python.io import ensure_dir
     run(_base / "data" / "input", ensure_dir(_base / "data" / "output"))

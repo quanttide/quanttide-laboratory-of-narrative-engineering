@@ -260,5 +260,5 @@ def run(data_dir: Path, results_dir: Path):
 
 
 if __name__ == "__main__":
-    _base = GIT_ROOT / "examples" / "reader" / "p16-reader"
+    _base = Path(__file__).resolve().parent.parent
     run(_base / "data" / "input", _base / "data" / "output")
