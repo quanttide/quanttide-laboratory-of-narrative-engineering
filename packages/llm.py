@@ -65,8 +65,13 @@ def call_llm(
             last_raw = resp.json()["choices"][0]["message"]["content"]
             last_raw = clean_json(last_raw)
 
-            # 仅在要求 JSON 时校验（system 含 "JSON" 字样则校验）
-            if "JSON" in system:
+            # 仅在要求 JSON 输出时校验
+            # 匹配 "只输出 JSON。" 之类的肯定指令，排除 "不要输出 JSON。" 之类的否定指令
+            _requires_json = any(
+                system.startswith(prefix)
+                for prefix in ["只输出 JSON", "你是一个专业的"]
+            )
+            if _requires_json:
                 json.loads(last_raw)
             return last_raw
 

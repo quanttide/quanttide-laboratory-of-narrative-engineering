@@ -1,6 +1,6 @@
 [build-system]
 requires = ["setuptools>=68"]
-build-backend = "setuptools.backends._legacy:_Backend"
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "p16-reader"
@@ -11,7 +11,7 @@ dependencies = [
     "numpy>=1.26",
     "scipy>=1.13",
     "scikit-learn>=1.5",
-    "sentence-transformers>=3.0",
+    "fastembed>=0.5",
     "requests>=2.31",
     "pyyaml>=6.0",
 ]

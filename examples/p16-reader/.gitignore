@@ -1,0 +1,13 @@
+# — 实验输出
+data/output/
+
+# — Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.venv/
+
+# — OS
+.DS_Store
+Thumbs.db
