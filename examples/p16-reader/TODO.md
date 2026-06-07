@@ -118,43 +118,38 @@
 
 ---
 
-## 探索性方向 (P3)
+## Phase III：读者视角的诊断与修复（P3）
 
-### □ 探索 ⑥：抽象母题的读者感知差异
+> 从"描述读者差异"到"利用读者差异诊断文本并修复"。
+> 设计文档见 `docs/experiments/E4-6-reflect-design.md` 和 `E4-7-rewrite-design.md`。
 
-- [ ] 6.1 将 E4-1 的 6 篇文本按"具象母题 / 抽象母题"分类
-- [ ] 6.2 比较两类文本上画像间的效应量大小
-- [ ] 6.3 输出 `data/output/p3_abstraction_effect.json`
+### □ E4-6 — 多画像评价→文本问题逆推（Reflect）
 
-### □ 探索 ⑦：temperature 对分化效度的影响
+- [ ] **6.1 实现差异维度分析** — 对每篇 Phase I 文本，计算画像间差异矩阵
+- [ ] **6.2 实现 Reflect prompt** — 输入文本+评分分布+差异分析 → 输出诊断 JSON
+- [ ] **6.3 运行验证** — 6 篇 × 2 prompt 风格 = 12 次 LLM 调用
+  - 诊断一致性：cross-prompt cosine ≥ 0.70
+  - 跨文本可区分性：类内/类间距离 < 0.80
+  - 诊断可操作性：≥ 4/6 actionable
+- [ ] **6.4 输出汇总** — `data/output/e4-6_reflect_summary.json`
 
-- [ ] 7.1 P2 vs P5 在 temperature=0.3/0.5/0.7/1.0 各跑 5 次
-- [ ] 7.2 比较 ICC 和分化效应量
-- [ ] 7.3 输出 `data/output/p3_temperature_analysis.json`
+### □ E4-7 — 读者视角的局部修改建议（Rewrite）
+
+- [ ] **7.1 实现 Rewrite prompt** — 输入原文片段+诊断+目标画像 → 输出改写建议
+- [ ] **7.2 生成修改版本** — 每个诊断点 2 个版本
+- [ ] **7.3 A/B 盲测验证** — 3 评委对比原版 vs 修改版
+  - 偏好提升：≥ 2/3 优于原版
+  - 场景完整性：≥ 80% 保持率
+  - 修改特异性：跨画像编辑距离 ≥ 20%
+- [ ] **7.4 输出汇总** — `data/output/e4-7_rewrite_summary.json`
 
 ---
 
-## 项目交付物清单
+## 交付物清单（Phase III）
 
-- [x] `data/input/profiles.json` — 画像定义（5 个具名用户画像）
-- [x] `data/input/planted_errors.json` — 植入错误记录（待填写）
-- [x] `src/phase1/prompt_templates.py` — prompt 模板
-- [x] `src/phase1/e4_0_manipulation.py` — E4-0 主流程 ✅
-- [x] `data/output/e4-0_result.json` — E4-0 结果
-- [ ] `src/phase1/e4_1_pilot.py` — E4-1 pilot
-- [ ] `src/phase1/e4_1_differentiation.py` — E4-1 主流程
-- [ ] `src/phase1/e4_2_generalization.py` — E4-2 泛化
-- [ ] `src/layer1/inference_demand.py` — 推理需求引擎
-- [ ] `src/layer1/working_memory.py` — 工作记忆负载
-- [ ] `src/layer1/backtracking.py` — 回溯重读预测
-- [ ] `src/layer1/situation_model.py` — 情境模型
-- [ ] `src/layer1/validation.py` — 层1对齐验证
-- [ ] `src/layer2/weight_ratios.py` — 权重比推断
-- [ ] `src/layer2/weight_mapping.py` — 参数→权重映射
-- [ ] `src/pipeline.py` — 全链路管线
-- [ ] `data/output/e4-1_summary.json`
-- [ ] `data/output/e4-2_summary.json`
-- [ ] `data/output/e4-3_validation.json`
-- [ ] `data/output/e4-4_summary.json`
-- [ ] `data/output/e4-5_summary.json`
-- [ ] `CONCLUSION.md`
+- [ ] `docs/experiments/E4-6-reflect-design.md` ✅
+- [ ] `docs/experiments/E4-7-rewrite-design.md` ✅
+- [ ] `data/output/e4-6_reflect_summary.json`
+- [ ] `data/output/e4-7_rewrite_summary.json`
+- [ ] 更新 ROADMAP.md ✅
+- [ ] 更新 TODO.md ✅
