@@ -20,40 +20,30 @@ def load_profiles(data_dir: Path) -> list[dict]:
     return load_json(data_dir / "profiles.json")
 
 
-def _run_try(data_dir: Path, results_dir: Path, prompt_type: str, temperature: float) -> dict | None:
-    """用指定 prompt 类型跑一轮 E4-0。通过返回 result，不通过返回 None。"""
-    from .prompt_templates import (
-        build_reader_self_description,
-        build_self_description_behavioral_anchor,
-    )
-
+def _run_try(data_dir: Path, results_dir: Path, temperature: float = 0.3) -> dict:
+    """跑一轮 E4-0。"""
+    from .prompt_templates import build_reader_self_description
     profiles = load_profiles(data_dir)
-    builder = (
-        build_reader_self_description
-        if prompt_type == "numeric"
-        else build_self_description_behavioral_anchor
-    )
 
-    tag = f"e4-0_raw_{prompt_type}.json"
-    cache = results_dir / tag
+    cache = results_dir / "e4-0_raw.json"
     if cache.exists():
         raw = load_json(cache)
-        print(f"  ← 读取缓存 {tag}")
+        print("  ← 读取缓存")
     else:
         raw = []
         for p in profiles:
-            print(f"  {p['id']} ({p['label']}) [{prompt_type}]...")
+            print(f"  {p['id']} ({p['label']})...")
             for i in range(3):
-                prompt = builder(p)
+                prompt = build_reader_self_description(p)
                 text = call_llm(prompt, system="请用中文回答，不要输出 JSON。", temperature=temperature)
-                raw.append({"profile": p["id"], "call": i, "prompt_type": prompt_type, "text": text})
+                raw.append({"profile": p["id"], "call": i, "text": text})
         save_json(cache, raw)
-        print(f"  已保存 {tag}")
+        print("  已保存原始响应")
 
-    return _analyze(raw, results_dir, prompt_type)
+    return _analyze(raw, results_dir)
 
 
-def _analyze(raw: list[dict], results_dir: Path, prompt_type: str) -> dict:
+def _analyze(raw: list[dict], results_dir: Path) -> dict:
     """对一批读者自述做 embedding 聚类分析，返回 result dict。"""
     from sklearn.metrics import silhouette_score
     from sklearn.metrics.pairwise import cosine_distances
@@ -104,7 +94,6 @@ def _analyze(raw: list[dict], results_dir: Path, prompt_type: str) -> dict:
     overall = passed_sil and passed_dist and passed_nn
 
     result = {
-        "prompt_type": prompt_type,
         "silhouette_score": round(float(sil), 4),
         "silhouette_pass": bool(passed_sil),
         "p0_vs_p1_cosine_dist": round(p0_p1_dist, 4),
@@ -115,7 +104,7 @@ def _analyze(raw: list[dict], results_dir: Path, prompt_type: str) -> dict:
         "within_profile_distances": within,
         "overall_pass": bool(overall),
     }
-    save_json(results_dir / f"e4-0_result_{prompt_type}.json", result)
+    save_json(results_dir / "e4-0_result.json", result)
 
     print(f"   通过: {'✅' if overall else '❌'}")
     return result
@@ -123,34 +112,19 @@ def _analyze(raw: list[dict], results_dir: Path, prompt_type: str) -> dict:
 
 def run(data_dir: Path, results_dir: Path):
     print("=" * 60)
-    print("E4-0 — Prompt 操控性检验")
+    print("E4-0 — Prompt 操控性检验（用户画像版）")
     print("=" * 60)
 
     profiles = load_profiles(data_dir)
-    print(f"已加载 {len(profiles)} 个画像: {[p['id'] for p in profiles]}")
+    print(f"已加载 {len(profiles)} 个画像: {[p['id'] + '-' + p['label'] for p in profiles]}")
 
-    # 第一轮：数值 prompt
-    print("\n── 第一轮：数值 prompt ──")
-    r1 = _run_try(data_dir, results_dir, "numeric", temperature=0.7)
+    r = _run_try(data_dir, results_dir, temperature=0.3)
 
-    if r1["overall_pass"]:
-        print("\n  ✅ 数值 prompt 通过 → 进入 E4-1")
-        save_json(results_dir / "e4-0_result.json", r1)
-        return r1
-
-    # 第二轮：行为锚定 prompt（降低 temperature 提高稳定性）
-    print("\n── 第二轮：行为锚定 prompt ──")
-    r2 = _run_try(data_dir, results_dir, "behavioral_anchor", temperature=0.3)
-
-    if r2["overall_pass"]:
-        print("\n  ✅ 行为锚定 prompt 通过 → 进入 E4-1")
-        save_json(results_dir / "e4-0_result.json", r2)
-        return r2
-
-    # 两轮均不通过 → 项目终止
-    print("\n  ❌ 两轮均不通过 → 项目终止")
-    save_json(results_dir / "e4-0_result.json", r2)
-    return r2
+    if r["overall_pass"]:
+        print("\n  ✅ 通过 → 进入 E4-1")
+    else:
+        print("\n  ❌ 不通过 → 项目终止")
+    return r
 
 
 if __name__ == "__main__":

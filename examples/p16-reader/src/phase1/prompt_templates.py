@@ -1,15 +1,7 @@
-"""Prompt 模板 — 读者自述、评价、行为锚定三套模板。"""
+"""Prompt 模板 — 读者自述、评价 prompt。
 
-
-def _params_desc(p: dict) -> str:
-    return (
-        f"openness={p['openness']}, empathy={p['empathy']}, "
-        f"need_for_closure={p['need_for_closure']}, "
-        f"literary_expertise={p['literary_expertise']}, "
-        f"genre_familiarity={p['genre_familiarity']}, "
-        f"time_pressure={p['time_pressure']}, "
-        f"reading_purpose={p['reading_purpose']}"
-    )
+画像基于真实读者人群（年龄/职业/阅读经验/动机），使用行为锚定描述直接驱动 LLM。
+"""
 
 
 def build_reader_self_description(profile: dict) -> str:
@@ -17,8 +9,9 @@ def build_reader_self_description(profile: dict) -> str:
     if profile["id"] == "P0":
         return "请用一段话描述你作为读者的阅读风格和偏好——你通常关注什么、不能忍受什么。"
 
+    anchor = profile.get("behavioral_anchor", "")
     return (
-        f"你是一位{_params_desc(profile['params'])}的读者。\n\n"
+        f"{anchor}\n\n"
         "请用一段话描述你作为读者的阅读风格和偏好——你通常关注什么、不能忍受什么。"
     )
 
@@ -38,24 +31,6 @@ def build_evaluation_prompt(profile: dict, text: str) -> str:
             f"---\n{text}"
         )
 
-    return (
-        f"你是一位{_params_desc(profile['params'])}的读者。\n\n"
-        "请从你的视角评价以下段落。"
-        "输出 JSON 格式：\n"
-        '{"logic_break": {"detected": true/false, "positions": ["位置"]}, '
-        '"grammar_error": {"detected": true/false}, '
-        '"emotional_impact": 1-7, '
-        '"reading_difficulty": 1-5, '
-        '"structure_label": "逻辑断裂" / "有意留白" / "正常", '
-        '"aesthetic_grade": "A" / "A-" / "B" / "C"}\n\n'
-        f"---\n{text}"
-    )
-
-
-def build_evaluation_behavioral_anchor(
-    profile: dict, text: str
-) -> str:
-    """行为锚定版评价 prompt — fallback。"""
     anchor = profile.get("behavioral_anchor", "")
     return (
         f"{anchor}\n\n"
@@ -68,15 +43,4 @@ def build_evaluation_behavioral_anchor(
         '"structure_label": "逻辑断裂" / "有意留白" / "正常", '
         '"aesthetic_grade": "A" / "A-" / "B" / "C"}\n\n'
         f"---\n{text}"
-    )
-
-
-def build_self_description_behavioral_anchor(profile: dict) -> str:
-    """行为锚定版读者自述 prompt — fallback。"""
-    anchor = profile.get("behavioral_anchor", "")
-    if not anchor:
-        return "请用一段话描述你作为读者的阅读风格和偏好——你通常关注什么、不能忍受什么。"
-    return (
-        f"{anchor}\n\n"
-        "请用一段话描述你作为读者的阅读风格和偏好——你通常关注什么、不能忍受什么。"
     )
