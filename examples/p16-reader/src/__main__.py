@@ -8,6 +8,7 @@
     python -m src e4-3           # 层1自动化验证（Phase II）
     python -m src e4-4           # 权重映射标定（Phase II）
     python -m src e4-5           # 端到端集成验证（Phase II）
+    python -m src e4-7           # 基于多画像评价的局部修改建议（Phase III）
 """
 import sys
 from pathlib import Path
@@ -38,6 +39,7 @@ def main():
         "e4-3": "src.layer1.validate",
         "e4-4": "src.layer2.validate",
         "e4-5": "src.pipeline",
+        "e4-7": "src.e4_7",
     }
 
     if command not in commands:
