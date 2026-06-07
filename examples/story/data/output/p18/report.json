@@ -1,0 +1,280 @@
+{
+  "pairs": [
+    {
+      "curr": "1_1_咖啡厅重逢",
+      "next": "1_2_深夜失眠",
+      "motivation_accuracy": 0.7,
+      "tension_carryover": 0.7,
+      "scene_plausibility": 0.7,
+      "alternative_accuracy": 0.5
+    },
+    {
+      "curr": "1_2_深夜失眠",
+      "next": "2_1_展会再遇",
+      "motivation_accuracy": 0.3,
+      "tension_carryover": 0.5,
+      "scene_plausibility": 0.5,
+      "alternative_accuracy": 0.7
+    },
+    {
+      "curr": "2_1_展会再遇",
+      "next": "2_3_傍晚小龙虾",
+      "motivation_accuracy": 0.7,
+      "tension_carryover": 0.7,
+      "scene_plausibility": 0.7,
+      "alternative_accuracy": 0.5
+    },
+    {
+      "curr": "2_3_傍晚小龙虾",
+      "next": "4_1_便利店谈心",
+      "motivation_accuracy": 0.3,
+      "tension_carryover": 0.5,
+      "scene_plausibility": 0.5,
+      "alternative_accuracy": 0.7
+    },
+    {
+      "curr": "4_1_便利店谈心",
+      "next": "4_2_夜市约会",
+      "motivation_accuracy": 0.7,
+      "tension_carryover": 0.7,
+      "scene_plausibility": 0.7,
+      "alternative_accuracy": 0.3
+    },
+    {
+      "curr": "4_2_夜市约会",
+      "next": "4_3_互相问早",
+      "motivation_accuracy": 0.7,
+      "tension_carryover": 0.7,
+      "scene_plausibility": 0.7,
+      "alternative_accuracy": 0.5
+    },
+    {
+      "curr": "4_3_互相问早",
+      "next": "6_2_海边散步",
+      "motivation_accuracy": 0.3,
+      "tension_carryover": 0.3,
+      "scene_plausibility": 0.3,
+      "alternative_accuracy": 0.5
+    },
+    {
+      "curr": "6_2_海边散步",
+      "next": "7_2_公园拥抱",
+      "motivation_accuracy": 0.7,
+      "tension_carryover": 0.7,
+      "scene_plausibility": 0.7,
+      "alternative_accuracy": 0.7
+    },
+    {
+      "curr": "7_2_公园拥抱",
+      "next": "8_2_酒吧表白",
+      "motivation_accuracy": 0.3,
+      "tension_carryover": 0.5,
+      "scene_plausibility": 0.3,
+      "alternative_accuracy": 0.5
+    },
+    {
+      "curr": "8_2_酒吧表白",
+      "next": "9_1_家里吃火锅",
+      "motivation_accuracy": 0.3,
+      "tension_carryover": 0.3,
+      "scene_plausibility": 0.5,
+      "alternative_accuracy": 0.5
+    },
+    {
+      "curr": "9_1_家里吃火锅",
+      "next": "10_1_书房陪伴",
+      "motivation_accuracy": 0.7,
+      "tension_carryover": 0.7,
+      "scene_plausibility": 0.7,
+      "alternative_accuracy": 0.5
+    },
+    {
+      "curr": "10_1_书房陪伴",
+      "next": "10_2_客厅看剧",
+      "motivation_accuracy": 0.3,
+      "tension_carryover": 0.5,
+      "scene_plausibility": 0.7,
+      "alternative_accuracy": 0.5
+    },
+    {
+      "curr": "10_2_客厅看剧",
+      "next": "10_3_阳台看星星",
+      "motivation_accuracy": 0.3,
+      "tension_carryover": 0.5,
+      "scene_plausibility": 0.5,
+      "alternative_accuracy": 0.7
+    }
+  ],
+  "rhythm": {
+    "pairs": [
+      {
+        "pair": "1_1_咖啡厅重逢→1_2_深夜失眠",
+        "motivation": 0.7,
+        "tension": 0.7,
+        "scene": 0.7,
+        "alternative": 0.5,
+        "avg": 0.7
+      },
+      {
+        "pair": "1_2_深夜失眠→2_1_展会再遇",
+        "motivation": 0.3,
+        "tension": 0.5,
+        "scene": 0.5,
+        "alternative": 0.7,
+        "avg": 0.4
+      },
+      {
+        "pair": "2_1_展会再遇→2_3_傍晚小龙虾",
+        "motivation": 0.7,
+        "tension": 0.7,
+        "scene": 0.7,
+        "alternative": 0.5,
+        "avg": 0.7
+      },
+      {
+        "pair": "2_3_傍晚小龙虾→4_1_便利店谈心",
+        "motivation": 0.3,
+        "tension": 0.5,
+        "scene": 0.5,
+        "alternative": 0.7,
+        "avg": 0.4
+      },
+      {
+        "pair": "4_1_便利店谈心→4_2_夜市约会",
+        "motivation": 0.7,
+        "tension": 0.7,
+        "scene": 0.7,
+        "alternative": 0.3,
+        "avg": 0.7
+      },
+      {
+        "pair": "4_2_夜市约会→4_3_互相问早",
+        "motivation": 0.7,
+        "tension": 0.7,
+        "scene": 0.7,
+        "alternative": 0.5,
+        "avg": 0.7
+      },
+      {
+        "pair": "4_3_互相问早→6_2_海边散步",
+        "motivation": 0.3,
+        "tension": 0.3,
+        "scene": 0.3,
+        "alternative": 0.5,
+        "avg": 0.3
+      },
+      {
+        "pair": "6_2_海边散步→7_2_公园拥抱",
+        "motivation": 0.7,
+        "tension": 0.7,
+        "scene": 0.7,
+        "alternative": 0.7,
+        "avg": 0.7
+      },
+      {
+        "pair": "7_2_公园拥抱→8_2_酒吧表白",
+        "motivation": 0.3,
+        "tension": 0.5,
+        "scene": 0.3,
+        "alternative": 0.5,
+        "avg": 0.4
+      },
+      {
+        "pair": "8_2_酒吧表白→9_1_家里吃火锅",
+        "motivation": 0.3,
+        "tension": 0.3,
+        "scene": 0.5,
+        "alternative": 0.5,
+        "avg": 0.3
+      },
+      {
+        "pair": "9_1_家里吃火锅→10_1_书房陪伴",
+        "motivation": 0.7,
+        "tension": 0.7,
+        "scene": 0.7,
+        "alternative": 0.5,
+        "avg": 0.7
+      },
+      {
+        "pair": "10_1_书房陪伴→10_2_客厅看剧",
+        "motivation": 0.3,
+        "tension": 0.5,
+        "scene": 0.7,
+        "alternative": 0.5,
+        "avg": 0.4
+      },
+      {
+        "pair": "10_2_客厅看剧→10_3_阳台看星星",
+        "motivation": 0.3,
+        "tension": 0.5,
+        "scene": 0.5,
+        "alternative": 0.7,
+        "avg": 0.4
+      }
+    ],
+    "avg_scores": 0.5230769230769231,
+    "high_signal_pairs": [
+      "1_1_咖啡厅重逢→1_2_深夜失眠",
+      "2_1_展会再遇→2_3_傍晚小龙虾",
+      "4_1_便利店谈心→4_2_夜市约会",
+      "4_2_夜市约会→4_3_互相问早",
+      "6_2_海边散步→7_2_公园拥抱",
+      "9_1_家里吃火锅→10_1_书房陪伴"
+    ],
+    "low_signal_pairs": [
+      "4_3_互相问早→6_2_海边散步",
+      "8_2_酒吧表白→9_1_家里吃火锅"
+    ],
+    "detected_jumps": []
+  },
+  "null_hypothesis": [
+    {
+      "pair": "1_1_咖啡厅重逢→1_2_深夜失眠",
+      "scores": {
+        "motivation_accuracy": 0.3,
+        "motivation_reason": "林远亭深夜翻看照片、递毛巾等行为符合其内敛深情的性格，但核心事件中‘用工作话题缓解紧张’的动机在下一场景中未体现，而是转向了更私密的内心活动，与档案中‘行动导向’的冲突模式部分脱节。",
+        "tension_carryover": 0.5,
+        "tension_reason": "上一场咖啡店相遇的未解决张力（双方未直接沟通情感）在下一场通过失眠、梦境等内心活动得到延续，但缺乏直接互动或对话推进，张力转化较为间接。",
+        "scene_plausibility": 0.7,
+        "plausibility_reason": "林远亭失眠翻看照片、递毛巾后害怕越界，以及陆知微梦到他并反复看消息，均符合两人‘内敛/感性’、‘自我压抑/主动探索’的性格行为范围，场景细节（粉色行李箱、眼睛亮晶晶）也贴合角色观察习惯。",
+        "alternative_accuracy": 0.5,
+        "alternative_reason": "替代路径中陆知微直接提及黎初晓消息符合其‘主动’特质，但林远亭因过度紧张而否认或回避，与档案中‘面对未知时先观察再行动’的冲突模式一致，但‘否认’稍显极端，不如主路径自然。",
+        "summary": "场景在角色内心活动上高度一致，但核心事件的工作话题动机未延续，张力通过内心独白间接承接，整体合理但缺乏直接互动推进。"
+      }
+    },
+    {
+      "pair": "6_2_海边散步→7_2_公园拥抱",
+      "scores": {
+        "motivation_accuracy": 0.7,
+        "motivation_reason": "林远亭的提问动机符合其‘内敛的浪漫’与‘行动派’特质——他需要确认自己的存在对陆知微有意义，且提问方式直接但保留余地（‘真的还记得吗’），与角色档案中‘关键对话中直接但保留余地’一致。陆知微的承认‘一直在找你’则与其‘渴望被主动靠近’和‘突破心理防线后情感外露’相符，但略高于其当前阶段（仍处于‘尝试主动’的早期），故扣0.3。",
+        "tension_carryover": 0.7,
+        "tension_reason": "上一场未解决的张力（双方隐藏的刻意接近与自我否定）在下一场中得到延续：林远亭的提问直接指向‘是否记得’这一核心疑虑，而陆知微的承认打破了‘碰巧’的伪装，使张力从‘隐藏’转向‘暴露后的脆弱’，符合角色档案中‘突破事件’后的情感升级。但下一场场景（公园散步、拥抱）未直接承接提问后的沉默或肢体接触，略有跳跃，故扣0.3。",
+        "scene_plausibility": 0.7,
+        "plausibility_reason": "公园散步、林远亭自述‘一个人来过很多次’符合其‘用行动替代言语’和‘内敛的浪漫’（独自在熟悉与陌生间行走）。陆知微因心疼而落泪拥抱，符合其‘共情力强’和‘行动派’特质，但‘反复说以后我陪你’稍显直白，略高于其‘内敛’的沟通风格，故扣0.3。",
+        "alternative_accuracy": 0.5,
+        "alternative_reason": "替代路径中陆知微用玩笑掩饰并后退，符合其‘回避直接表达情感’和‘典型防御（理性化、回避）’的倾向，但‘松开手、快步走向出口’过于退缩，与当前阶段（已突破肢体接触界限）的进展矛盾，且未体现其‘渴望被主动靠近’的深层需求，故评为‘合理但不如主路径’。",
+        "summary": "主路径基本符合角色性格，但陆知微的承认稍显超前；替代路径合理但过于保守，与当前关系进展脱节。"
+      }
+    },
+    {
+      "pair": "8_2_酒吧表白→9_1_家里吃火锅",
+      "scores": {
+        "motivation_accuracy": 0.7,
+        "motivation_reason": "林远亭主动准备火锅、买拖鞋等行为，符合其‘用行动表达关心’的沟通风格和‘主动制造机会’的行为倾向；但‘大了一码’的细节暗示他可能仍保留一丝回避（不直接确认尺码），与‘在不确定时也会犹豫’一致。",
+        "tension_carryover": 0.5,
+        "tension_reason": "上一场‘确定关系后第一个清晨’的尴尬与甜蜜，通过火锅场景中‘试拖鞋’、‘问西红柿’等日常互动得到部分延续，但缺少对‘过度暴露脆弱’或‘刻意保持距离’的直接承接，张力有所弱化。",
+        "scene_plausibility": 0.7,
+        "plausibility_reason": "林远亭准备火锅、切菜装盘、掏新拖鞋等行为，完全在其‘主动制造机会’和‘细腻’的性格范围内；陆知微问西红柿、做调料碟也符合其‘间接、克制’的沟通方式。场景自然且符合角色行为模式。",
+        "alternative_accuracy": 0.3,
+        "alternative_reason": "替代路径中‘林远亭因过度暴露脆弱而触发回避机制，第二天刻意保持距离’与档案中‘习惯性回避’一致，但实际场景显示他主动且细致，回避机制未触发，因此替代路径在当前场景下合理性较低。",
+        "summary": "场景整体符合角色性格，但未充分延续上一场的张力，替代路径与当前行为模式冲突。"
+      }
+    }
+  ],
+  "summary": {
+    "avg_motivation": 0.48,
+    "avg_tension": 0.56,
+    "avg_alternative": 0.55,
+    "null_motivation_drop": 0.13
+  }
+}

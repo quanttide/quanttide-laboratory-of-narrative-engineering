@@ -1,13 +1,17 @@
 #!/usr/bin/env python3
 """
-p18 — 角色驱动的母题推理实验
+p18 — 角色驱动的母题推理实验 (v3)
 
-Part A: 从全部场景聚合构建深度角色档案
-Part B: 基于角色档案 + 当前场景状态 → 推理下一情节
-Part C: 与 story.yaml 对比验证
+改进：
+1. 隔离输入窗口：建档案只用到当前场景为止的文本
+2. 独立评估：结构化评分代替 LLM 自评
+3. 零假设：交换角色人格特质后重跑
+4. 全量 13 对相邻场景 + 叙事节奏曲线
+5. 合理性检查器
 """
-import json, os, sys
+import json, os, sys, statistics
 from pathlib import Path
+from collections import defaultdict
 
 import requests, yaml
 
@@ -20,6 +24,7 @@ if not DEEPSEEK_API_KEY:
 API_URL = "https://api.deepseek.com/chat/completions"
 RESULTS_DIR = DATA_DIR / "p18"
 
+# 全部场景按时间顺序
 ALL_SCENES = [
     "1_1_咖啡厅重逢", "1_2_深夜失眠", "2_1_展会再遇", "2_3_傍晚小龙虾",
     "4_1_便利店谈心", "4_2_夜市约会", "4_3_互相问早", "6_2_海边散步",
@@ -27,14 +32,8 @@ ALL_SCENES = [
     "10_2_客厅看剧", "10_3_阳台看星星",
 ]
 
-# 推理场景对：(当前场景 → 下一场景)
-INFERENCE_PAIRS = [
-    ("1_1_咖啡厅重逢", "1_2_深夜失眠"),
-    ("4_1_便利店谈心", "4_2_夜市约会"),
-    ("6_2_海边散步",   "7_2_公园拥抱"),
-    ("7_2_公园拥抱",   "8_2_酒吧表白"),
-    ("8_2_酒吧表白",   "9_1_家里吃火锅"),
-]
+# 13 个相邻对
+ALL_PAIRS = [(ALL_SCENES[i], ALL_SCENES[i+1]) for i in range(len(ALL_SCENES)-1)]
 
 
 def call_llm(prompt, system="只输出 JSON。", temperature=0.3):
@@ -67,224 +66,359 @@ def call_llm(prompt, system="只输出 JSON。", temperature=0.3):
 def read_scene(name):
     path = FICTION_ROOT / f"{name}.md"
     if not path.exists():
-        raise FileNotFoundError(f"场景不存在: {path}")
+        return ""
     text = path.read_text("utf-8")
     lines = text.split("\n")
     body = [" " if l.strip() == "" else l for l in lines if not l.startswith("# ")]
     return "\n".join(body).strip()
 
 
-# ─── Part A: 聚合构建角色深度档案 ───────────────────────────
+def id_from_name(name):
+    return "_".join(name.split("_")[:2])
 
-def partA_build_profile(all_texts: list[tuple[str, str]]) -> dict:
-    """从全部场景文本中聚合提取两个角色的深度心理档案。"""
-    combined = "\n\n===\n\n".join(
-        f"[{name}]\n{text[:2000]}" for name, text in all_texts
-    )
 
-    prompt = f"""你是专业叙事分析师。以下是同一部小说全部{len(all_texts)}个场景的文本，
-请从中构建两个主角的深度心理档案。只基于文本证据，不引入外部知识。
+# ─── Part A: 从时序窗口建档案 ────────────────────────────
 
-输出 JSON（严格按此 schema）：
+def build_profile(scene_texts: list[tuple[str, str]]) -> dict:
+    """从给定场景列表中构建角色档案。"""
+    combined = "\n\n===\n\n".join(f"[{name}]\n{text[:1500]}" for name, text in scene_texts)
+    prompt = f"""你是专业叙事分析师。以下是同一部小说多个场景的文本，
+请从中构建两个主角的林远亭和陆知微的深度心理档案。只基于文本证据。
 
+输出 JSON schema：
 {{
   "林远亭": {{
-    "personality": {{
-      "core_traits": ["5-8个核心性格特质"],
-      "communication_style": "他如何表达/不表达情感",
-      "conflict_pattern": "面对压力和亲密时的典型反应"
-    }},
-    "internal_world": {{
-      "core_belief": "关于自己和他人的深层信念",
-      "deepest_fear": "最深的恐惧",
-      "unspoken_need": "从未说出口的需求",
-      "arc_trajectory": "从开场到终场的心理变化路径"
-    }},
-    "behavior": {{
-      "action_tendency": "在关键情境下倾向于怎么做（靠近/退缩/沉默/行动）",
-      "threshold_for_change": "什么条件下他会突破惯性",
-      "typical_defense": "惯用的心理防御机制（回避/调侃/沉默/理性化等）"
-    }},
-    "relationship_with_陆知微": {{
-      "perceived_distance": "他眼中两人的关系距离",
-      "what_he_knows": "他确定她知道的事",
-      "what_he_hides": "他刻意隐藏的事",
-      "hope_and_fear": "对这段关系最大的期待和恐惧"
-    }}
+    "personality": {{"core_traits":[], "communication_style":"", "conflict_pattern":""}},
+    "internal_world": {{"core_belief":"", "deepest_fear":"", "unspoken_need":"", "arc_trajectory":""}},
+    "behavior": {{"action_tendency":"", "threshold_for_change":"", "typical_defense":""}},
+    "relationship_with_陆知微": {{"perceived_distance":"", "what_he_knows":"", "what_he_hides":"", "hope_and_fear":""}}
   }},
   "陆知微": {{
-    "personality": {{ ... }},
-    "internal_world": {{ ... }},
-    "behavior": {{ ... }},
-    "relationship_with_林远亭": {{ ... }}
+    "personality": {{"core_traits":[], "communication_style":"", "conflict_pattern":""}},
+    "internal_world": {{"core_belief":"", "deepest_fear":"", "unspoken_need":"", "arc_trajectory":""}},
+    "behavior": {{"action_tendency":"", "threshold_for_change":"", "typical_defense":""}},
+    "relationship_with_林远亭": {{"perceived_distance":"", "what_she_knows":"", "what_she_hides":"", "hope_and_fear":""}}
   }},
   "relationship_dynamic": {{
-    "stage": "当前关系阶段",
-    "power_imbalance": "谁在推动/谁在退缩",
-    "unspoken_rules": "双方默契但不言明的规则",
-    "breakthrough_events": ["关键突破事件列表"],
-    "remaining_barriers": ["仍未突破的障碍"]
+    "stage":"", "power_imbalance":"", "unspoken_rules":"",
+    "breakthrough_events":[], "remaining_barriers":[]
   }}
 }}
 
-全部场景文本：
-{combined[:15000]}"""
+文本：
+{combined[:12000]}"""
     return json.loads(call_llm(prompt, temperature=0.3))
 
 
-# ─── Part B: 基于档案 + 当前状态 → 推理下一情节 ──────────
+# ─── Part B: 推理下一情节 ──────────────────────────────
 
-def partB_infer(profile: dict, current_text: str, current_name: str, next_name: str) -> dict:
-    """基于角色深度档案 + 当前场景文本，推理下一情节。"""
-    profile_json = json.dumps(profile, ensure_ascii=False, indent=2)
-    prompt = f"""你既是叙事分析师又是创意写作者。给定一部小说的完整角色心理档案，
-以及当前场景全文，请推理下一场《{next_name}》最可能的情节走向。
+def infer_next(profile: dict, curr_text: str, curr_name: str, next_name: str) -> dict:
+    prompt = f"""给定角色深度档案和当前场景，推理下一场最可能的情节。
 
-约束：
-1. 推理必须严格符合角色的性格、行为模式和心理弧线
-2. 下一场的情节应是当前角色状态的必然结果，而非作者的外部干预
-3. 必须引用角色档案中的具体特质来佐证推理
+角色档案（摘要）：
+{json.dumps(profile, ensure_ascii=False, indent=2)[:4000]}
 
-角色深度档案：
-{profile_json[:5000]}
-
-当前场景《{current_name}》全文：
-{current_text[:4000]}
+当前场景《{curr_name}》：
+{curr_text[:3000]}
 
 输出 JSON：
 {{
   "inferred_next": {{
-    "core_beat": "15字内的核心事件",
-    "detailed_scene": "200字以内的具体场景设想，含对话/动作/环境细节",
-    "motivation": {{
-      "driving_character": "哪个角色的动机在推动这场戏",
-      "why_now": "为什么在当前时刻——不能更早也不能更晚",
-      "traits_in_play": ["这个情节依赖的角色特质"]
-    }},
-    "tension_carried": "上一场未解决的张力在本场如何延续/转化/爆发"
+    "core_beat": "核心事件",
+    "motivation": {{"driving_character":"", "why_now":"", "traits_in_play":[]}},
+    "tension_carried": "张力延续"
   }},
   "alternative_path": {{
-    "core_beat": "如果关键角色做出了不同选择的情节走向",
-    "trigger": "什么会触发这个替代路径",
-    "character_consistency": "这个替代路径是否同样符合角色性格（是/部分/否）"
+    "core_beat": "",
+    "trigger": "",
+    "character_consistency": "是|部分|否"
   }}
 }}"""
     return json.loads(call_llm(prompt, temperature=0.7))
 
 
-# ─── Part C: 与 story.yaml 对比 ──────────────────────────
+# ─── Part C: 独立评估（基于结构化规则） ────────────────
 
-def load_story_yaml():
-    path = FICTION_ROOT / "story.yaml"
-    if not path.exists():
-        raise FileNotFoundError(f"story.yaml 不存在: {path}")
-    raw = path.read_text("utf-8")
-    raw = "\n".join(l for l in raw.splitlines() if l.strip() and not l.strip().startswith("# "))
-    return yaml.safe_load(raw) or {}
+def evaluate(main_beat: str, alt_beat: str, actual_text: str, profile: dict) -> dict:
+    """用结构化 prompt 评估一致性，避免 LLM 自评循环。"""
+    profile_s = json.dumps(profile, ensure_ascii=False, indent=2)[:3000]
+    prompt = f"""你是一个严格的叙事分析评估器。你的任务是评估一个情节推理的好坏，
+不是看它"像不像正确答案"，而是看它是否符合角色的性格。
 
+角色档案摘要：
+{profile_s}
 
-def partC_compare(inference: dict, actual_text: str, actual_title: str) -> dict:
-    prompt = f"""对比推理情节与实际场景，从以下维度评估一致性。
+推理的核心事件：{main_beat}
+替代路径：{alt_beat}
 
-推理的核心事件：{inference['inferred_next']['core_beat']}
-推理的具体设想：{inference['inferred_next']['detailed_scene'][:300]}
+实际下一场景的描述：
+{actual_text[:600]}
 
-替代路径：{inference['alternative_path']['core_beat']}
+请按以下维度评分（0-1），每个评分必须附一句基于角色档案的客观理由：
 
-实际场景《{actual_title}》：
-{actual_text[:800]}
+1. motivation_accuracy: 推理归因的角色动机是否与角色档案一致？
+   评分标准：0=矛盾, 0.3=不充分但有合理性, 0.5=部分一致, 0.7=基本一致, 1=完全一致
+   
+2. tension_carryover: 上一场的未解决张力是否自然地延续到下一场？
+   评分标准：0=张力断裂, 0.3=弱连接, 0.5=部分延续, 0.7=自然延续, 1=张力完美转化
+
+3. scene_plausibility: 设想的具体场景是否在角色行为范围内？
+   评分标准：0=OOC, 0.3=勉强合理, 0.5=可能发生, 0.7=很可能, 1=必然
+
+4. alternative_accuracy: 替代路径在角色性格框架内的合理性
+   评分标准：0=不符合任何角色, 0.3=勉强合理, 0.5=合理但不如主路径, 0.7=同样合理, 1=更合理
 
 输出 JSON：
 {{
-  "beat_match": "吻合|部分吻合|不吻合",
-  "reasoning": "一句话解释",
-  "motivation_accuracy": "推理的角色动机是否与实际一致 0-1",
-  "scene_consistency": "设想的场景细节是否匹配 0-1",
-  "tension_carryover": "张力延续是否被实际场景验证 0-1",
-  "alternative_accuracy": "替代路径与实际的一致性 0-1"
+  "motivation_accuracy": 0.0,
+  "motivation_reason": "",
+  "tension_carryover": 0.0,
+  "tension_reason": "",
+  "scene_plausibility": 0.0,
+  "plausibility_reason": "",
+  "alternative_accuracy": 0.0,
+  "alternative_reason": "",
+  "summary": "一句话评估"
 }}"""
-    return json.loads(call_llm(prompt))
+    return json.loads(call_llm(prompt, temperature=0.1))
 
 
-# ─── Main ────────────────────────────────────────────────
+# ─── Part D: 合理性检查器 ──────────────────────────────
+
+def consistency_check(scene_text: str, profile: dict) -> dict:
+    """检查场景中每个角色动作是否符合角色档案。"""
+    profile_s = json.dumps(profile, ensure_ascii=False, indent=2)[:4000]
+    prompt = f"""你是角色一致性检查器。给定角色档案和场景全文，
+逐句检查每个角色的行为、对话和内心活动是否符合其性格。
+
+对每个发现的不一致，输出：
+- 角色：谁
+- 位置：文本片段（最多 50 字）
+- 问题类型：OOC_行为 | OOC_对话 | OOC_内心 | 关系越界 | 张力断裂
+- 严重等级：1=轻微, 2=中等, 3=严重
+- 原因：引用角色档案具体特质解释为什么不一致
+
+如果全部一致，输出 "all_consistent": true。
+
+角色档案：
+{profile_s}
+
+场景全文：
+{scene_text[:5000]}
+
+输出 JSON：
+{{
+  "all_consistent": false,
+  "issues": [
+    {{"character":"", "location":"", "type":"", "severity":1, "reason":""}}
+  ],
+  "overall_score": 0.0
+}}"""
+    return json.loads(call_llm(prompt, temperature=0.1))
+
+
+# ─── 零假设：交换角色特质 ────────────────────────────
+
+def swap_profile(profile: dict) -> dict:
+    """交换两个角色的核心特质，用于零假设检验。"""
+    p = json.loads(json.dumps(profile))
+    for key in ["personality", "internal_world", "behavior"]:
+        p["林远亭"][key], p["陆知微"][key] = p["陆知微"][key], p["林远亭"][key]
+    p["relationship_dynamic"]["stage"] = "不相干的两个陌生人"
+    return p
+
+
+# ─── 叙事节奏分析 ─────────────────────────────────────
+
+def rhythm_analysis(results: list[dict]) -> dict:
+    """从全量相邻对结果中提取叙事节奏信息。"""
+    pairs = []
+    for r in results:
+        pairs.append({
+            "pair": f"{r['curr_short']}→{r['next_short']}",
+            "motivation": r["motivation_accuracy"],
+            "tension": r["tension_carryover"],
+            "scene": r["scene_plausibility"],
+            "alternative": r["alternative_accuracy"],
+            "avg": (r["motivation_accuracy"] + r["tension_carryover"]) / 2,
+        })
+
+    # 检测跳跃点：avg 骤降且替代路径分高
+    jumps = []
+    for i in range(1, len(pairs)):
+        drop = pairs[i-1]["avg"] - pairs[i]["avg"]
+        if drop > 0.3 and pairs[i]["alternative"] > 0.5:
+            jumps.append({
+                "at": pairs[i]["pair"],
+                "drop": round(drop, 2),
+                "alt_score": pairs[i]["alternative"],
+                "signal": "可能缺失中间情节"
+            })
+
+    return {
+        "pairs": pairs,
+        "avg_scores": statistics.mean([p["avg"] for p in pairs]) if pairs else 0,
+        "high_signal_pairs": [p["pair"] for p in pairs if p["avg"] >= 0.6],
+        "low_signal_pairs": [p["pair"] for p in pairs if p["avg"] < 0.4],
+        "detected_jumps": jumps,
+    }
+
+
+# ─── Main ──────────────────────────────────────────────
 
 def main():
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
     print("=" * 60)
-    print("p18 — 角色驱动的母题推理实验")
+    print("p18 — 角色驱动的母题推理 (v3)")
     print("=" * 60)
 
-    # Part A: 构建角色档案
-    profile_cache = RESULTS_DIR / "profile.json"
-    if profile_cache.exists():
-        profile = json.loads(profile_cache.read_text("utf-8"))
-        print(f"\n[Part A] 角色档案 ← 缓存")
-    else:
-        print(f"\n[Part A] 从 {len(ALL_SCENES)} 个场景构建角色档案...")
-        all_texts = [(s, read_scene(s)) for s in ALL_SCENES]
-        profile = partA_build_profile(all_texts)
-        profile_cache.write_text(json.dumps(profile, ensure_ascii=False, indent=2), "utf-8")
-        print(f"  完成: {list(profile.keys())}")
+    # ── Step 1: 读全部场景文本 ──
+    print(f"\n[1/5] 加载 {len(ALL_SCENES)} 个场景文本...")
+    scene_texts = {s: read_scene(s) for s in ALL_SCENES}
 
-    # 打印摘要
-    for name in ["林远亭", "陆知微"]:
-        p = profile.get(name, {})
-        traits = p.get("personality", {}).get("core_traits", [])
-        arc = p.get("internal_world", {}).get("arc_trajectory", "")[:60]
-        print(f"  {name}: {', '.join(traits[:4])} | {arc}...")
+    # ── Step 2: 对每个相邻对建隔离档案 + 推理 + 评估 ──
+    print(f"\n[2/5] 跑 {len(ALL_PAIRS)} 组相邻对（隔离输入窗口）...\n")
 
-    # Part B + C: 推理并对比
-    story = load_story_yaml()
-    plots_by_id = {p["id"]: p for p in story.get("plots", [])}
+    results = []
+    for idx, (curr, nxt) in enumerate(ALL_PAIRS):
+        curr_id = id_from_name(curr)
+        print(f"  {idx+1:2d}/{len(ALL_PAIRS)}  {curr[:16]:16s} → {nxt[:16]:16s}")
 
-    print(f"\n[Part B+C] {len(INFERENCE_PAIRS)} 组推理 + 对比\n")
+        # 建档案：只用到当前场景（含）为止的文本
+        window_idx = ALL_SCENES.index(curr)
+        window = [(ALL_SCENES[i], scene_texts[ALL_SCENES[i]]) for i in range(window_idx + 1)]
 
-    comparisons = []
-    for curr_name, next_name in INFERENCE_PAIRS:
-        curr_id = "_".join(curr_name.split("_")[:2])
-        next_id = "_".join(next_name.split("_")[:2])
-        sid = curr_id.replace("_", "")
+        prof_cache = RESULTS_DIR / f"profile_{curr_id}.json"
+        if prof_cache.exists():
+            profile = json.loads(prof_cache.read_text("utf-8"))
+        else:
+            profile = build_profile(window)
+            prof_cache.write_text(json.dumps(profile, ensure_ascii=False, indent=2), "utf-8")
 
-        text = read_scene(curr_name)
-        print(f"  {curr_name} → {next_name} ({len(text)} chars)")
-
-        inf_cache = RESULTS_DIR / f"inference_{sid}.json"
+        # 推理
+        inf_cache = RESULTS_DIR / f"inference_{curr_id}.json"
         if inf_cache.exists():
             inference = json.loads(inf_cache.read_text("utf-8"))
-            print(f"    ← 推理缓存")
         else:
-            inference = partB_infer(profile, text, curr_name, next_name)
+            inference = infer_next(profile, scene_texts[curr], curr, nxt)
             inf_cache.write_text(json.dumps(inference, ensure_ascii=False, indent=2), "utf-8")
-            print(f"    ✓ 推理: {inference['inferred_next']['core_beat'][:50]}")
 
-        # 找实际的下一场景
-        actual = plots_by_id.get(next_id)
-        if actual:
-            actual_text = actual.get("description", "")
-            comp = partC_compare(inference, actual_text, actual.get("title", ""))
-            comp["scene_id"] = sid
-            comp["current"] = curr_name
-            comp["actual_next"] = actual.get("title", "")
-            comparisons.append(comp)
-            print(f"      vs 《{actual.get('title', '')}》: {comp['beat_match']}  (动机={comp.get('motivation_accuracy','?')})")
+        # 评估
+        ev_cache = RESULTS_DIR / f"eval_{curr_id}.json"
+        if ev_cache.exists():
+            ev = json.loads(ev_cache.read_text("utf-8"))
         else:
-            print(f"      ⚠ 未找到实际场景: {next_id}")
+            story_yaml = FICTION_ROOT / "story.yaml"
+            if story_yaml.exists():
+                raw = story_yaml.read_text("utf-8")
+                raw = "\n".join(l for l in raw.splitlines() if l.strip() and not l.strip().startswith("# "))
+                story = yaml.safe_load(raw) or {}
+                plots = {p["id"]: p for p in story.get("plots", [])}
+                actual = plots.get(id_from_name(nxt), {})
+                actual_desc = actual.get("description", "")
+            else:
+                actual_desc = scene_texts[nxt][:600]
 
-    # 汇总
-    comp_file = RESULTS_DIR / "comparison.json"
-    comp_file.write_text(json.dumps(comparisons, ensure_ascii=False, indent=2), "utf-8")
+            ev = evaluate(
+                inference["inferred_next"]["core_beat"],
+                inference["alternative_path"]["core_beat"],
+                actual_desc,
+                profile,
+            )
+            ev_cache.write_text(json.dumps(ev, ensure_ascii=False, indent=2), "utf-8")
+
+        ev["curr"] = curr
+        ev["next"] = nxt
+        ev["curr_short"] = curr
+        ev["next_short"] = nxt
+        results.append(ev)
+
+        m = ev.get("motivation_accuracy", 0)
+        t = ev.get("tension_carryover", 0)
+        a = ev.get("alternative_accuracy", 0)
+        print(f"     动机={m:.1f}  张力={t:.1f}  替代={a:.1f}")
+
+    # ── Step 3: 零假设（仅对部分样本运行） ──
+    print(f"\n[3/5] 零假设检验（交换角色特质，跑 3 组样本）...")
+    null_indices = [0, 7, 9]  # 首、中、尾各一
+    null_results = []
+    for idx in null_indices:
+        curr, nxt = ALL_PAIRS[idx]
+        curr_id = id_from_name(curr)
+        prof = json.loads((RESULTS_DIR / f"profile_{curr_id}.json").read_text("utf-8"))
+        swapped = swap_profile(prof)
+        inference = infer_next(swapped, scene_texts[curr], curr, nxt)
+        story_yaml = FICTION_ROOT / "story.yaml"
+        if story_yaml.exists():
+            raw = story_yaml.read_text("utf-8")
+            raw = "\n".join(l for l in raw.splitlines() if l.strip() and not l.strip().startswith("# "))
+            story = yaml.safe_load(raw) or {}
+            plots = {p["id"]: p for p in story.get("plots", [])}
+            actual = plots.get(id_from_name(nxt), {})
+            actual_desc = actual.get("description", "")
+        else:
+            actual_desc = scene_texts[nxt][:600]
+        ev = evaluate(
+            inference["inferred_next"]["core_beat"],
+            inference["alternative_path"]["core_beat"],
+            actual_desc,
+            swapped,
+        )
+        null_results.append({"pair": f"{curr[:12]}→{nxt[:12]}", "scores": ev})
+        print(f"   {curr[:16]}→{nxt[:16]}: 动机={ev.get('motivation_accuracy',0):.1f} (正常={results[idx].get('motivation_accuracy',0):.1f})")
+
+    # ── Step 4: 叙事节奏分析 ──
+    print(f"\n[4/5] 叙事节奏分析...")
+    rhythm = rhythm_analysis(results)
+    print(f"   平均分: {rhythm['avg_scores']:.2f}")
+    print(f"   高信号段: {len(rhythm['high_signal_pairs'])} 组")
+    print(f"   低信号段: {len(rhythm['low_signal_pairs'])} 组")
+    for j in rhythm.get("detected_jumps", []):
+        print(f"   ⚡ {j['at']}: 下降{j['drop']} 替代={j['alt_score']} — {j['signal']}")
+
+    # ── Step 5: 合理性检查器（demo：跑当前 vs 相邻场景） ──
+    print(f"\n[5/5] 合理性检查器（demo）...")
+    demo_profile = json.loads((RESULTS_DIR / f"profile_{id_from_name(ALL_SCENES[0])}.json").read_text("utf-8"))
+    demo_text = scene_texts[ALL_SCENES[0]]
+    check = consistency_check(demo_text, demo_profile)
+    n_issues = len(check.get("issues", []))
+    print(f"   《{ALL_SCENES[0]}》: {n_issues} 个问题, 综合分={check.get('overall_score', 0):.1f}")
+    for iss in check.get("issues", [])[:3]:
+        print(f"    - [{iss.get('type','')}][严重={iss.get('severity',0)}] {iss.get('location','')[:40]}")
+        print(f"      {iss.get('reason','')[:60]}")
+
+    # ── 保存完整结果 ──
+    report = {
+        "pairs": [{
+            "curr": r["curr"], "next": r["next"],
+            "motivation_accuracy": r.get("motivation_accuracy", 0),
+            "tension_carryover": r.get("tension_carryover", 0),
+            "scene_plausibility": r.get("scene_plausibility", 0),
+            "alternative_accuracy": r.get("alternative_accuracy", 0),
+        } for r in results],
+        "rhythm": rhythm,
+        "null_hypothesis": null_results,
+        "summary": {
+            "avg_motivation": round(statistics.mean([r.get("motivation_accuracy", 0) for r in results]), 2),
+            "avg_tension": round(statistics.mean([r.get("tension_carryover", 0) for r in results]), 2),
+            "avg_alternative": round(statistics.mean([r.get("alternative_accuracy", 0) for r in results]), 2),
+            "null_motivation_drop": round(
+                statistics.mean([r.get("motivation_accuracy", 0) for r in results[::7]]) -
+                statistics.mean([n["scores"].get("motivation_accuracy", 0) for n in null_results]),
+                2
+            ),
+        }
+    }
+    (RESULTS_DIR / "report.json").write_text(json.dumps(report, ensure_ascii=False, indent=2), "utf-8")
 
     print(f"\n{'='*60}")
-    print(f"对比汇总")
+    print(f"汇总")
     print(f"{'='*60}")
-    for c in comparisons:
-        print(f"  {c['current']:12s} → {c.get('actual_next','?'):8s}: "
-              f"{c['beat_match']:5s}  "
-              f"动机={c.get('motivation_accuracy',0):.1f}  "
-              f"场景={c.get('scene_consistency',0):.1f}  "
-              f"张力={c.get('tension_carryover',0):.1f}  "
-              f"替代={c.get('alternative_accuracy',0):.1f}")
-
+    print(f"  平均动机准确率: {report['summary']['avg_motivation']}")
+    print(f"  平均张力延续:   {report['summary']['avg_tension']}")
+    print(f"  平均替代合理率: {report['summary']['avg_alternative']}")
+    print(f"  零假设动机下降: {report['summary']['null_motivation_drop']}")
+    print(f"\n  节奏: 高信号={len(rhythm['high_signal_pairs'])} 低信号={len(rhythm['low_signal_pairs'])} 跳跃={len(rhythm.get('detected_jumps',[]))}")
     print(f"\n结果: {RESULTS_DIR}")
 
 
