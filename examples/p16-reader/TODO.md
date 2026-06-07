@@ -12,19 +12,18 @@
 
 **前置条件**：无（这是第一个实验）
 
-- [ ] **0.1 创建目录结构**
-  - `mkdir -p phase1 results`
-- [ ] **0.2 定义画像配置文件**
-  - 创建 `phase1/profiles.json`：P0–P5 六个画像的参数定义（openness/empathy/NFC/expertise/familiarity/time_pressure/purpose）
-  - 包含 P0 无画像标记（参数全为 null）
+- [x] **0.1 创建目录结构**
+  - `src/phase1/`、`src/`、`data/`、`results/` 已就绪
+- [x] **0.2 定义画像配置文件**
+  - `data/profiles.json`：P0–P5 六个画像（含数值参数 + 行为锚定两套）
 - [ ] **0.3 实现 prompt 模板系统**
-  - 创建 `phase1/prompt_templates.py`
+  - 创建 `src/phase1/prompt_templates.py`
   - 实现 `build_reader_self_description_prompt(profile) → str`（读者自述 prompt）
   - 实现 `build_evaluation_prompt(profile, text) → str`（评价 prompt，E4-1 复用）
   - 实现 `build_behavioral_anchor_prompt(profile_tag, text) → str`（行为锚定 fallback 版）
 - [ ] **0.4 实现 E4-0 主流程**
-  - 创建 `phase1/e4-0_manipulation.py`
-  - 加载 `profiles.json`
+  - 创建 `src/phase1/e4_0_manipulation.py`
+  - 加载 `data/profiles.json`
   - 对 P0–P5 各调用 3 次读者自述 prompt（temperature=0.7），共 18 次 LLM 调用 → 保存原始输出到 `results/e4-0_raw.json`
   - embedding 化所有自述文本
   - 计算轮廓系数、P0 vs P1 余弦距离、P2 vs P4 余弦距离
@@ -47,7 +46,7 @@
 **E4-1 Pilot（调用次数校准）**
 
 - [ ] **1.1 编写 E4-1 pilot 脚本**
-  - 创建 `phase1/e4-1_pilot.py`
+  - 创建 `src/phase1/e4_1_pilot.py`
   - 选取 P1（普通读者）和 P3（情感沉浸型），在单篇文本（4.1）上各跑 10 次（temperature=0.7）
   - 计算 ICC 和情感冲击评分的 Cohen's d
   - 输出 `results/e4-1_pilot.json`
@@ -59,9 +58,9 @@
 
 - [ ] **1.3 准备植入错误**
   - 对 6 篇测试文本（4.1、7.2、9.1、2.3、10.3、1.2）各植入 2 个语法错误 + 1 个事实矛盾
-  - 创建 `phase1/planted_errors.json`：记录每篇文本的错误类型、位置和预期检出
+  - 创建 `data/planted_errors.json`：记录每篇文本的错误类型、位置和预期检出
 - [ ] **1.4 实现 E4-1 主流程**
-  - 创建 `phase1/e4-1_differentiation.py`
+  - 创建 `src/phase1/e4_1_differentiation.py`
   - 5 画像（P1–P5）× 6 篇文本 × n_calls 次调用（temperature=0.7）
   - 每个调用的输出格式：
     ```json
@@ -109,7 +108,7 @@
 **前置条件**：E4-1 全部通过 ✅
 
 - [ ] **2.1 实现泛化检验**
-  - 创建 `phase1/e4-2_generalization.py`
+  - 创建 `src/phase1/e4_2_generalization.py`
   - 将 E4-1 的 6 篇文本分为 3 组（各 2 篇）
   - 3-fold CV：用 2 组训练简单分类器（如逻辑回归），在剩余 1 组上预测画像标签
   - 输出预测准确率到 `results/e4-2_generalization.json`
@@ -233,13 +232,13 @@
 
 ## 项目交付物清单
 
-- [ ] `phase1/profiles.json` — 画像参数定义
-- [ ] `phase1/prompt_templates.py` — prompt 模板（读者自述 + 评价 + 行为锚定）
-- [ ] `phase1/planted_errors.json` — 植入错误记录
-- [ ] `phase1/e4-0_manipulation.py` — E4-0 主流程
-- [ ] `phase1/e4-1_pilot.py` — E4-1 调用次数校准
-- [ ] `phase1/e4-1_differentiation.py` — E4-1 主流程
-- [ ] `phase1/e4-2_generalization.py` — E4-2 泛化与锚定
+- [ ] `data/profiles.json` — 画像参数定义
+- [ ] `data/planted_errors.json` — 植入错误记录
+- [ ] `src/phase1/prompt_templates.py` — prompt 模板（读者自述 + 评价 + 行为锚定）
+- [ ] `src/phase1/e4_0_manipulation.py` — E4-0 主流程
+- [ ] `src/phase1/e4_1_pilot.py` — E4-1 调用次数校准
+- [ ] `src/phase1/e4_1_differentiation.py` — E4-1 主流程
+- [ ] `src/phase1/e4_2_generalization.py` — E4-2 泛化与锚定
 - [ ] `src/layer1/inference_demand.py` — 推理需求引擎
 - [ ] `src/layer1/working_memory.py` — 工作记忆负载
 - [ ] `src/layer1/backtracking.py` — 回溯重读预测

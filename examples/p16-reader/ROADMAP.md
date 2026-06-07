@@ -30,7 +30,7 @@
 ### 实验 ③：E4-1 分化验证
 
 **实施**：
-1. 在 Phase I 专属目录（`phase1/`）实现 prompt 模板系统
+1. 在 `src/phase1/` 下实现 prompt 模板系统
 2. 5 画像 × 6 文本 × 5 次调用 = 150 次 LLM 调用
 3. 分析：判别效度（4 组对比方向）、稳定效度（ICC）、客观基线（植入错误检出率）
 4. 结果写入 `results/e4-1_differentiation.json`
