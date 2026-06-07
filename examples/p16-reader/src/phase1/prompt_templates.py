@@ -18,29 +18,21 @@ def build_reader_self_description(profile: dict) -> str:
 
 def build_evaluation_prompt(profile: dict, text: str) -> str:
     """评价 prompt — 用于 E4-1 分化验证。"""
-    if profile["id"] == "P0":
-        return (
-            "请从你的视角评价以下段落。"
-            "输出 JSON 格式：\n"
-            '{"logic_break": {"detected": true/false, "positions": ["位置"]}, '
-            '"grammar_error": {"detected": true/false}, '
-            '"emotional_impact": 1-7, '
-            '"reading_difficulty": 1-5, '
-            '"structure_label": "逻辑断裂" / "有意留白" / "正常", '
-            '"aesthetic_grade": "A" / "A-" / "B" / "C"}\n\n'
-            f"---\n{text}"
-        )
-
-    anchor = profile.get("behavioral_anchor", "")
-    return (
-        f"{anchor}\n\n"
-        "请从上述读者的视角评价以下段落。"
-        "输出 JSON 格式：\n"
-        '{"logic_break": {"detected": true/false, "positions": ["位置"]}, '
-        '"grammar_error": {"detected": true/false}, '
-        '"emotional_impact": 1-7, '
-        '"reading_difficulty": 1-5, '
-        '"structure_label": "逻辑断裂" / "有意留白" / "正常", '
-        '"aesthetic_grade": "A" / "A-" / "B" / "C"}\n\n'
-        f"---\n{text}"
+    base = (
+        "请从你的视角评价以下段落。\n"
+        "输出 JSON 格式，严格按以下字段：\n"
+        '{\n'
+        '  "writing_quality": 1-7（文笔质量，越高越好）,\n'
+        '  "emotional_impact": 1-7（情感冲击力，越高越强）,\n'
+        '  "character_realism": 1-7（角色真实感，越高越真实）,\n'
+        '  "cliche_level": 1-5（套路感，越高越套路化）,\n'
+        '  "reading_difficulty": 1-5（阅读难度，越高越难读）,\n'
+        '  "logic_break": {"detected": true/false, "positions": ["位置"]},\n'
+        '  "structure_label": "逻辑断裂" / "有意留白" / "正常",\n'
+        '  "aesthetic_grade": "A" / "A-" / "B" / "C"\n'
+        '}\n\n'
     )
+    if profile["id"] == "P0":
+        return base + f"---\n{text}"
+    anchor = profile.get("behavioral_anchor", "")
+    return f"{anchor}\n\n{base}---\n{text}"
