@@ -57,12 +57,7 @@ h1 { font-size:18px; margin-bottom:4px; }
 .meta { font-size:13px; color:#666; margin-bottom:12px; }
 .quote { background:#f8f8f8; border-left:3px solid #0066cc; padding:12px 16px; margin-bottom:16px; font-size:14px; line-height:1.7; border-radius:0 6px 6px 0; }
 .section { margin-bottom:12px; }
-.stitle { font-size:12px; font-weight:600; color:#888; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px; }
-.tag { display:inline-block; font-size:11px; padding:1px 8px; border-radius:10px; margin:2px 4px 2px 0; }
-.tag.ok { background:#dcfce7; color:#166534; }
-.tag.err { background:#fee2e2; color:#991b1b; }
-.tag.warn { background:#fef9c3; color:#854d0e; }
-.signal { font-size:13px; color:#444; line-height:1.6; }
+
 .fb { margin-top:16px; padding-top:16px; border-top:1px solid #eee; display:flex; gap:12px; align-items:center; }
 .fb button { padding:6px 20px; border:2px solid #ccc; border-radius:6px; background:#fff; cursor:pointer; font-size:14px; }
 .fb button.sel { border-color:#0066cc; background:#e8f0fe; font-weight:600; }
@@ -121,54 +116,44 @@ function init() {{
 }}
 
 function _card(id, d, idx) {{
-  var p = d.point||{{}}, c = d.contract||{{}}, r = d.reader||{{}};
-  var dims = c.style&&c.style.touched_dimensions||[];
-  var keeps = dims.filter(function(v){{return v.nature==='遵守'||v.nature==='对齐';}});
-  var breaks = dims.filter(function(v){{return v.nature==='违反'||v.nature==='偏离';}});
-  var mids = dims.filter(function(v){{return v.nature!=='遵守'&&v.nature!=='违反'&&v.nature!=='对齐'&&v.nature!=='偏离';}});
-
-  // 一句话结论
-  var verdict = '';
-  if (breaks.length>0) {{
-    verdict = '<div style="margin-bottom:12px;padding:8px 12px;border-radius:6px;background:#fef2f2;color:#991b1b;font-size:13px;font-weight:500">⚠️ 契约判定：存在 '+breaks.length+' 处偏离/违反</div>';
-  }} else if (mids.length>0) {{
-    verdict = '<div style="margin-bottom:12px;padding:8px 12px;border-radius:6px;background:#fffbeb;color:#854d0e;font-size:13px;font-weight:500">📐 契约判定：边缘情况，需作者自行判断</div>';
-  }} else {{
-    verdict = '<div style="margin-bottom:12px;padding:8px 12px;border-radius:6px;background:#f0fdf4;color:#166534;font-size:13px;font-weight:500">✅ 契约判定：全部遵守</div>';
-  }}
-
-  function _tag(arr, cls) {{ return arr.map(function(v){{return '<span class="tag '+cls+'">'+v.dimension+'</span>';}}).join(''); }}
-
-  var tags = '';
-  if (breaks.length) tags += '<div style="margin-bottom:4px">'+_tag(breaks,'err')+'</div>';
-  if (mids.length) tags += '<div style="margin-bottom:4px">'+_tag(mids,'warn')+'</div>';
-  if (keeps.length) tags += '<div>'+_tag(keeps,'ok')+'</div>';
-
-  // 母题简化为一行
-  var ms = (c.motif&&c.motif.touched_motifs||[]);
-  var mtxt = ms.length ? '<div style="font-size:12px;color:#666;margin-top:6px">母题：'+ms.map(function(m){{return m.motif+'→'+m.alignment;}}).join('、')+'</div>' : '';
-
-  // 读者信号：只列最关键的一条
-  var sig = '';
-  var ks = r.key_signals||{{}};
-  var pair = ks.max_divergence_pair;
-  if (pair) {{
-    var colors = {{P1:'#e8d5f5',P2:'#d5e8f5',P3:'#f5d5d5',P4:'#d5f5e8',P5:'#f5e8d5'}};
-    sig += '<div style="font-size:13px;line-height:1.6;padding:8px 0"><span style="font-weight:500">读者分歧</span>：'+pair[0]+' 和 '+pair[1]+' 在「'+pair[2]+'」上差距 <strong>'+pair[3]+'</strong></div>';
-  }}
-  var anom = ks.anomalies||[];
-  if (anom.length) {{
-    var a=anom[0];
-    sig += '<div style="font-size:13px;color:#666">最异常：'+a.profile+' 给 '+a.field+' 打 '+a.value+'（均值 '+a.mean+'）</div>';
-  }}
-
+  var p = d.point||{{}};
+  var ops = (d.reader&&d.reader.reader_opinions)||{{}};
+  var c = d.contract||{{}};
+  var dims = (c.style&&c.style.touched_dimensions)||[];
+  var t3 = dims.filter(function(v){{return v.nature==='违反';}});
+  var key_dim = (t3.length?t3[0]:dims[0])||{{}};
+  var nature_label = key_dim.nature||'';
+  var ncolor = nature_label==='违反'?'#991b1b':nature_label==='边缘'?'#854d0e':'#166534';
+  var sbs = (d.side_by_side&&d.side_by_side.output)||'';
+  var intent = '';
+  var m = sbs.match(/作者原意[：:]([^]*?)(?=契约立场|$)/);
+  if (m) intent = m[1].trim().replace(/\n.*/,'');
+  var p3 = ops.P3||'';
+  var p1 = ops.P1||'';
   var fv = FB[id]||'';
   return '<div class="card'+(idx===0?' active':'')+'" id="cd-'+idx+'">'+
     '<div class="meta">'+id+' '+p.location+'（'+p.type+'）</div>'+
     '<div class="quote">'+p.quote+'</div>'+
-    verdict+
-    (tags?'<div style="margin-bottom:8px">'+tags+mtxt+'</div>':'')+
-    (sig?'<div style="border-top:1px solid #eee;padding-top:8px;margin-top:8px">'+sig+'</div>':'')+
+    '<div style="display:flex;gap:12px;margin-bottom:8px">'+
+      // 左列：作者意图
+      '<div style="flex:1;background:#f0f7ff;border-radius:6px;padding:10px 12px;font-size:13px;line-height:1.5">'+
+        '<div style="font-size:11px;font-weight:600;color:#0066cc;margin-bottom:4px">作者原意</div>'+
+        (intent||'<span style="color:#999">（待推断）</span>')+
+      '</div>'+
+      // 中列：契约
+      '<div style="flex:1;background:#fafafa;border-radius:6px;padding:10px 12px;font-size:13px;line-height:1.5">'+
+        '<div style="font-size:11px;font-weight:600;color:#888;margin-bottom:4px">契约判断</div>'+
+        '<span style="color:'+ncolor+';font-weight:500">'+nature_label+'</span>「'+key_dim.dimension+'」'+
+      '</div>'+
+      // 右列：读者感受
+      '<div style="flex:1;background:#f5f5f5;border-radius:6px;padding:10px 12px;font-size:13px;line-height:1.5">'+
+        '<div style="font-size:11px;font-weight:600;color:#888;margin-bottom:4px">读者感受</div>'+
+        (p3?'P3读：'+p3:'')+
+        (p3&&p1?'<br>':'')+
+        (p1?'P1读：'+p1:'')+
+        (!p3&&!p1?'<span style="color:#999">（待生成）</span>':'')+
+      '</div>'+
+    '</div>'+
     '<div class="fb">'+
     '<button class="'+(fv==='acc'?'sel':'')+'" onclick="fb(\\''+id+'\\',\\'acc\\')">准确</button>'+
     '<button class="'+(fv==='inacc'?'sel':'')+'" onclick="fb(\\''+id+'\\',\\'inacc\\')">不准确</button>'+

@@ -1,10 +1,10 @@
 {
-  "experiment": "p17 — 写作契约 vs 读者回响：单点反思",
-  "timestamp": "2026-06-07T17:15:46.936349",
+  "experiment": "p17 — 写作契约 vs 读者回响",
+  "timestamp": "2026-06-07T17:33:35.663434",
   "text_points": 4,
   "verification": {
-    "contract_annotation_success": "4/4",
-    "reader_data_available": "4/4",
+    "contract": "4/4",
+    "reader_data": "4/4",
     "no_overstepping": "4/4"
   },
   "per_point": [

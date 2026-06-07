@@ -116,7 +116,7 @@ def run_batch():
         # Step 3
         print(f"  Step 3: 材料并排...")
         side_by_side_output = generate_side_by_side(
-            tp, contract_result, reader_response, profile_map
+            tp, contract_result, reader_response, profile_map, contracts
         )
         print(f"    输出: {len(side_by_side_output)} 字符")
 
