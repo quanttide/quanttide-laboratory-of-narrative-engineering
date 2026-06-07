@@ -81,42 +81,75 @@
 
 ---
 
-## Phase II：系统集成与校准
+## Phase II：系统集成与校准（无外部依赖方案）
 
-> 仅在 Phase I 全部通过后启动。
+> Phase I 已验证"LLM 能通过 prompt 模拟分化读者"。Phase II 的目标是给已验证的能力加可解释性层。
+> **关键变更**：层1验证不依赖 E1/E2 手动标注，改用 LLM 自身作为金标准。
 
-### □ E4-3 — 层1自动化验证
+### □ E4-3 — 层1认知负荷指标实现与自验证
 
-**前置条件**：E1、E2 数据可用
+**前置条件**：无（p16 自有数据）
 
-- [ ] **3.1 实现推理需求引擎** — `src/layer1/inference_demand.py`
-- [ ] **3.2 实现工作记忆负载模块** — `src/layer1/working_memory.py`
-- [ ] **3.3 实现回溯重读预测模块** — `src/layer1/backtracking.py`
-- [ ] **3.4 实现情境模型构建模块** — `src/layer1/situation_model.py`
-- [ ] **3.5 对齐验证**
-  - 推理需求：Spearman ρ ≥ 0.70
-  - 工作记忆：AUC ≥ 0.75
-  - 回溯重读：命中率 ≥ 60%
-  - 情境模型：ICC ≥ 0.65
-  - 输出 `data/output/e4-3_validation.json`
+- [ ] **3.1 创建层1目录结构**
+  - 创建 `src/layer1/__init__.py`
+  - 创建 `src/layer1/inference_demand.py` — 推理需求密度（规则驱动）
+  - 创建 `src/layer1/working_memory.py` — 工作记忆负载（规则驱动）
+  - 创建 `src/layer1/backtracking.py` — 回溯重读预测（规则驱动）
+  - 创建 `src/layer1/situation_model.py` — 情境模型五维度（规则驱动）
+- [ ] **3.2 创建 LLM 标注函数**
+  - 创建 `src/layer1/llm_labels.py` — LLM 对逐句标注推理需求/阅读难度/回读概率/连贯性
+- [ ] **3.3 创建验证入口**
+  - 创建 `src/layer1/validate.py` — 对 6 篇 Phase I 文本，公式 vs LLM 标注的 Spearman ρ
+  - 成功标准：4 项 ρ 全部 ≥ 0.60
+- [ ] **3.4 运行 E4-3**
+  - 更新 `src/__main__.py` 注册 `e4-3`
+  - 运行 `python -m src e4-3`
+  - 输出 `data/output/e4-3_summary.json`
+- [ ] **3.5 门控判定**
+  - 全部通过 → E4-4
+  - 任一未通过 → 调试公式后重试；仍不过则跳过（层1降级为实验性功能）
 
 ### □ E4-4 — 权重映射标定
 
-**前置条件**：E4-3 通过 ✅
+**前置条件**：E4-3 完成 ✅
 
-- [ ] **4.1 pairwise 权重比推断** — `src/layer2/weight_ratios.py`
-- [ ] **4.2 参数 → 权重比映射** — `src/layer2/weight_mapping.py`
-- [ ] **4.3 验证**（CI 宽度 < 0.30、单调方向 ≥ 3/4、ICC ≥ 0.50）
+- [ ] **4.1 对每个画像做 pairwise 权重比推断**
+  - 创建 `src/layer2/weight_ratios.py`
+  - 自变量：层1 4 个认知负荷指标（E4-3 产出）
+  - 因变量：E4-1 的 4 个评分维度
+  - 输出各画像的权重比 w₁:w₂:w₃:w₄
+- [ ] **4.2 参数 → 权重比映射**
+  - 创建 `src/layer2/weight_mapping.py`
+  - 5 个画像作观测点，线性拟合单调趋势
+- [ ] **4.3 验证**
+  - Bootstrapping CI 宽度 < 0.30
+  - 单调方向 ≥ 3/4
+  - 跨文本 ICC ≥ 0.50
+  - 输出 `data/output/e4-4_summary.json`
 - [ ] **4.4 门控判定**
+  - 全部通过 → E4-5
+  - 任一未通过 → 简化权重模型（降为 2-3 个主线维度）
 
 ### □ E4-5 — 端到端集成验证
 
-**前置条件**：E4-3、E4-4 通过 ✅
+**前置条件**：E4-3、E4-4 完成 ✅
 
-- [ ] **5.1 实现全链路管线** — `src/pipeline.py`
-- [ ] **5.2 在未见文本上运行** — 8 篇文本 × 3 次调用
-- [ ] **5.3 验证**（ICC ≥ 0.50、ρ ≥ 0.60、ANOVA p < 0.05）
-- [ ] **5.4 项目收尾** — `CONCLUSION.md`
+- [ ] **5.1 选择 4 篇新文本**
+  - 从 assets/fiction 选非 4.1/7.2/9.1/2.3/10.3/1.2 的文本
+- [ ] **5.2 创建全链路管线**
+  - 创建 `src/pipeline.py`
+  - 层1 → 层2（加权）→ 层3（聚合 P1-P5 评价分布）
+- [ ] **5.3 在新文本上运行**
+  - 4 篇文本 × 5 画像 × 3 次调用
+- [ ] **5.4 验证**
+  - ICC ≥ 0.50（全链路稳定性）
+  - ρ ≥ 0.60（与直接 prompt 一致）
+  - ANOVA p < 0.05（画像主效应）
+  - 输出 `data/output/e4-5_summary.json`
+- [ ] **5.5 项目收尾**
+  - 更新 STATUS.md Phase II 部分
+  - 更新 ROADMAP.md
+  - 创建 `CONCLUSION.md` 或确认 STATUS.md 已覆盖
 
 ---
 
