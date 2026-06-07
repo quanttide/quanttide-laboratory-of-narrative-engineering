@@ -1,0 +1,44 @@
+{
+  "experiment": "p17 — 写作契约 vs 读者回响：单点反思",
+  "timestamp": "2026-06-07T17:15:46.936349",
+  "text_points": 4,
+  "verification": {
+    "contract_annotation_success": "4/4",
+    "reader_data_available": "4/4",
+    "no_overstepping": "4/4"
+  },
+  "per_point": [
+    {
+      "text_point": "T1",
+      "type": "对齐点",
+      "contract_annotation_success": true,
+      "reader_data_available": true,
+      "no_overstepping": true,
+      "overstepping_violations": []
+    },
+    {
+      "text_point": "T2",
+      "type": "偏离点",
+      "contract_annotation_success": true,
+      "reader_data_available": true,
+      "no_overstepping": true,
+      "overstepping_violations": []
+    },
+    {
+      "text_point": "T3",
+      "type": "偏离点",
+      "contract_annotation_success": true,
+      "reader_data_available": true,
+      "no_overstepping": true,
+      "overstepping_violations": []
+    },
+    {
+      "text_point": "T4",
+      "type": "对齐点",
+      "contract_annotation_success": true,
+      "reader_data_available": true,
+      "no_overstepping": true,
+      "overstepping_violations": []
+    }
+  ]
+}

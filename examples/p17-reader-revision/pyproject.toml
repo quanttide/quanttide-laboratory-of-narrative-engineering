@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "p17-reader-revision"
+version = "0.1.0"
+description = "p17 — 写作契约 vs 读者回响：单点反思"
+requires-python = ">=3.11"
+dependencies = [
+    "numpy>=1.26",
+    "scipy>=1.13",
+    "requests>=2.31",
+    "pyyaml>=6.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]

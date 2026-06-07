@@ -1,0 +1,55 @@
+{
+  "scene_ratings": {
+    "P1": {
+      "writing_quality": 4.67,
+      "emotional_impact": 5.67,
+      "character_realism": 5.0,
+      "cliche_level": 2.33
+    },
+    "P2": {
+      "writing_quality": 5.0,
+      "emotional_impact": 4.67,
+      "character_realism": 6.0,
+      "cliche_level": 2.33
+    },
+    "P3": {
+      "writing_quality": 5.67,
+      "emotional_impact": 5.33,
+      "character_realism": 6.67,
+      "cliche_level": 1.0
+    },
+    "P4": {
+      "writing_quality": 4.67,
+      "emotional_impact": 5.33,
+      "character_realism": 5.67,
+      "cliche_level": 2.33
+    },
+    "P5": {
+      "writing_quality": 5.0,
+      "emotional_impact": 4.67,
+      "character_realism": 6.0,
+      "cliche_level": 3.0
+    }
+  },
+  "key_signals": {
+    "max_variance_dimension": [
+      "cliche_level",
+      0.4261
+    ],
+    "max_divergence_pair": [
+      "P3",
+      "P5",
+      "cliche_level",
+      2.0
+    ],
+    "anomalies": [
+      {
+        "profile": "P3",
+        "field": "cliche_level",
+        "value": 1.0,
+        "mean": 2.2,
+        "deviation": -1.2
+      }
+    ]
+  }
+}
