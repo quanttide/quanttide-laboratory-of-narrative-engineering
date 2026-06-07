@@ -1,21 +1,23 @@
 # story/ — 叙事写作辅助管线
 
-情节 + 角色：诊断场景因果链 → 生成写作备忘 → 分析角色档案/弧线/关系。
+p18 统一入口，已取代 p14/p15。
 
-| 模块 | 来源 | 功能 |
-|------|------|------|
-| `p14_scene_diagnosis.py` | p14 | 行为链标注 → 薄弱点诊断 → 三类修改建议 |
-| `p15_outline_generation.py` | p15 | YAML + p14 JSON → 场景写作备忘 |
-| `p18_character_plot.py` | p18 | 角色状态提取 → 情节推理 → 反向验证 |
+| 子命令 | 取代 | 功能 |
+|--------|------|------|
+| `infer` | — | 情节推理 + 叙事节奏分析 |
+| `check` | p14 | 角色一致性检查（行为链标注 → 诊断 → 建议） |
+| `outline` | p15 | 推理 + YAML → 格式化写作备忘 |
+| `rhythm` | — | 全量相邻对叙事节奏曲线 |
 
 ## 用法
 
 ```bash
-uv run python src/p14_scene_diagnosis.py
-uv run python src/p15_outline_generation.py
-uv run python src/p18_character_plot.py
+uv run python src/p18_character_plot.py infer
+uv run python src/p18_character_plot.py check <场景名>
+uv run python src/p18_character_plot.py outline --scene-id <ID>
+uv run python src/p18_character_plot.py rhythm
 ```
 
 ## 扩展
 
-角色实验（角色档案提取、弧线检测、关系图谱）直接在此组内新增，与情节模块共享 `config.py` 和 `assets/fiction/story.yaml`。
+角色实验直接在此组内新增，共享 `config.py` 和 `assets/fiction/`。

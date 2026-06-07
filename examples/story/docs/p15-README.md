@@ -1,4 +1,7 @@
-# p15 — 提纲生成实验
+> ⚠️ **已废弃**：p15 的功能已被 p18 `outline` 子命令取代。
+> 请使用 `uv run python src/p18_character_plot.py outline --scene-id <ID>`
+
+# p15 — 提纲生成实验（归档）
 
 验证从 YAML（style/story/motif）+ JSON（p14 suggestions）能否自动生成可用的 md 提纲，覆盖原有人工提纲的核心信息。
 
