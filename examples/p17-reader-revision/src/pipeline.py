@@ -18,7 +18,7 @@ from src.config import TEXT_POINTS, FICTION_ROOT, P16_OUTPUT, DATA_OUTPUT
 from src.contract import load_contracts, annotate as contract_annotate
 from src.reader_mapping import load_p16_data, load_profiles, map_reader_response
 from src.side_by_side import generate_side_by_side
-from src.feedback import collect_feedback
+
 
 
 def read_scene_text(scene_file):
@@ -167,51 +167,7 @@ def run_batch():
         "per_point": all_verifications,
     })
     print(f"\n已保存到: {DATA_OUTPUT}")
-    print("要逐点反馈，运行: python -m src feedback")
-
-
-def run_feedback():
-    """Step 4: 逐点展示已保存的材料并收集作者反馈。"""
-    print("=" * 60)
-    print("p17 — Step 4: 作者反馈")
-    print("=" * 60)
-    print()
-
-    feedback_results = []
-    for tp in TEXT_POINTS:
-        f = DATA_OUTPUT / f"{tp['id']}_side_by_side.json"
-        if not f.exists():
-            print(f"⚠️ {tp['id']} 材料并排未找到，先运行 python -m src")
-            continue
-
-        data = json.loads(f.read_text())
-        output = data["output"]
-
-        feedback = collect_feedback(tp, output, DATA_OUTPUT / f"{tp['id']}_feedback.json", data_dir=DATA_OUTPUT)
-        feedback_results.append(feedback)
-        print()
-
-    # 汇总
-    total = len(feedback_results)
-    submitted = [f for f in feedback_results if not f.get("skipped", True)]
-    print("=" * 60)
-    print("反馈汇总")
-    print("=" * 60)
-    print(f"  已反馈: {len(submitted)}/{total}")
-    for f in feedback_results:
-        if f.get("skipped"):
-            print(f"  ⏭️ {f['text_point_id']}: 跳过")
-        else:
-            print(f"  ✅ {f['text_point_id']}: {f['choice']} — {f['choice_label']}")
-    print()
-
-    if len(submitted) < total:
-        remaining = [tp["id"] for tp in TEXT_POINTS
-                     if not any(f.get("text_point_id") == tp["id"] and not f.get("skipped")
-                               for f in feedback_results)]
-        if remaining:
-            print(f"  未反馈: {', '.join(remaining)}")
-            print(f"  再次运行: python -m src feedback")
+    print("查看反馈页面: python -m src feedback")
 
 
 if __name__ == "__main__":
