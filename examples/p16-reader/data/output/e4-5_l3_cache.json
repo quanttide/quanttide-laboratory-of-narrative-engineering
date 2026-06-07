@@ -1,0 +1,986 @@
+[
+  {
+    "writing_quality": 4,
+    "emotional_impact": 5,
+    "character_realism": 4,
+    "cliche_level": 4,
+    "reading_difficulty": 2,
+    "logic_break": {
+      "detected": false,
+      "positions": []
+    },
+    "structure_label": "正常",
+    "aesthetic_grade": "B",
+    "profile": "P1",
+    "text_id": "2.1",
+    "call": 0
+  },
+  {
+    "writing_quality": 4,
+    "emotional_impact": 5,
+    "character_realism": 4,
+    "cliche_level": 4,
+    "reading_difficulty": 2,
+    "logic_break": {
+      "detected": false,
+      "positions": []
+    },
+    "structure_label": "正常",
+    "aesthetic_grade": "B",
+    "profile": "P1",
+    "text_id": "2.1",
+    "call": 1
+  },
+  {
+    "writing_quality": 4,
+    "emotional_impact": 5,
+    "character_realism": 4,
+    "cliche_level": 4,
+    "reading_difficulty": 2,
+    "logic_break": {
+      "detected": false,
+      "positions": []
+    },
+    "structure_label": "正常",
+    "aesthetic_grade": "B",
+    "profile": "P1",
+    "text_id": "2.1",
+    "call": 2
+  },
+  {
+    "writing_quality": 5,
+    "emotional_impact": 6,
+    "character_realism": 5,
+    "cliche_level": 3,
+    "reading_difficulty": 2,
+    "logic_break": {
+      "detected": false,
+      "positions": []
+    },
+    "structure_label": "正常",
+    "aesthetic_grade": "A-",
+    "profile": "P1",
+    "text_id": "4.2",
+    "call": 0
+  },
+  {
+    "writing_quality": 5,
+    "emotional_impact": 6,
+    "character_realism": 5,
+    "cliche_level": 3,
+    "reading_difficulty": 2,
+    "logic_break": {
+      "detected": false,
+      "positions": []
+    },
+    "structure_label": "正常",
+    "aesthetic_grade": "A-",
+    "profile": "P1",
+    "text_id": "4.2",
+    "call": 1
+  },
+  {
+    "writing_quality": 5,
+    "emotional_impact": 6,
+    "character_realism": 5,
+    "cliche_level": 4,
+    "reading_difficulty": 2,
+    "logic_break": {
+      "detected": false,
+      "positions": []
+    },
+    "structure_label": "正常",
+    "aesthetic_grade": "A-",
+    "profile": "P1",
+    "text_id": "4.2",
+    "call": 2
+  },
+  {
+    "writing_quality": 4,
+    "emotional_impact": 5,
+    "character_realism": 4,
+    "cliche_level": 3,
+    "reading_difficulty": 2,
+    "logic_break": {
+      "detected": false,
+      "positions": []
+    },
+    "structure_label": "正常",
+    "aesthetic_grade": "A-",
+    "profile": "P1",
+    "text_id": "6.2",
+    "call": 0
+  },
+  {
+    "writing_quality": 4,
+    "emotional_impact": 5,
+    "character_realism": 4,
+    "cliche_level": 3,
+    "reading_difficulty": 2,
+    "logic_break": {
+      "detected": false,
+      "positions": []
+    },
+    "structure_label": "正常",
+    "aesthetic_grade": "A-",
+    "profile": "P1",
+    "text_id": "6.2",
+    "call": 1
+  },
+  {
+    "writing_quality": 5,
+    "emotional_impact": 6,
+    "character_realism": 5,
+    "cliche_level": 3,
+    "reading_difficulty": 2,
+    "logic_break": {
+      "detected": false,
+      "positions": []
+    },
+    "structure_label": "正常",
+    "aesthetic_grade": "A-",
+    "profile": "P1",
+    "text_id": "6.2",
+    "call": 2
+  },
+  {
+    "writing_quality": 4,
+    "emotional_impact": 5,
+    "character_realism": 4,
+    "cliche_level": 4,
+    "reading_difficulty": 2,
+    "logic_break": {
+      "detected": false,
+      "positions": []
+    },
+    "structure_label": "正常",
+    "aesthetic_grade": "B",
+    "profile": "P1",
+    "text_id": "8.2",
+    "call": 0
+  },
+  {
+    "writing_quality": 4,
+    "emotional_impact": 5,
+    "character_realism": 4,
+    "cliche_level": 4,
+    "reading_difficulty": 2,
+    "logic_break": {
+      "detected": false,
+      "positions": []
+    },
+    "structure_label": "正常",
+    "aesthetic_grade": "B",
+    "profile": "P1",
+    "text_id": "8.2",
+    "call": 1
+  },
+  {
+    "writing_quality": 4,
+    "emotional_impact": 5,
+    "character_realism": 4,
+    "cliche_level": 4,
+    "reading_difficulty": 2,
+    "logic_break": {
+      "detected": false,
+      "positions": []
+    },
+    "structure_label": "正常",
+    "aesthetic_grade": "B",
+    "profile": "P1",
+    "text_id": "8.2",
+    "call": 2
+  },
+  {
+    "writing_quality": 4,
+    "emotional_impact": 3,
+    "character_realism": 3,
+    "cliche_level": 4,
+    "reading_difficulty": 2,
+    "logic_break": {
+      "detected": true,
+      "positions": [
+        "王助理作为下属，对上司的私事过于主动和八卦，职业逻辑不合理",
+        "陆知微作为十年暗恋者，内心活动过于直白和幼稚，与职场精英人设不符"
+      ]
+    },
+    "structure_label": "逻辑断裂",
+    "aesthetic_grade": "C",
+    "profile": "P2",
+    "text_id": "2.1",
+    "call": 0
+  },
+  {
+    "writing_quality": 4,
+    "emotional_impact": 3,
+    "character_realism": 3,
+    "cliche_level": 4,
+    "reading_difficulty": 2,
+    "logic_break": {
+      "detected": true,
+      "positions": [
+        "王助理作为下属，对上司的私事过于主动和八卦，且直接发消息说‘双箭头’，职业边界感缺失，逻辑上不合理。",
+        "陆知微作为职场精英，在初次见面的场合反复走神、脸红、自嘲，人设与行为脱节。"
+      ]
+    },
+    "structure_label": "逻辑断裂",
+    "aesthetic_grade": "C",
+    "profile": "P2",
+    "text_id": "2.1",
+    "call": 1
+  },
+  {
+    "writing_quality": 4,
+    "emotional_impact": 4,
+    "character_realism": 5,
+    "cliche_level": 4,
+    "reading_difficulty": 2,
+    "logic_break": {
+      "detected": false,
+      "positions": []
+    },
+    "structure_label": "正常",
+    "aesthetic_grade": "B",
+    "profile": "P2",
+    "text_id": "2.1",
+    "call": 2
+  },
+  {
+    "writing_quality": 5,
+    "emotional_impact": 5,
+    "character_realism": 5,
+    "cliche_level": 3,
+    "reading_difficulty": 2,
+    "logic_break": {
+      "detected": false,
+      "positions": []
+    },
+    "structure_label": "正常",
+    "aesthetic_grade": "A-",
+    "profile": "P2",
+    "text_id": "4.2",
+    "call": 0
+  },
+  {
+    "writing_quality": 5,
+    "emotional_impact": 5,
+    "character_realism": 6,
+    "cliche_level": 3,
+    "reading_difficulty": 2,
+    "logic_break": {
+      "detected": false,
+      "positions": []
+    },
+    "structure_label": "正常",
+    "aesthetic_grade": "A-",
+    "profile": "P2",
+    "text_id": "4.2",
+    "call": 1
+  },
+  {
+    "writing_quality": 5,
+    "emotional_impact": 5,
+    "character_realism": 5,
+    "cliche_level": 3,
+    "reading_difficulty": 2,
+    "logic_break": {
+      "detected": false,
+      "positions": []
+    },
+    "structure_label": "正常",
+    "aesthetic_grade": "B",
+    "profile": "P2",
+    "text_id": "4.2",
+    "call": 2
+  },
+  {
+    "writing_quality": 5,
+    "emotional_impact": 5,
+    "character_realism": 6,
+    "cliche_level": 3,
+    "reading_difficulty": 2,
+    "logic_break": {
+      "detected": false,
+      "positions": []
+    },
+    "structure_label": "正常",
+    "aesthetic_grade": "B",
+    "profile": "P2",
+    "text_id": "6.2",
+    "call": 0
+  },
+  {
+    "writing_quality": 5,
+    "emotional_impact": 5,
+    "character_realism": 5,
+    "cliche_level": 3,
+    "reading_difficulty": 2,
+    "logic_break": {
+      "detected": false,
+      "positions": []
+    },
+    "structure_label": "正常",
+    "aesthetic_grade": "B",
+    "profile": "P2",
+    "text_id": "6.2",
+    "call": 1
+  },
+  {
+    "writing_quality": 5,
+    "emotional_impact": 5,
+    "character_realism": 5,
+    "cliche_level": 3,
+    "reading_difficulty": 2,
+    "logic_break": {
+      "detected": false,
+      "positions": []
+    },
+    "structure_label": "正常",
+    "aesthetic_grade": "A-",
+    "profile": "P2",
+    "text_id": "6.2",
+    "call": 2
+  },
+  {
+    "writing_quality": 5,
+    "emotional_impact": 5,
+    "character_realism": 4,
+    "cliche_level": 4,
+    "reading_difficulty": 2,
+    "logic_break": {
+      "detected": true,
+      "positions": [
+        "酒吧对话中，男主先指了靠里桌子说常坐，后又改口坐外面，理由牵强；回忆中男主说‘喜欢了十年’与后文‘执念’的补充略显重复，且醉酒后直接重复相同台词，略显刻意"
+      ]
+    },
+    "structure_label": "逻辑断裂",
+    "aesthetic_grade": "B",
+    "profile": "P2",
+    "text_id": "8.2",
+    "call": 0
+  },
+  {
+    "writing_quality": 5,
+    "emotional_impact": 6,
+    "character_realism": 6,
+    "cliche_level": 3,
+    "reading_difficulty": 2,
+    "logic_break": {
+      "detected": false,
+      "positions": []
+    },
+    "structure_label": "正常",
+    "aesthetic_grade": "A-",
+    "profile": "P2",
+    "text_id": "8.2",
+    "call": 1
+  },
+  {
+    "writing_quality": 5,
+    "emotional_impact": 5,
+    "character_realism": 5,
+    "cliche_level": 3,
+    "reading_difficulty": 2,
+    "logic_break": {
+      "detected": true,
+      "positions": [
+        "对话中‘你喜不喜欢她？’的提问者身份未交代，导致上下文断裂",
+        "‘那次他一杯就醉了’与后文‘她好像也醉了’时间线模糊"
+      ]
+    },
+    "structure_label": "逻辑断裂",
+    "aesthetic_grade": "B",
+    "profile": "P2",
+    "text_id": "8.2",
+    "call": 2
+  },
+  {
+    "writing_quality": 4,
+    "emotional_impact": 4,
+    "character_realism": 5,
+    "cliche_level": 3,
+    "reading_difficulty": 2,
+    "logic_break": {
+      "detected": false,
+      "positions": []
+    },
+    "structure_label": "正常",
+    "aesthetic_grade": "B",
+    "profile": "P3",
+    "text_id": "2.1",
+    "call": 0
+  },
+  {
+    "writing_quality": 5,
+    "emotional_impact": 4,
+    "character_realism": 5,
+    "cliche_level": 3,
+    "reading_difficulty": 2,
+    "logic_break": {
+      "detected": false,
+      "positions": []
+    },
+    "structure_label": "正常",
+    "aesthetic_grade": "B",
+    "profile": "P3",
+    "text_id": "2.1",
+    "call": 1
+  },
+  {
+    "writing_quality": 4,
+    "emotional_impact": 4,
+    "character_realism": 5,
+    "cliche_level": 3,
+    "reading_difficulty": 2,
+    "logic_break": {
+      "detected": false,
+      "positions": []
+    },
+    "structure_label": "正常",
+    "aesthetic_grade": "B",
+    "profile": "P3",
+    "text_id": "2.1",
+    "call": 2
+  },
+  {
+    "writing_quality": 5,
+    "emotional_impact": 5,
+    "character_realism": 6,
+    "cliche_level": 2,
+    "reading_difficulty": 2,
+    "logic_break": {
+      "detected": false,
+      "positions": []
+    },
+    "structure_label": "正常",
+    "aesthetic_grade": "A-",
+    "profile": "P3",
+    "text_id": "4.2",
+    "call": 0
+  },
+  {
+    "writing_quality": 5,
+    "emotional_impact": 5,
+    "character_realism": 6,
+    "cliche_level": 2,
+    "reading_difficulty": 2,
+    "logic_break": {
+      "detected": false,
+      "positions": []
+    },
+    "structure_label": "正常",
+    "aesthetic_grade": "A-",
+    "profile": "P3",
+    "text_id": "4.2",
+    "call": 1
+  },
+  {
+    "writing_quality": 5,
+    "emotional_impact": 5,
+    "character_realism": 6,
+    "cliche_level": 2,
+    "reading_difficulty": 2,
+    "logic_break": {
+      "detected": false,
+      "positions": []
+    },
+    "structure_label": "正常",
+    "aesthetic_grade": "A-",
+    "profile": "P3",
+    "text_id": "4.2",
+    "call": 2
+  },
+  {
+    "writing_quality": 5,
+    "emotional_impact": 5,
+    "character_realism": 6,
+    "cliche_level": 2,
+    "reading_difficulty": 2,
+    "logic_break": {
+      "detected": false,
+      "positions": []
+    },
+    "structure_label": "正常",
+    "aesthetic_grade": "A-",
+    "profile": "P3",
+    "text_id": "6.2",
+    "call": 0
+  },
+  {
+    "writing_quality": 5,
+    "emotional_impact": 5,
+    "character_realism": 6,
+    "cliche_level": 2,
+    "reading_difficulty": 2,
+    "logic_break": {
+      "detected": false,
+      "positions": []
+    },
+    "structure_label": "正常",
+    "aesthetic_grade": "A-",
+    "profile": "P3",
+    "text_id": "6.2",
+    "call": 1
+  },
+  {
+    "writing_quality": 5,
+    "emotional_impact": 6,
+    "character_realism": 6,
+    "cliche_level": 2,
+    "reading_difficulty": 2,
+    "logic_break": {
+      "detected": false,
+      "positions": []
+    },
+    "structure_label": "正常",
+    "aesthetic_grade": "A-",
+    "profile": "P3",
+    "text_id": "6.2",
+    "call": 2
+  },
+  {
+    "writing_quality": 5,
+    "emotional_impact": 6,
+    "character_realism": 6,
+    "cliche_level": 2,
+    "reading_difficulty": 2,
+    "logic_break": {
+      "detected": false,
+      "positions": []
+    },
+    "structure_label": "正常",
+    "aesthetic_grade": "A-",
+    "profile": "P3",
+    "text_id": "8.2",
+    "call": 0
+  },
+  {
+    "writing_quality": 5,
+    "emotional_impact": 6,
+    "character_realism": 6,
+    "cliche_level": 2,
+    "reading_difficulty": 2,
+    "logic_break": {
+      "detected": false,
+      "positions": []
+    },
+    "structure_label": "正常",
+    "aesthetic_grade": "A-",
+    "profile": "P3",
+    "text_id": "8.2",
+    "call": 1
+  },
+  {
+    "writing_quality": 5,
+    "emotional_impact": 6,
+    "character_realism": 6,
+    "cliche_level": 3,
+    "reading_difficulty": 2,
+    "logic_break": {
+      "detected": false,
+      "positions": []
+    },
+    "structure_label": "正常",
+    "aesthetic_grade": "A-",
+    "profile": "P3",
+    "text_id": "8.2",
+    "call": 2
+  },
+  {
+    "writing_quality": 4,
+    "emotional_impact": 5,
+    "character_realism": 5,
+    "cliche_level": 3,
+    "reading_difficulty": 2,
+    "logic_break": {
+      "detected": false,
+      "positions": []
+    },
+    "structure_label": "正常",
+    "aesthetic_grade": "B",
+    "profile": "P4",
+    "text_id": "2.1",
+    "call": 0
+  },
+  {
+    "writing_quality": 4,
+    "emotional_impact": 5,
+    "character_realism": 5,
+    "cliche_level": 3,
+    "reading_difficulty": 2,
+    "logic_break": {
+      "detected": false,
+      "positions": []
+    },
+    "structure_label": "正常",
+    "aesthetic_grade": "B",
+    "profile": "P4",
+    "text_id": "2.1",
+    "call": 1
+  },
+  {
+    "writing_quality": 4,
+    "emotional_impact": 5,
+    "character_realism": 5,
+    "cliche_level": 4,
+    "reading_difficulty": 2,
+    "logic_break": {
+      "detected": false,
+      "positions": []
+    },
+    "structure_label": "正常",
+    "aesthetic_grade": "B",
+    "profile": "P4",
+    "text_id": "2.1",
+    "call": 2
+  },
+  {
+    "writing_quality": 5,
+    "emotional_impact": 5,
+    "character_realism": 6,
+    "cliche_level": 3,
+    "reading_difficulty": 2,
+    "logic_break": {
+      "detected": false,
+      "positions": []
+    },
+    "structure_label": "正常",
+    "aesthetic_grade": "A-",
+    "profile": "P4",
+    "text_id": "4.2",
+    "call": 0
+  },
+  {
+    "writing_quality": 5,
+    "emotional_impact": 6,
+    "character_realism": 6,
+    "cliche_level": 3,
+    "reading_difficulty": 2,
+    "logic_break": {
+      "detected": false,
+      "positions": []
+    },
+    "structure_label": "正常",
+    "aesthetic_grade": "A-",
+    "profile": "P4",
+    "text_id": "4.2",
+    "call": 1
+  },
+  {
+    "writing_quality": 5,
+    "emotional_impact": 5,
+    "character_realism": 6,
+    "cliche_level": 3,
+    "reading_difficulty": 2,
+    "logic_break": {
+      "detected": false,
+      "positions": []
+    },
+    "structure_label": "正常",
+    "aesthetic_grade": "A-",
+    "profile": "P4",
+    "text_id": "4.2",
+    "call": 2
+  },
+  {
+    "writing_quality": 5,
+    "emotional_impact": 6,
+    "character_realism": 6,
+    "cliche_level": 3,
+    "reading_difficulty": 2,
+    "logic_break": {
+      "detected": false,
+      "positions": []
+    },
+    "structure_label": "正常",
+    "aesthetic_grade": "A-",
+    "profile": "P4",
+    "text_id": "6.2",
+    "call": 0
+  },
+  {
+    "writing_quality": 5,
+    "emotional_impact": 6,
+    "character_realism": 6,
+    "cliche_level": 3,
+    "reading_difficulty": 2,
+    "logic_break": {
+      "detected": false,
+      "positions": []
+    },
+    "structure_label": "正常",
+    "aesthetic_grade": "A-",
+    "profile": "P4",
+    "text_id": "6.2",
+    "call": 1
+  },
+  {
+    "writing_quality": 5,
+    "emotional_impact": 6,
+    "character_realism": 6,
+    "cliche_level": 3,
+    "reading_difficulty": 2,
+    "logic_break": {
+      "detected": false,
+      "positions": []
+    },
+    "structure_label": "正常",
+    "aesthetic_grade": "A-",
+    "profile": "P4",
+    "text_id": "6.2",
+    "call": 2
+  },
+  {
+    "writing_quality": 4,
+    "emotional_impact": 5,
+    "character_realism": 5,
+    "cliche_level": 4,
+    "reading_difficulty": 2,
+    "logic_break": {
+      "detected": false,
+      "positions": []
+    },
+    "structure_label": "正常",
+    "aesthetic_grade": "B",
+    "profile": "P4",
+    "text_id": "8.2",
+    "call": 0
+  },
+  {
+    "writing_quality": 5,
+    "emotional_impact": 6,
+    "character_realism": 6,
+    "cliche_level": 3,
+    "reading_difficulty": 2,
+    "logic_break": {
+      "detected": false,
+      "positions": []
+    },
+    "structure_label": "正常",
+    "aesthetic_grade": "A-",
+    "profile": "P4",
+    "text_id": "8.2",
+    "call": 1
+  },
+  {
+    "writing_quality": 4,
+    "emotional_impact": 5,
+    "character_realism": 5,
+    "cliche_level": 3,
+    "reading_difficulty": 2,
+    "logic_break": {
+      "detected": false,
+      "positions": []
+    },
+    "structure_label": "正常",
+    "aesthetic_grade": "B",
+    "profile": "P4",
+    "text_id": "8.2",
+    "call": 2
+  },
+  {
+    "writing_quality": 4,
+    "emotional_impact": 3,
+    "character_realism": 3,
+    "cliche_level": 4,
+    "reading_difficulty": 2,
+    "logic_break": {
+      "detected": true,
+      "positions": [
+        "王助理发消息时未注意林远亭走近，但林远亭听到消息内容后反应合理，但王助理作为职场人，在客户面前发消息并提及‘双箭头’略显突兀"
+      ]
+    },
+    "structure_label": "正常",
+    "aesthetic_grade": "C",
+    "profile": "P5",
+    "text_id": "2.1",
+    "call": 0
+  },
+  {
+    "writing_quality": 4,
+    "emotional_impact": 4,
+    "character_realism": 3,
+    "cliche_level": 4,
+    "reading_difficulty": 2,
+    "logic_break": {
+      "detected": true,
+      "positions": [
+        "陆知微内心独白中突然意识到说漏嘴，但前文未明确她说了什么",
+        "王助理发消息提到‘双箭头’，但陆知微和林远亭尚未互动，信息来源不明"
+      ]
+    },
+    "structure_label": "逻辑断裂",
+    "aesthetic_grade": "C",
+    "profile": "P5",
+    "text_id": "2.1",
+    "call": 1
+  },
+  {
+    "writing_quality": 4,
+    "emotional_impact": 3,
+    "character_realism": 3,
+    "cliche_level": 4,
+    "reading_difficulty": 2,
+    "logic_break": {
+      "detected": true,
+      "positions": [
+        "王助理发消息时未注意林远亭走近，但林远亭能听到她说话，场景合理性存疑"
+      ]
+    },
+    "structure_label": "逻辑断裂",
+    "aesthetic_grade": "C",
+    "profile": "P5",
+    "text_id": "2.1",
+    "call": 2
+  },
+  {
+    "writing_quality": 5,
+    "emotional_impact": 5,
+    "character_realism": 5,
+    "cliche_level": 3,
+    "reading_difficulty": 2,
+    "logic_break": {
+      "detected": false,
+      "positions": []
+    },
+    "structure_label": "正常",
+    "aesthetic_grade": "A-",
+    "profile": "P5",
+    "text_id": "4.2",
+    "call": 0
+  },
+  {
+    "writing_quality": 5,
+    "emotional_impact": 5,
+    "character_realism": 6,
+    "cliche_level": 3,
+    "reading_difficulty": 2,
+    "logic_break": {
+      "detected": false,
+      "positions": []
+    },
+    "structure_label": "正常",
+    "aesthetic_grade": "A-",
+    "profile": "P5",
+    "text_id": "4.2",
+    "call": 1
+  },
+  {
+    "writing_quality": 5,
+    "emotional_impact": 5,
+    "character_realism": 6,
+    "cliche_level": 3,
+    "reading_difficulty": 2,
+    "logic_break": {
+      "detected": false,
+      "positions": []
+    },
+    "structure_label": "正常",
+    "aesthetic_grade": "A-",
+    "profile": "P5",
+    "text_id": "4.2",
+    "call": 2
+  },
+  {
+    "writing_quality": 5,
+    "emotional_impact": 6,
+    "character_realism": 6,
+    "cliche_level": 3,
+    "reading_difficulty": 2,
+    "logic_break": {
+      "detected": false,
+      "positions": []
+    },
+    "structure_label": "正常",
+    "aesthetic_grade": "A-",
+    "profile": "P5",
+    "text_id": "6.2",
+    "call": 0
+  },
+  {
+    "writing_quality": 5,
+    "emotional_impact": 6,
+    "character_realism": 5,
+    "cliche_level": 3,
+    "reading_difficulty": 2,
+    "logic_break": {
+      "detected": false,
+      "positions": []
+    },
+    "structure_label": "正常",
+    "aesthetic_grade": "A-",
+    "profile": "P5",
+    "text_id": "6.2",
+    "call": 1
+  },
+  {
+    "writing_quality": 5,
+    "emotional_impact": 6,
+    "character_realism": 6,
+    "cliche_level": 3,
+    "reading_difficulty": 2,
+    "logic_break": {
+      "detected": false,
+      "positions": []
+    },
+    "structure_label": "正常",
+    "aesthetic_grade": "A-",
+    "profile": "P5",
+    "text_id": "6.2",
+    "call": 2
+  },
+  {
+    "writing_quality": 4,
+    "emotional_impact": 5,
+    "character_realism": 4,
+    "cliche_level": 4,
+    "reading_difficulty": 2,
+    "logic_break": {
+      "detected": true,
+      "positions": [
+        "酒吧对话中突然插入回忆片段，且回忆中人物名称用'xx'代替，显得突兀；'那次他一杯就醉了'与前后文衔接不自然"
+      ]
+    },
+    "structure_label": "逻辑断裂",
+    "aesthetic_grade": "B",
+    "profile": "P5",
+    "text_id": "8.2",
+    "call": 0
+  },
+  {
+    "writing_quality": 4,
+    "emotional_impact": 5,
+    "character_realism": 4,
+    "cliche_level": 4,
+    "reading_difficulty": 2,
+    "logic_break": {
+      "detected": true,
+      "positions": [
+        "酒吧对话中突然插入回忆段落，人称代词‘xx’未明确指代，导致叙事混乱"
+      ]
+    },
+    "structure_label": "逻辑断裂",
+    "aesthetic_grade": "B",
+    "profile": "P5",
+    "text_id": "8.2",
+    "call": 1
+  },
+  {
+    "writing_quality": 4,
+    "emotional_impact": 5,
+    "character_realism": 4,
+    "cliche_level": 4,
+    "reading_difficulty": 2,
+    "logic_break": {
+      "detected": true,
+      "positions": [
+        "酒吧对话中突然插入回忆片段，时间线跳跃略显突兀"
+      ]
+    },
+    "structure_label": "逻辑断裂",
+    "aesthetic_grade": "B",
+    "profile": "P5",
+    "text_id": "8.2",
+    "call": 2
+  }
+]

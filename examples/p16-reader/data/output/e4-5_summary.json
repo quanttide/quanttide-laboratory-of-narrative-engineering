@@ -1,0 +1,16 @@
+{
+  "texts": [
+    "2.1",
+    "4.2",
+    "6.2",
+    "8.2"
+  ],
+  "icc": 0.8295,
+  "icc_pass": true,
+  "spearman_rho_vs_direct": -0.6844,
+  "spearman_pass": false,
+  "anova_f": 2.052,
+  "anova_p": 0.0997,
+  "anova_pass": false,
+  "pass": false
+}
