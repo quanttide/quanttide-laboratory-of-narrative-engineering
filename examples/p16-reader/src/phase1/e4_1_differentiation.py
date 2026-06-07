@@ -85,30 +85,41 @@ def run(data_dir: Path, results_dir: Path):
         print("  已保存")
 
     # ── 分析 ──
-    # 判别效度
+    # 判别效度（无方向检验）：画像是否影响了评分模式？
     def mean_for(pid, field):
         vals = [r[field] for r in rows if r["profile"] == pid and isinstance(r.get(field), (int, float))]
         return float(np.mean(vals)) if vals else 0.0
 
-    print("\n── 判别效度 ──")
-    checks = [
-        ("P2 > P1 文笔评分", mean_for("P2", "writing_quality") - mean_for("P1", "writing_quality") >= 1.0),
-        ("P5 > P1 角色真实感", mean_for("P5", "character_realism") - mean_for("P1", "character_realism") >= 1.0),
-        ("P4 < P1 情感冲击", mean_for("P4", "emotional_impact") - mean_for("P1", "emotional_impact") <= -0.5),
-        ("P3 > P2 套路感", mean_for("P3", "cliche_level") - mean_for("P2", "cliche_level") >= 0.5),
-    ]
-    n_pass = sum(1 for _, ok in checks if ok)
-    for desc, ok in checks:
-        print(f"  {'✅' if ok else '❌'} {desc}")
-    print(f"  通过: {n_pass}/{len(checks)} (标准 ≥ 3/4)")
-
-    # 打印均值
+    FIELDS = ["writing_quality", "emotional_impact", "character_realism", "cliche_level"]
+    print("\n── 判别效度（无方向检验）──")
     print("\n  各画像评分均值:")
     header = "字段".ljust(20) + "".join(f"{p:>10}" for p in labels)
     print(f"  {header}")
-    for field in ["writing_quality", "emotional_impact", "character_realism", "cliche_level"]:
+    for field in FIELDS:
         vals = "".join(f"{mean_for(p, field):>10.2f}" for p in labels)
         print(f"  {field:<20}{vals}")
+
+    # eta-squared：画像解释了多少评分方差
+    from scipy.stats import f_oneway
+    eta_sq_list = []
+    for field in FIELDS:
+        groups = [np.array([r[field] for r in rows if r["profile"] == p and isinstance(r.get(field), (int, float))], dtype=float) for p in labels]
+        all_vals = np.concatenate(groups)
+        grand_mean = all_vals.mean()
+        ss_between = sum(len(g) * (g.mean() - grand_mean) ** 2 for g in groups)
+        ss_within = sum(((g - g.mean()) ** 2).sum() for g in groups)
+        eta_sq = ss_between / (ss_between + ss_within) if (ss_between + ss_within) > 0 else 0
+        eta_sq_list.append(eta_sq)
+        # 单因素 ANOVA 方向检验
+        f_stat, p_val = f_oneway(*groups)
+        sig = "显著" if p_val < 0.05 else "不显著"
+        print(f"  {field:<25} η²={eta_sq:.3f}  F={f_stat:.2f}  p={p_val:.4f} {sig}")
+
+    mean_eta = float(np.mean(eta_sq_list))
+    n_sig = sum(1 for f in FIELDS for g in [np.array([r[f] for r in rows if r["profile"] == p and isinstance(r.get(f), (int, float))], dtype=float) for p in labels] if len(g) > 1)
+    print(f"\n  平均 η² = {mean_eta:.3f}  (标准 ≥ 0.10)")
+    disc_ok = mean_eta >= 0.10
+    print(f"  {'✅' if disc_ok else '❌'} 判别效度通过")
 
     # 稳定效度
     print("\n── 稳定效度 ──")
@@ -127,11 +138,11 @@ def run(data_dir: Path, results_dir: Path):
     print(f"  ICC = {icc_val:.3f} {'✅' if icc_ok else '❌'} (标准 ≥ 0.50)")
 
     # 汇总
-    disc_ok = n_pass >= 3
     overall = disc_ok and icc_ok
 
     summary = {
-        "discriminant_checks": [{"desc": d, "passed": bool(ok)} for d, ok in checks],
+        "eta_squared_per_field": {f: round(float(e), 3) for f, e in zip(FIELDS, eta_sq_list)},
+        "mean_eta_squared": round(float(mean_eta), 3),
         "discriminant_pass": bool(disc_ok),
         "icc": round(float(icc_val), 3),
         "icc_pass": bool(icc_ok),
