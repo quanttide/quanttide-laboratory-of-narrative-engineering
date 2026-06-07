@@ -16,8 +16,8 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO_ROOT))
 
-DATA_DIR = REPO_ROOT / "examples" / "p16-reader" / "data"
-RESULTS_DIR = REPO_ROOT / "examples" / "p16-reader" / "results"
+DATA_DIR = REPO_ROOT / "examples" / "p16-reader" / "data" / "input"
+RESULTS_DIR = REPO_ROOT / "examples" / "p16-reader" / "data" / "output"
 
 
 def main():
