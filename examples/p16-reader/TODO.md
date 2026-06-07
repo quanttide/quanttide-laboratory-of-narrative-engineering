@@ -126,11 +126,11 @@
 ### □ E4-6 — 多画像评价→文本问题逆推（Reflect）
 
 - [ ] **6.1 实现差异维度分析** — 对每篇 Phase I 文本，计算画像间差异矩阵
-- [ ] **6.2 实现 Reflect prompt** — 输入文本+评分分布+差异分析 → 输出诊断 JSON
-- [ ] **6.3 运行验证** — 6 篇 × 2 prompt 风格 = 12 次 LLM 调用
-  - 诊断一致性：cross-prompt cosine ≥ 0.70
-  - 跨文本可区分性：类内/类间距离 < 0.80
-  - 诊断可操作性：≥ 4/6 actionable
+- [ ] **6.2 实现 Reflect prompt** — 3 种风格，输入文本+评分分布+差异分析 → 输出诊断 JSON（无 fix_direction）
+- [ ] **6.3 运行验证** — 6 篇 × 3 prompt 风格 = 18 次 LLM 调用
+  - 诊断合理性：3 评委投票，≥ 14/18 合理
+  - 阴性对照：4.1 vs 2.3，≥ 80% 判为不同问题
+  - 诊断稳定性：≥ 4/6 文本 structural_type 一致
 - [ ] **6.4 输出汇总** — `data/output/e4-6_reflect_summary.json`
 
 ### □ E4-7 — 读者视角的局部修改建议（Rewrite）
