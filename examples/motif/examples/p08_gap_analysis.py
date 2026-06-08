@@ -43,8 +43,9 @@ def main():
     for art in ARTICLES:
         series = art["series"]
         target = urban_target if series == "urban" else campus_target
-        target_motifs = target.get("motifs", [])
-        target_titles = [m["title"] for m in target_motifs]
+        target_motif_dicts = target.get("motifs", [])
+        target_motifs = to_motifs(target_motif_dicts)
+        target_titles = [m.title for m in target_motifs]
         print(f"\n{'='*40}\n{art['id']} {art['name']} ({series})")
         print(f"  目标母题: {', '.join(target_titles)}")
 
@@ -74,7 +75,7 @@ def main():
             suggestions = cache_or_compute(
                 RESULTS_DIR / f"suggestions_{art['id']}_{gt}.json",
                 lambda: generate_suggestions(art["name"], text, gap_item, attr.gap_types or [],
-                    next((m for m in target_motifs if m["title"] == gt), {})),
+                    next((m for m in target_motifs if m.title == gt), Motif(title=gt, description=""))),
             )
             for s in suggestions:
                 analysis.add_suggestion(gt, s)

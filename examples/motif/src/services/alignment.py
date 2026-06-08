@@ -16,11 +16,11 @@ def llm_motif_match(detected_title: str, target_title: str, target_description: 
         return False
 
 
-def compute_alignment(detected: list[Motif], target_titles: set[str], target_motifs: list[dict] | None = None) -> float:
+def compute_alignment(detected: list[Motif], target_titles: set[str], target_motifs: list[Motif] | None = None) -> float:
     """计算母题吻合度（基于 LLM 语义判断）。"""
     if not target_titles:
         return 0.0
-    target_map = {m["title"]: m.get("description", "") for m in (target_motifs or [])}
+    target_map = {m.title: m.description for m in (target_motifs or [])}
     detected_titles = [m.title for m in detected]
     matched = 0
     for target in target_titles:

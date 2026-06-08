@@ -13,6 +13,7 @@ import os
 
 from src.config import GALLERY_ROOT, DATA_DIR
 from src.infra import cache_or_compute, cache_or_compute_text, load_motif_yaml, call_llm, call_llm_openai
+from src.infra.acl import to_motifs
 from src.services import (
     extract_motifs_from_text, extract_motifs_cross_validate,
     compute_alignment,
@@ -44,17 +45,17 @@ ABSTRACT_MOTIF_ACTIONS = {
 }
 
 
-def build_motif_description(motifs: list[dict]) -> str:
+def build_motif_description(motifs: list[Motif]) -> str:
     lines = []
     for i, m in enumerate(motifs):
-        lines.append(f"{i+1}. {m['title']}：{m.get('description', '')}")
-        action = ABSTRACT_MOTIF_ACTIONS.get(m["title"])
+        lines.append(f"{i+1}. {m.title}：{m.description}")
+        action = ABSTRACT_MOTIF_ACTIONS.get(m.title)
         if action:
             lines.append(f"   → 写作建议：{action}")
     return "\n".join(lines)
 
 
-def generate_scene(scene: dict, motifs: list[dict] | None, style: str) -> str:
+def generate_scene(scene: dict, motifs: list[Motif] | None, style: str) -> str:
     from src.prompts import load_prompt
     motif_text = ""
     if motifs:
@@ -77,9 +78,10 @@ def main():
 
     urban_motifs = load_motif_yaml(GALLERY_ROOT / "urban-romance" / "motif.yaml")
     campus_motifs = load_motif_yaml(GALLERY_ROOT / "campus-romance" / "motif.yaml")
-    urban_list, campus_list = urban_motifs.get("motifs", []), campus_motifs.get("motifs", [])
-    urban_titles = {m["title"] for m in urban_list}
-    campus_titles = {m["title"] for m in campus_list}
+    urban_dicts, campus_dicts = urban_motifs.get("motifs", []), campus_motifs.get("motifs", [])
+    urban_list, campus_list = to_motifs(urban_dicts), to_motifs(campus_dicts)
+    urban_titles = {m.title for m in urban_list}
+    campus_titles = {m.title for m in campus_list}
 
     all_results = []
     configs = [("urban", urban_list, urban_titles, "都市言情"), ("campus", campus_list, campus_titles, "校园言情")]
