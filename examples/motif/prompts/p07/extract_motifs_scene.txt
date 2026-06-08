@@ -17,4 +17,4 @@
 }
 
 场景文本：
-{sample}
+$sample

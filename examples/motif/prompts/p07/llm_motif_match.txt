@@ -1,5 +1,5 @@
 判断以下提取的母题是否体现了目标母题的含义。只输出 yes 或 no。
 
-提取的母题: {detected_title}
-目标母题: {target_title}
-目标母题定义: {target_description}
+提取的母题: $detected_title
+目标母题: $target_title
+目标母题定义: $target_description

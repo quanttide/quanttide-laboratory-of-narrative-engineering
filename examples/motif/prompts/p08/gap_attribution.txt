@@ -1,5 +1,5 @@
-场景《{article_name}》缺少母题「{missing_title}」。
-该母题定义：{missing_description}
+场景《$article_name》缺少母题「$missing_title」。
+该母题定义：$missing_description
 可能原因：场景类型不支持 / 作者用了替代母题 / 单纯遗漏。可标注多个。
 输出 JSON：{{"gap_types": ["scene_incompatible"], "alternative_motif": "替代母题名（如有）", "reasoning": "一句话原因"}}
-场景片段：{sample}
+场景片段：$sample

@@ -5,27 +5,14 @@ p07 — 母题一致性检验实验
 验证以母题为约束生成多场景文本时，母题能否保持一致性和连贯性。
 """
 import json
-import os
-import sys
-import random
 from pathlib import Path
 
-import requests
-import yaml
+from src.config import GALLERY_ROOT, DATA_DIR
+from src.infra import call_llm, call_llm_openai, clean_json, cache_or_compute, cache_or_compute_text, load_motif_yaml
+from src.prompts import load_prompt
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from src.config import REPO_ROOT, GALLERY_ROOT, DATA_DIR
-
-DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY", "")
-OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
-if not DEEPSEEK_API_KEY:
-    print("错误：请设置 DEEPSEEK_API_KEY 环境变量")
-    sys.exit(1)
-
-API_URL = "https://api.deepseek.com/chat/completions"
 RESULTS_DIR = DATA_DIR / "p07"
-
-TEMPERATURE = 0.8  # 生成与检测统一使用
+TEMPERATURE = 0.8
 
 SCENE_TEMPLATES = [
     {"id": "scene1", "name": "咖啡厅初遇", "type": "静态室内", "desc": "一个下雨的傍晚，主角走进一家安静的咖啡厅避雨。在靠窗的位置，她看到了一个熟悉的身影——是多年前有过一面之缘的人。"},
@@ -33,142 +20,62 @@ SCENE_TEMPLATES = [
     {"id": "scene3", "name": "日常帮忙", "type": "静态室内", "desc": "主角在办公室加班，那个人来帮忙整理文件或处理工作。两人在安静的空间里共处。"},
     {"id": "scene4", "name": "夜晚散步", "type": "动态室外", "desc": "工作结束后，两人一起在夜色中散步。路灯下，影子被拉得很长。"},
     {"id": "scene5", "name": "表白时刻", "type": "任意", "desc": "在某个安静的地方，主角终于鼓起勇气，说出了藏在心里的话。"},
+    {"id": "scene6", "name": "KTV 唱歌", "type": "动态室内", "desc": "朋友们约了一间 KTV 包厢。麦克风传到主角手中，她犹豫了一下，点了一首对他们有特殊意义的歌。音乐响起时，两个人的眼神在昏暗的灯光下交汇。"},
+    {"id": "scene7", "name": "共同起草声明", "type": "静态室内", "desc": "主角和那个人需要一起起草一份公开声明。两人坐在电脑前，一个打字一个在旁边看着，反复修改措辞。不知不觉，窗外的天已经黑了。"},
+    {"id": "scene8", "name": "朋友们的反应", "type": "任意", "desc": "主角的朋友们发现了她和那个人的事情。闺蜜拉着她追问细节，同事在茶水间窃窃私语，论坛上出现了匿名的讨论帖——所有旁观者都成了这段关系的见证者和评论者。"},
+    {"id": "scene9", "name": "独自加班到深夜", "type": "静态室内", "desc": "办公室只剩主角一个人。窗外的城市灯火通明，她打开手机相册，翻到一张旧照片。她放下手机，揉了揉太阳穴，给自己倒了杯水，却端着杯子发呆了好几分钟。"},
 ]
 
-
-def load_motif_yaml(path: Path) -> dict:
-    raw = path.read_text("utf-8")
-    raw = "\n".join(line for line in raw.splitlines() if line.strip() and not line.strip().startswith("# ") and line.strip() != "---")
-    return yaml.safe_load(raw)
-
-
-def call_llm(prompt: str, system: str = "你是一个专业的叙事学分析助手。只输出 JSON。", temperature: float = 0.3) -> str:
-    resp = requests.post(
-        API_URL,
-        headers={"Authorization": f"Bearer {DEEPSEEK_API_KEY}", "Content-Type": "application/json"},
-        json={
-            "model": "deepseek-chat",
-            "messages": [
-                {"role": "system", "content": system},
-                {"role": "user", "content": prompt},
-            ],
-            "temperature": temperature,
-        },
-        timeout=180,
-    )
-    resp.raise_for_status()
-    return resp.json()["choices"][0]["message"]["content"]
-
-
-def clean_json(raw: str) -> str:
-    raw = raw.strip()
-    if raw.startswith("```"):
-        lines = raw.split("\n")
-        lines = lines[1:] if lines[0].startswith("```") else lines
-        if lines and lines[-1].strip() == "```":
-            lines = lines[:-1]
-        raw = "\n".join(lines)
-    return raw.strip()
+ABSTRACT_MOTIF_ACTIONS: dict[str, str] = {
+    "孤独": "写一段内心独白，让角色觉得无人可说、说不出来——手势和沉默比台词承载更多情感",
+    "旁观者": "在场景中插入一个第三方角色的评论或反应（闺蜜/室友/同事/论坛网友）",
+    "旁观者的缺席与在场": "在场景中插入一个第三方角色的评论或反应（闺蜜/室友/同事/论坛网友）",
+    "歌声": "让一首具体的歌成为情感载体——点歌、听到某首歌、歌词引起回忆或对话",
+    "随身携带的温柔": "让一个角色在另一个角色需要时恰好掏出某个随身物品（纸巾/毛巾/外套/创可贴）",
+    "协作书写": "让两个角色一起修改同一份文本（声明/文档/帖子/信件），在文字修改中推进情感",
+}
 
 
 def build_motif_description(motifs: list[dict]) -> str:
-    """将母题列表格式化为一句话描述，用于 prompt 约束"""
     lines = []
     for i, m in enumerate(motifs):
         lines.append(f"{i+1}. {m['title']}：{m.get('description', '')}")
+        action = ABSTRACT_MOTIF_ACTIONS.get(m["title"])
+        if action:
+            lines.append(f"   → 写作建议：{action}")
     return "\n".join(lines)
 
 
 def generate_scene(scene: dict, motifs: list[dict] | None, style: str) -> str:
-    """生成一个场景（带或不带母题约束）"""
     motif_text = ""
     if motifs:
         motif_desc = build_motif_description(motifs)
         motif_text = f"\n请在写作中自然体现以下母题：\n{motif_desc}\n母题是贯穿叙事的重复性主题元素，而非需要逐字逐句插入的标签。不要刻意提及母题名称本身，而是通过角色行为、对话和细节来体现。\n"
-
-    prompt = f"""请以都市言情风格写一个约 500 字的场景。
-
-场景描述：{scene['desc']}
-{motif_text}
-只输出场景正文，不要标题、不要说明文字。"""
-
+    prompt = load_prompt("p07/generate_scene", style_name=style, scene_desc=scene["desc"], motif_text=motif_text)
     raw = call_llm(prompt, "你是一个专业的小说作家。只输出正文。", temperature=TEMPERATURE)
     return raw.strip()
 
 
 def extract_motifs_from_text(text: str) -> list[dict]:
-    """使用 p05 的母题提取 prompt"""
     sample = text[:2000]
-    prompt = f"""分析以下场景文本，从中提取叙事母题（motif）。
-
-母题定义：在叙事中反复出现的主题元素，包括具体意象、关系模式、行为习惯、叙事惯例。
-
-要求：提取 3-6 个母题，每个母题须有原文线索支撑。
-
-输出格式（JSON）：
-{{
-  "motifs": [
-    {{
-      "title": "母题名（简短）",
-      "description": "一句话描述",
-      "weight": 5,
-      "evidence": ["原文引用"]
-    }}
-  ]
-}}
-
-场景文本：
-{sample}"""
-
+    prompt = load_prompt("p07/extract_motifs_scene", sample=sample)
     raw = call_llm(prompt, "你是一个专业的叙事学分析助手。只输出 JSON。", temperature=0.3)
     return json.loads(clean_json(raw)).get("motifs", [])
 
 
-def call_llm_openai(prompt: str, system: str = "你是一个专业的叙事学分析助手。只输出 JSON。", temperature: float = 0.3) -> str:
-    """调用 OpenAI 兼容 API（GPT-4o-mini）作为交叉验证。"""
-    api_key = os.environ.get("OPENAI_API_KEY", "")
-    if not api_key:
-        raise ValueError("请设置 OPENAI_API_KEY 环境变量以使用交叉验证")
-    resp = requests.post(
-        "https://api.openai.com/v1/chat/completions",
-        headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
-        json={
-            "model": "gpt-4o-mini",
-            "messages": [
-                {"role": "system", "content": system},
-                {"role": "user", "content": prompt},
-            ],
-            "temperature": temperature,
-        },
-        timeout=180,
-    )
-    resp.raise_for_status()
-    return resp.json()["choices"][0]["message"]["content"]
-
-
 def extract_motifs_cross_validate(text: str) -> list[dict]:
-    """用 GPT-4o-mini 做母题提取，用于交叉验证（消除同源偏差）。"""
     sample = text[:2000]
-    prompt = f"""分析以下场景文本，从中提取叙事母题（motif）。
-母题定义：在叙事中反复出现的主题元素，包括具体意象、关系模式、行为习惯、叙事惯例。
-要求：提取 3-6 个母题，每个母题须有原文线索支撑。
-输出格式（JSON）：{{"motifs": [{{"title":"母题名","description":"一句话描述","weight":5,"evidence":["原文引用"]}}]}}
-场景文本：{sample}"""
+    prompt = load_prompt("p07/extract_motifs_scene", sample=sample)
     try:
         raw = call_llm_openai(prompt, "你是一个专业的叙事学分析助手。只输出 JSON。", temperature=0.3)
         return json.loads(clean_json(raw)).get("motifs", [])
-    except Exception as e:
-        print(f"      交叉验证失败: {e}")
+    except Exception:
         return []
 
 
 def llm_motif_match(detected_title: str, target_title: str, target_description: str) -> bool:
-    """用 LLM 判断提取的母题是否体现了目标母题的含义。"""
-    prompt = f"""判断以下提取的母题是否体现了目标母题的含义。只输出 yes 或 no。
-
-提取的母题: {detected_title}
-目标母题: {target_title}
-目标母题定义: {target_description}"""
+    prompt = load_prompt("p07/llm_motif_match",
+        detected_title=detected_title, target_title=target_title, target_description=target_description)
     try:
         raw = call_llm(prompt, "你是一个叙事学分析助手。只输出 yes 或 no。", temperature=0.1)
         return raw.strip().lower() == "yes"
@@ -177,27 +84,15 @@ def llm_motif_match(detected_title: str, target_title: str, target_description: 
 
 
 def compute_alignment(detected: list[dict], target_titles: set[str], target_motifs: list[dict] | None = None) -> float:
-    """计算母题吻合度（基于 LLM 语义判断）。
-    替代原有的 keyword-map 匹配，消除 false positive/negative。
-    """
     if not target_titles:
         return 0.0
-
-    target_map = {}
-    if target_motifs:
-        for m in target_motifs:
-            target_map[m["title"]] = m.get("description", "")
-
+    target_map = {m["title"]: m.get("description", "") for m in (target_motifs or [])}
     detected_titles = [m["title"] for m in detected]
-
     matched = 0
     for target in target_titles:
         desc = target_map.get(target, "")
-        for dt in detected_titles:
-            if llm_motif_match(dt, target, desc):
-                matched += 1
-                break
-
+        if any(llm_motif_match(dt, target, desc) for dt in detected_titles):
+            matched += 1
     return min(matched / len(target_titles), 1.0)
 
 
@@ -205,192 +100,99 @@ def main():
     print("=" * 60)
     print("p07 — 母题一致性检验实验")
     print("=" * 60)
-
     RESULTS_DIR.mkdir(exist_ok=True)
     generated_dir = RESULTS_DIR / "generated"
     detection_dir = RESULTS_DIR / "motif_detection"
     generated_dir.mkdir(exist_ok=True)
     detection_dir.mkdir(exist_ok=True)
 
-    # 加载母题约束
-    print("\n加载母题约束...")
     urban_motifs = load_motif_yaml(GALLERY_ROOT / "urban-romance" / "motif.yaml")
     campus_motifs = load_motif_yaml(GALLERY_ROOT / "campus-romance" / "motif.yaml")
+    urban_list, campus_list = urban_motifs.get("motifs", []), campus_motifs.get("motifs", [])
+    urban_titles = {m["title"] for m in urban_list}
+    campus_titles = {m["title"] for m in campus_list}
 
-    urban_motif_list = urban_motifs.get("motifs", [])
-    campus_motif_list = campus_motifs.get("motifs", [])
-
-    urban_titles = {m["title"] for m in urban_motif_list}
-    campus_titles = {m["title"] for m in campus_motif_list}
-
-    print(f"  都市言情母题: {len(urban_motif_list)} — {', '.join(urban_titles)}")
-    print(f"  校园言情母题: {len(campus_motif_list)} — {', '.join(campus_titles)}")
-
-    # 步骤 1-3: 生成 + 交叉验证
     all_results = []
-    configs = [
-        ("urban", urban_motif_list, urban_titles, "都市言情"),
-        ("campus", campus_motif_list, campus_titles, "校园言情"),
-    ]
+    configs = [("urban", urban_list, urban_titles, "都市言情"), ("campus", campus_list, campus_titles, "校园言情")]
 
     for series, motif_list, target_titles, style_name in configs:
-        print(f"\n{'='*40}")
-        print(f"约束组: {style_name} ({len(motif_list)} 个母题)")
-        print(f"{'='*40}")
-
-        # 带约束生成
-        print(f"\n  步骤 1: 带母题约束生成 (5 个场景)")
+        print(f"\n{'='*40}\n约束组: {style_name} ({len(motif_list)} 个母题)\n{'='*40}")
         for scene in SCENE_TEMPLATES:
-            cache_file = generated_dir / f"constrained_{series}_{scene['id']}.txt"
-            if cache_file.exists():
-                text = cache_file.read_text("utf-8")
-                print(f"    {scene['name']} ← 读取缓存")
-            else:
-                print(f"    {scene['name']}...", end=" ", flush=True)
-                text = generate_scene(scene, motif_list, style_name)
-                cache_file.write_text(text, "utf-8")
-                print(f"✓ ({len(text)} 字)")
+            text = cache_or_compute_text(
+                generated_dir / f"constrained_{series}_{scene['id']}.txt",
+                lambda s=scene: generate_scene(s, motif_list, style_name),
+                f"生成 {scene['name']}", verbose=True,
+            )
+            detected = cache_or_compute(
+                detection_dir / f"constrained_{series}_{scene['id']}.json",
+                lambda t=text: {"motifs": extract_motifs_from_text(t)},
+                verbose=False,
+            )
+            alignment = compute_alignment(detected.get("motifs", []), target_titles, motif_list)
+            all_results.append({"group": f"constrained_{series}", "scene": scene["name"], "alignment": alignment,
+                "detected_count": len(detected.get("motifs", [])), "target_count": len(target_titles),
+                "detected_titles": [m["title"] for m in detected.get("motifs", [])]})
+            print(f"      吻合度: {alignment*100:.0f}%")
 
-            # 检测母题
-            detect_cache = detection_dir / f"constrained_{series}_{scene['id']}.json"
-            if detect_cache.exists():
-                detected = json.loads(detect_cache.read_text("utf-8")).get("motifs", [])
-            else:
-                detected = extract_motifs_from_text(text)
-                detect_cache.write_text(json.dumps({"motifs": detected}, ensure_ascii=False, indent=2), "utf-8")
-
-            alignment = compute_alignment(detected, target_titles, motif_list)
-            all_results.append({
-                "group": f"constrained_{series}",
-                "scene": scene["name"],
-                "alignment": alignment,
-                "detected_count": len(detected),
-                "target_count": len(target_titles),
-                "detected_titles": [m["title"] for m in detected],
-            })
-            print(f"      吻合度: {alignment*100:.0f}% ({len(detected)} 个检测 / {len(target_titles)} 个目标)")
-
-        # 无约束对照组
-        print(f"\n  步骤 2: 无母题约束生成 (对照组, 5 个场景)")
         for scene in SCENE_TEMPLATES:
-            cache_file = generated_dir / f"control_{series}_{scene['id']}.txt"
-            if cache_file.exists():
-                text = cache_file.read_text("utf-8")
-                print(f"    {scene['name']} ← 读取缓存")
-            else:
-                print(f"    {scene['name']}...", end=" ", flush=True)
-                text = generate_scene(scene, None, style_name)
-                cache_file.write_text(text, "utf-8")
-                print(f"✓ ({len(text)} 字)")
+            text = cache_or_compute_text(
+                generated_dir / f"control_{series}_{scene['id']}.txt",
+                lambda s=scene: generate_scene(s, None, style_name),
+                f"生成对照 {scene['name']}", verbose=True,
+            )
+            detected = cache_or_compute(
+                detection_dir / f"control_{series}_{scene['id']}.json",
+                lambda t=text: {"motifs": extract_motifs_from_text(t)},
+                verbose=False,
+            )
+            alignment = compute_alignment(detected.get("motifs", []), target_titles, motif_list)
+            all_results.append({"group": f"control_{series}", "scene": scene["name"], "alignment": alignment,
+                "detected_count": len(detected.get("motifs", [])), "target_count": len(target_titles),
+                "detected_titles": [m["title"] for m in detected.get("motifs", [])]})
 
-            detect_cache = detection_dir / f"control_{series}_{scene['id']}.json"
-            if detect_cache.exists():
-                detected = json.loads(detect_cache.read_text("utf-8")).get("motifs", [])
-            else:
-                detected = extract_motifs_from_text(text)
-                detect_cache.write_text(json.dumps({"motifs": detected}, ensure_ascii=False, indent=2), "utf-8")
-
-            alignment = compute_alignment(detected, target_titles, motif_list)
-            all_results.append({
-                "group": f"control_{series}",
-                "scene": scene["name"],
-                "alignment": alignment,
-                "detected_count": len(detected),
-                "target_count": len(target_titles),
-                "detected_titles": [m["title"] for m in detected],
-            })
-            print(f"      吻合度: {alignment*100:.0f}% ({len(detected)} 个检测 / {len(target_titles)} 个目标)")
-
-    # 步骤 3: 交叉验证（GPT-4o-mini 消除同源偏差）
-    print("\n" + "=" * 40)
-    print("步骤 3: 交叉验证（GPT-4o-mini，消除同源偏差）")
-    print("=" * 40)
+    # Cross-validation
     cross_validated = []
-    if OPENAI_API_KEY:
+    if any(os.environ.get("OPENAI_API_KEY") for _ in [1]):
         for series, motif_list, target_titles, style_name in configs:
             for scene in SCENE_TEMPLATES:
-                cache_file = generated_dir / f"constrained_{series}_{scene['id']}.txt"
-                if not cache_file.exists():
+                path = generated_dir / f"constrained_{series}_{scene['id']}.txt"
+                if not path.exists():
                     continue
-                text = cache_file.read_text("utf-8")
-                cv_cache = detection_dir / f"crossval_{series}_{scene['id']}.json"
-                if cv_cache.exists():
-                    cv_detected = json.loads(cv_cache.read_text("utf-8")).get("motifs", [])
-                else:
-                    print(f"    {style_name} {scene['name']}...", end=" ", flush=True)
-                    cv_detected = extract_motifs_cross_validate(text)
-                    cv_cache.write_text(json.dumps({"motifs": cv_detected}, ensure_ascii=False, indent=2), "utf-8")
-                    print(f"✓ ({len(cv_detected)} 个母题)")
-                cv_alignment = compute_alignment(cv_detected, target_titles, motif_list)
-                cross_validated.append({
-                    "series": series,
-                    "scene": scene["name"],
-                    "group": "constrained",
-                    "cv_alignment": cv_alignment,
-                })
+                text = path.read_text("utf-8")
+                cv_detected = cache_or_compute(
+                    detection_dir / f"crossval_{series}_{scene['id']}.json",
+                    lambda: {"motifs": extract_motifs_cross_validate(text)},
+                    verbose=False,
+                )
+                cv_alignment = compute_alignment(cv_detected.get("motifs", []), target_titles, motif_list)
+                cross_validated.append({"series": series, "scene": scene["name"], "cv_alignment": cv_alignment})
+
         if cross_validated:
             avg_cv = sum(r["cv_alignment"] for r in cross_validated) / len(cross_validated)
-            avg_primary = sum(r["alignment"] for r in all_results if r.get("group", "").startswith("constrained_")) / max(1, len([r for r in all_results if r.get("group", "").startswith("constrained_")]))
-            cv_diff = abs(avg_cv - avg_primary) * 100
-            print(f"\n  交叉验证约束组平均吻合度: {avg_cv*100:.0f}%（DeepSeek: {avg_primary*100:.0f}%，差异: {cv_diff:.0f}%）")
-            if cv_diff > 15:
-                print(f"  ⚠️ 差异 > 15%，结果优先采信 GPT-4o-mini 交叉验证")
-            else:
-                print(f"  ✅ 差异在 15% 以内，DeepSeek 结果可信")
-    else:
-        print("  跳过（未设置 OPENAI_API_KEY）")
+            avg_p = sum(r["alignment"] for r in all_results if r["group"].startswith("constrained_")) / max(1, len([r for r in all_results if r["group"].startswith("constrained_")]))
+            print(f"\n  交叉验证约束组: {avg_cv*100:.0f}% (DeepSeek: {avg_p*100:.0f}%, 差异: {abs(avg_cv-avg_p)*100:.0f}%)")
+            print(f"  {'✅ 结果可信' if abs(avg_cv-avg_p)*100 <= 15 else '⚠️ 差异 > 15%，优先采信 GPT-4o-mini'}")
 
-    # 步骤 4-6: 对比分析
-    print("\n" + "=" * 60)
-    print("p07 分析报告：母题一致性检验")
-    print("=" * 60)
-
+    print(f"\n{'='*60}\np07 分析报告：母题一致性检验\n{'='*60}")
     for series, target_titles, style in [("urban", urban_titles, "都市言情"), ("campus", campus_titles, "校园言情")]:
         constrained = [r for r in all_results if r["group"] == f"constrained_{series}"]
         control = [r for r in all_results if r["group"] == f"control_{series}"]
-
-        avg_constrained = sum(r["alignment"] for r in constrained) / len(constrained) if constrained else 0
-        avg_control = sum(r["alignment"] for r in control) / len(control) if control else 0
-        diff = avg_constrained - avg_control
-
+        avg_c = sum(r["alignment"] for r in constrained) / len(constrained) if constrained else 0
+        avg_ct = sum(r["alignment"] for r in control) / len(control) if control else 0
         print(f"\n## {style}")
-        print(f"  约束组平均吻合度: {avg_constrained*100:.0f}%")
-        print(f"  对照组平均吻合度: {avg_control*100:.0f}%")
-        print(f"  提升: {diff*100:+.0f} 百分点")
+        print(f"  约束组平均吻合度: {avg_c*100:.0f}%")
+        print(f"  对照组平均吻合度: {avg_ct*100:.0f}%")
+        print(f"  提升: {(avg_c-avg_ct)*100:+.0f} 百分点")
 
-        # 单母题覆盖率
-        print(f"\n  母题约束力分析:")
-        for title in sorted(target_titles):
-            coverage = sum(1 for r in constrained if title in str(r.get("detected_titles", []))) / len(constrained) if constrained else 0
-            bar = "█" * int(coverage * 10)
-            print(f"    {title:<10}: {coverage*100:3.0f}% {bar}")
-
-    # 保存完整报告
     report_data = {
         "results": all_results,
-        "urban_avg": {
-            "constrained": sum(r["alignment"] for r in all_results if r["group"] == "constrained_urban")
-            / max(1, len([r for r in all_results if r["group"] == "constrained_urban"])),
-            "control": sum(r["alignment"] for r in all_results if r["group"] == "control_urban")
-            / max(1, len([r for r in all_results if r["group"] == "control_urban"])),
-        },
-        "campus_avg": {
-            "constrained": sum(r["alignment"] for r in all_results if r["group"] == "constrained_campus")
-            / max(1, len([r for r in all_results if r["group"] == "constrained_campus"])),
-            "control": sum(r["alignment"] for r in all_results if r["group"] == "control_campus")
-            / max(1, len([r for r in all_results if r["group"] == "control_campus"])),
-        },
-        "cross_validation": {
-            "cv_results": cross_validated,
-            "avg_cv_alignment": sum(r["cv_alignment"] for r in cross_validated) / len(cross_validated) if cross_validated else 0,
-        },
+        "cross_validation": {"cv_results": cross_validated,
+            "avg_cv_alignment": sum(r["cv_alignment"] for r in cross_validated) / len(cross_validated) if cross_validated else 0},
     }
-    (RESULTS_DIR / "consistency_report.json").write_text(
-        json.dumps(report_data, ensure_ascii=False, indent=2), "utf-8"
-    )
-
+    cache_or_compute(RESULTS_DIR / "consistency_report.json", lambda: report_data, verbose=False)
     print(f"\n结果已保存到: {RESULTS_DIR}")
 
 
 if __name__ == "__main__":
+    import os
     main()

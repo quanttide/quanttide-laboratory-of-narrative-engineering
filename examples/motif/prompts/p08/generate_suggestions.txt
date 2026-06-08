@@ -1,8 +1,8 @@
 
-你是《{article_name}》的创作顾问。这篇文章缺少母题「{target_title}」（定义：{target_description}）。
-已识别的原因：{gap_types_str}
+你是《$article_name》的创作顾问。这篇文章缺少母题「$target_title」（定义：$target_description）。
+已识别的原因：$gap_types_str
 
-{mirror_text}
+$mirror_text
 
 请从以下 6 个方向各生成一条改进建议（每条 80-150 字）：
 1. 增强 - 强化已存在但偏弱的母题
@@ -21,4 +21,4 @@
 }
 其中"反向"方向额外含 "reverse_risk": 1-3
 
-场景文本：{sample}
+场景文本：$sample

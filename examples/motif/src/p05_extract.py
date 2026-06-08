@@ -6,23 +6,16 @@ p05 — 母题可提取性实验
 """
 import json
 import os
-import sys
 import random
-from pathlib import Path
 from collections import defaultdict
+from pathlib import Path
 
 import requests
-import yaml
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from src.config import REPO_ROOT, FICTION_ROOT, GALLERY_ROOT, DATA_DIR
+from src.config import FICTION_ROOT, GALLERY_ROOT, DATA_DIR
+from src.infra import call_llm, clean_json, cache_or_compute, read_article_text, load_motif_yaml, semantic_similarity
+from src.prompts import load_prompt
 
-DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY", "")
-if not DEEPSEEK_API_KEY:
-    print("错误：请设置 DEEPSEEK_API_KEY 环境变量")
-    sys.exit(1)
-
-API_URL = "https://api.deepseek.com/chat/completions"
 RESULTS_DIR = DATA_DIR / "p05"
 
 ARTICLES = [
@@ -37,194 +30,41 @@ ARTICLES = [
 ]
 
 
-def read_article_text(path: str) -> str:
-    full_path = FICTION_ROOT / path
-    if not full_path.exists():
-        raise FileNotFoundError(f"文件不存在: {full_path}")
-    text = full_path.read_text("utf-8")
-    lines = text.split("\n")
-    body_lines = [" " if l.strip() == "" else l for l in lines if not l.startswith("# ")]
-    return "\n".join(body_lines).strip()
-
-
-def load_motif_yaml(path: Path) -> dict:
-    """加载 YAML，自动忽略 YAML 文档分隔符 `---`"""
-    raw = path.read_text("utf-8")
-    raw = "\n".join(line for line in raw.splitlines() if line.strip() and not line.strip().startswith("# ") and line.strip() != "---")
-    return yaml.safe_load(raw)
-
-
 def load_all_motif_ground_truth() -> dict:
-    """加载三层 motif.yaml 作为 ground truth"""
     gt = {}
-
-    shared = GALLERY_ROOT / "motif.yaml"
-    if shared.exists():
-        gt["shared"] = load_motif_yaml(shared)
-
-    urban = GALLERY_ROOT / "urban-romance" / "motif.yaml"
-    if urban.exists():
-        gt["urban"] = load_motif_yaml(urban)
-
-    campus = GALLERY_ROOT / "campus-romance" / "motif.yaml"
-    if campus.exists():
-        gt["campus"] = load_motif_yaml(campus)
-
+    for level in ["shared", "urban", "campus"]:
+        path = GALLERY_ROOT / ("motif.yaml" if level == "shared" else f"{level}-romance/motif.yaml")
+        if path.exists():
+            gt[level] = load_motif_yaml(path)
     return gt
 
 
-def call_llm(prompt: str, system: str = "你是一个专业的叙事学分析助手。只输出 JSON。") -> str:
-    resp = requests.post(
-        API_URL,
-        headers={"Authorization": f"Bearer {DEEPSEEK_API_KEY}", "Content-Type": "application/json"},
-        json={
-            "model": "deepseek-chat",
-            "messages": [
-                {"role": "system", "content": system},
-                {"role": "user", "content": prompt},
-            ],
-            "temperature": 0.3,
-        },
-        timeout=180,
-    )
-    resp.raise_for_status()
-    return resp.json()["choices"][0]["message"]["content"]
-
-
-def clean_json(raw: str) -> str:
-    raw = raw.strip()
-    if raw.startswith("```"):
-        lines = raw.split("\n")
-        lines = lines[1:] if lines[0].startswith("```") else lines
-        if lines and lines[-1].strip() == "```":
-            lines = lines[:-1]
-        raw = "\n".join(lines)
-    return raw.strip()
-
-
 def extract_motifs(text: str, article_name: str) -> dict:
-    """步骤 1：从单篇文章中提取母题"""
     sample = text[:3000]
-    prompt = f"""分析下面名为《{article_name}》的文章，从中提取叙事母题（motif）。
-
-母题定义：在叙事中反复出现的主题元素，包括具体意象、关系模式、行为习惯、
-叙事惯例。母题与主题不同——主题是"说什么"（如"爱情"），母题是"怎么说"
-（如"通过手势而非语言表达爱意"）。
-
-要求：
-- 提取 3-6 个母题
-- 每个母题必须有来自原文的具体线索（2-3 条 evidence）
-- weight 表示该母题在本文中的重要性（1-10）
-
-输出格式（JSON）：
-{{
-  "motifs": [
-    {{
-      "title": "母题名（简短，2-6字）",
-      "description": "一句话描述该母题在本文中的表现",
-      "weight": 5,
-      "evidence": ["原文引用1", "原文引用2"]
-    }}
-  ]
-}}
-
-文章内容：
-{sample}"""
-
+    prompt = load_prompt("p05/extract_single_motif", article_name=article_name, sample=sample)
     raw = call_llm(prompt)
     return json.loads(clean_json(raw))
 
 
 def extract_motifs_joint(texts: list[dict], series_name: str) -> dict:
-    """步骤 2：从多篇合并文本中联合提取母题"""
-    combined_parts = []
-    for t in texts:
-        combined_parts.append(f"--- 文章: {t['name']} ---\n{t['text'][:2000]}")
+    combined_parts = [f"--- 文章: {t['name']} ---\n{t['text'][:2000]}" for t in texts]
     combined = "\n\n".join(combined_parts)
-
-    prompt = f"""以下是从《{series_name}》系列中抽取的多篇文章片段。请从这些合并文本中
-提取该系列的共同叙事母题（motif）。
-
-母题定义：在叙事中反复出现的主题元素，包括具体意象、关系模式、行为习惯、
-叙事惯例。母题与主题不同——主题是"说什么"（如"爱情"），母题是"怎么说"
-（如"通过手势而非语言表达爱意"）。
-
-要求：
-- 提取 4-6 个跨场景复现的母题
-- 每个母题应有跨文章的证据支撑
-- weight 表示该母题在整个系列中的重要性（1-10）
-
-输出格式（JSON）：
-{{
-  "motifs": [
-    {{
-      "title": "母题名（简短，2-6字）",
-      "description": "一句话描述该母题在系列中的表现",
-      "weight": 5,
-      "evidence": ["原文引用1（来自文章X）", "原文引用2（来自文章Y）"]
-    }}
-  ]
-}}
-
-{combined}"""
-
+    prompt = load_prompt("p05/extract_joint_motif", series_name=series_name, combined=combined)
     raw = call_llm(prompt)
     return json.loads(clean_json(raw))
-
-
-def get_embedding(text: str) -> list[float]:
-    """调用 embedding API 获取文本向量。
-    支持 OpenAI 兼容格式（text-embedding-3-small）。
-    """
-    api_key = os.environ.get("OPENAI_API_KEY", "")
-    api_url = os.environ.get("EMBEDDING_API_URL", "https://api.openai.com/v1/embeddings")
-    model = os.environ.get("EMBEDDING_MODEL", "text-embedding-3-small")
-
-    if not api_key:
-        raise ValueError("请设置 OPENAI_API_KEY 环境变量以使用 embedding 匹配")
-
-    resp = requests.post(
-        api_url,
-        headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
-        json={"input": text, "model": model},
-        timeout=30,
-    )
-    resp.raise_for_status()
-    return resp.json()["data"][0]["embedding"]
-
-
-def cosine_similarity(a: list[float], b: list[float]) -> float:
-    dot = sum(x * y for x, y in zip(a, b))
-    norm_a = sum(x * x for x in a) ** 0.5
-    norm_b = sum(y * y for y in b) ** 0.5
-    return dot / (norm_a * norm_b) if norm_a and norm_b else 0.0
-
-
-def semantic_similarity(desc_a: str, desc_b: str) -> float:
-    """用 embedding 余弦相似度判断两个母题描述的语义相似度（0-1）。
-    替代原有的 LLM 判定方式，消除"LLM 提取→LLM 评估"循环论证。
-    """
-    try:
-        emb_a = get_embedding(desc_a)
-        emb_b = get_embedding(desc_b)
-        return max(0.0, min(1.0, cosine_similarity(emb_a, emb_b)))
-    except Exception:
-        return 0.0
 
 
 def compare_with_ground_truth(single_results: dict, joint_results: dict, gt: dict) -> dict:
     """步骤 3：与人工标注对比（覆盖率基于 unique GT 母题去重）"""
     report = {}
-
-    for level_name, level_data in [("urban", gt.get("urban", {})), ("campus", gt.get("campus", {}))]:
+    for level_name in ["urban", "campus"]:
+        level_data = gt.get(level_name, {})
         gt_motifs = level_data.get("motifs", [])
         if not gt_motifs:
             continue
 
-        gt_titles = {m["title"] for m in gt_motifs}
         gt_descs = {m["title"]: m.get("description", "") for m in gt_motifs}
 
-        # 单篇覆盖率（基于 unique GT 母题去重）
         single_coverage = {}
         for art in ARTICLES:
             if art["series"] != level_name:
@@ -236,9 +76,8 @@ def compare_with_ground_truth(single_results: dict, joint_results: dict, gt: dic
             for e in extracted:
                 for g_title, g_desc in gt_descs.items():
                     sim = semantic_similarity(e.get("description", ""), g_desc)
-                    if sim > 0.7:
-                        if g_title not in matched_gt:
-                            matched_gt.add(g_title)
+                    if sim > 0.7 and g_title not in matched_gt:
+                        matched_gt.add(g_title)
                         match_details.append({"extracted": e["title"], "gt": g_title, "similarity": sim})
                         break
             single_coverage[aid] = {
@@ -248,16 +87,14 @@ def compare_with_ground_truth(single_results: dict, joint_results: dict, gt: dic
                 "matches": match_details,
             }
 
-        # 联合覆盖率（基于 unique GT 母题去重）
         joint = joint_results.get(level_name, {}).get("motifs", [])
         joint_matched_gt = set()
         joint_match_details = []
         for e in joint:
             for g_title, g_desc in gt_descs.items():
                 sim = semantic_similarity(e.get("description", ""), g_desc)
-                if sim > 0.7:
-                    if g_title not in joint_matched_gt:
-                        joint_matched_gt.add(g_title)
+                if sim > 0.7 and g_title not in joint_matched_gt:
+                    joint_matched_gt.add(g_title)
                     joint_match_details.append({"extracted": e["title"], "gt": g_title, "similarity": sim})
                     break
 
@@ -269,56 +106,35 @@ def compare_with_ground_truth(single_results: dict, joint_results: dict, gt: dic
             "joint_matches": joint_match_details,
             "gt_motif_count": len(gt_motifs),
         }
-
     return report
 
 
 def blind_clustering(motif_descriptions: dict) -> list[dict]:
-    """步骤 4：盲品归因——将母题描述按系列聚类"""
     items = []
     for aid, data in motif_descriptions.items():
-        motifs = data.get("motifs", [])
-        desc = " | ".join(m.get("description", "") for m in motifs[:4])
-        items.append({"id": aid, "description": desc})
+        descs = [m.get("description", "") for m in data.get("motifs", [])[:4]]
+        items.append({"id": aid, "description": " | ".join(descs)})
 
     random.shuffle(items)
     profiles = "\n\n".join(f"[文章 {it['id']}]\n{it['description']}" for it in items)
-
-    prompt = f"""以下 8 篇文章的母题描述已去掉作者信息。请按母题相似度将它们分成 2 组。
-
-输出格式（JSON）：
-{{
-  "groups": [
-    {{"members": ["文章ID1", "文章ID3", ...], "reason": "共同母题特征"}},
-    ...
-  ]
-}}
-
-母题描述：
-{profiles}"""
-
+    prompt = load_prompt("p05/blind_clustering", profiles=profiles)
     raw = call_llm(prompt, "你是一个叙事学分析专家。只输出 JSON。")
     return json.loads(clean_json(raw))
 
 
 def report(gt: dict, single_results: dict, joint_results: dict, comparison: dict, clusterings: list[dict]):
-    print("\n" + "=" * 60)
-    print("p05 分析报告：母题可提取性")
-    print("=" * 60)
-
     series_map = {a["id"]: a["series"] for a in ARTICLES}
     series_names = {"urban": "都市言情", "campus": "校园言情"}
 
-    # Ground truth
+    print("\n" + "=" * 60)
+    print("p05 分析报告：母题可提取性")
+    print("=" * 60)
     print("\n## Ground Truth（人工标注）")
     for level in ["shared", "urban", "campus"]:
-        data = gt.get(level, {})
-        motifs = data.get("motifs", [])
+        motifs = gt.get(level, {}).get("motifs", [])
         if motifs:
-            names = ", ".join(m["title"] for m in motifs)
-            print(f"  {level}: {len(motifs)} 个母题 — {names}")
+            print(f"  {level}: {len(motifs)} 个母题 — {', '.join(m['title'] for m in motifs)}")
 
-    # 对比结果
     print("\n## 母题提取质量对比")
     for level_name in ["urban", "campus"]:
         c = comparison.get(level_name, {})
@@ -327,44 +143,30 @@ def report(gt: dict, single_results: dict, joint_results: dict, comparison: dict
         print(f"\n  {series_names.get(level_name, level_name)} ({c['gt_motif_count']} 个人工标注母题):")
         print(f"    单篇平均覆盖率: {c['single_avg_coverage']*100:.0f}%")
         print(f"    多篇联合覆盖率: {c['joint_coverage']*100:.0f}%")
-
         for aid, sc in c.get("single_coverage", {}).items():
             name = next(a["name"] for a in ARTICLES if a["id"] == aid)
             print(f"      {aid} {name:<14} {sc['extracted_count']} 个提取 / {sc['matched_count']} 个匹配 = {sc['coverage']*100:.0f}%")
 
-        if c.get("joint_matches"):
-            print(f"    联合提取匹配:")
-            for m in c["joint_matches"]:
-                print(f"      → {m['extracted']} ↔ {m['gt']} (sim={m['similarity']:.2f})")
-
-    # 盲品归因
     print(f"\n## 盲品归因（{len(clusterings)} 次独立运行）")
     total_accuracy = 0
     for r_idx, clustering in enumerate(clusterings):
-        groups = clustering.get("groups", [])
         correct = 0
-        for g in groups:
+        for g in clustering.get("groups", []):
             members = g["members"]
             series_in_group = [series_map.get(m, "?") for m in members]
             counts = {}
             for s in series_in_group:
                 counts[s] = counts.get(s, 0) + 1
             max_count = max(counts.values())
-            # 平局时按随机基线计（50% 正确率）
             if list(counts.values()).count(max_count) > 1:
                 correct += max_count
             else:
                 majority = max(set(series_in_group), key=series_in_group.count)
                 correct += sum(1 for s in series_in_group if s == majority)
-
         acc = correct / len(ARTICLES) * 100 if ARTICLES else 0
         total_accuracy += acc
         print(f"  第 {r_idx+1} 轮: 同系列聚类率 {correct}/{len(ARTICLES)} = {acc:.0f}%")
-        for g in groups:
-            print(f"    {g['members']} — {g.get('reason', '')[:60]}")
-
-    avg = total_accuracy / len(clusterings) if clusterings else 0
-    print(f"\n  平均聚类率: {avg:.0f}%")
+    print(f"\n  平均聚类率: {total_accuracy / len(clusterings):.0f}%" if clusterings else "")
 
 
 def main():
@@ -374,89 +176,53 @@ def main():
 
     RESULTS_DIR.mkdir(exist_ok=True)
 
-    # 加载 ground truth
     print("\n加载 Gallery 母题标注...")
     gt = load_all_motif_ground_truth()
     for level, data in gt.items():
-        n = len(data.get("motifs", []))
-        print(f"  {level}: {n} 个母题")
+        print(f"  {level}: {len(data.get('motifs', []))} 个母题")
 
-    # 步骤 1: 单篇提取
     print("\n步骤 1: 单篇母题提取")
     single_results = {}
     for art in ARTICLES:
-        cache_file = RESULTS_DIR / f"motif_{art['id']}.json"
-        if cache_file.exists():
-            single_results[art["id"]] = json.loads(cache_file.read_text("utf-8"))
-            print(f"  {art['id']} {art['name']} ← 读取缓存")
-            continue
+        result = cache_or_compute(
+            RESULTS_DIR / f"motif_{art['id']}.json",
+            lambda a=art: extract_motifs(read_article_text(a["path"]), a["name"]),
+            f"{art['id']} {art['name']}",
+        )
+        single_results[art["id"]] = result
 
-        print(f"  {art['id']} {art['name']}...", end=" ", flush=True)
-        try:
-            text = read_article_text(art["path"])
-            result = extract_motifs(text, art["name"])
-            single_results[art["id"]] = result
-            cache_file.write_text(json.dumps(result, ensure_ascii=False, indent=2), "utf-8")
-            print(f"✓ ({len(result.get('motifs', []))} 个母题)")
-        except Exception as e:
-            print(f"✗ {e}")
-
-    # 步骤 2: 多篇联合提取
     print("\n步骤 2: 多篇联合提取")
     joint_results = {}
     series_articles = defaultdict(list)
     for art in ARTICLES:
         try:
-            text = read_article_text(art["path"])
-            series_articles[art["series"]].append({"name": art["name"], "text": text})
+            series_articles[art["series"]].append({"name": art["name"], "text": read_article_text(art["path"])})
         except Exception:
             continue
 
     for series, texts in series_articles.items():
-        cache_file = RESULTS_DIR / f"motif_{series}_joint.json"
-        if cache_file.exists():
-            joint_results[series] = json.loads(cache_file.read_text("utf-8"))
-            print(f"  {series} 联合 ← 读取缓存")
-            continue
-
         series_name = "都市言情" if series == "urban" else "校园言情"
-        print(f"  {series} 联合提取 ({len(texts)} 篇)...", end=" ", flush=True)
-        try:
-            result = extract_motifs_joint(texts, series_name)
-            joint_results[series] = result
-            cache_file.write_text(json.dumps(result, ensure_ascii=False, indent=2), "utf-8")
-            print(f"✓ ({len(result.get('motifs', []))} 个母题)")
-        except Exception as e:
-            print(f"✗ {e}")
+        result = cache_or_compute(
+            RESULTS_DIR / f"motif_{series}_joint.json",
+            lambda t=texts, s=series_name: extract_motifs_joint(t, s),
+            f"{series} 联合提取 ({len(texts)} 篇)",
+        )
+        joint_results[series] = result
 
-    # 步骤 3: 与人工标注对比
     print("\n步骤 3: 与人工标注对比")
     comparison = compare_with_ground_truth(single_results, joint_results, gt)
 
-    # 步骤 4: 盲品归因（3 次独立运行）
     print("\n步骤 4: 盲品归因")
     clusterings = []
     for r in range(3):
-        cache_file = RESULTS_DIR / f"blind_clustering_r{r+1}.json"
-        if cache_file.exists():
-            clusterings.append(json.loads(cache_file.read_text("utf-8")))
-            print(f"  第 {r+1} 轮 ← 读取缓存")
-            continue
+        result = cache_or_compute(
+            RESULTS_DIR / f"blind_clustering_r{r+1}.json",
+            lambda: blind_clustering(single_results),
+            f"第 {r+1} 轮",
+        )
+        clusterings.append(result)
 
-        print(f"  第 {r+1} 轮...", end=" ", flush=True)
-        try:
-            result = blind_clustering(single_results)
-            clusterings.append(result)
-            cache_file.write_text(json.dumps(result, ensure_ascii=False, indent=2), "utf-8")
-            print("✓")
-        except Exception as e:
-            print(f"✗ {e}")
-
-    # 保存对比报告
-    (RESULTS_DIR / "comparison.json").write_text(
-        json.dumps(comparison, ensure_ascii=False, indent=2), "utf-8"
-    )
-
+    cache_or_compute(RESULTS_DIR / "comparison.json", lambda: comparison, verbose=False)
     report(gt, single_results, joint_results, comparison, clusterings)
     print(f"\n结果已保存到: {RESULTS_DIR}")
 

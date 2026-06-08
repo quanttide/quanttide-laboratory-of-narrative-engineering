@@ -9,4 +9,4 @@
 }
 
 母题描述：
-{profiles}
+$profiles

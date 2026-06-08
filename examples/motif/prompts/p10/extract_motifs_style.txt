@@ -1,5 +1,5 @@
-分析《{article_name}》提取叙事母题（3-6个）。
+分析《$article_name》提取叙事母题（3-6个）。
 母题定义：叙事中反复出现的主题元素（意象、关系模式、行为习惯、叙事惯例）。
 每个母题须有原文线索。
 输出JSON：{{"motifs":[{{"title":"母题名","description":"描述","weight":5,"evidence":["线索"]}}]}}
-文章：{sample}
+文章：$sample

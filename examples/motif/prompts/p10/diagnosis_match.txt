@@ -1,8 +1,8 @@
 以下是叙事元素缺失假设：
-{hypotheses}
+$hypotheses
 
 已知该系列的母题库：
-{target_motif_pool}
+$target_motif_pool
 
 对每个假设，判断它最接近哪个已知母题（如有）。
 如果假设与任何已知母题都不匹配，related_missing_motif 留空。
