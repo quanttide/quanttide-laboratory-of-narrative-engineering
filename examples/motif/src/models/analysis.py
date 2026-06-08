@@ -7,9 +7,9 @@ from src.models.types import Direction, GapType
 from src.models.motif import Motif
 
 
-@dataclass
+@dataclass(frozen=True)
 class GapItem:
-    """单个母题的缝隙状态"""
+    """单个母题的缝隙状态（值对象）"""
     title: str
     target_weight: int
     extracted_weight: Optional[int] = None
@@ -23,17 +23,17 @@ class GapItem:
         return self.extracted_weight is not None and self.extracted_weight < self.target_weight * 0.5
 
 
-@dataclass
+@dataclass(frozen=True)
 class GapAttribution:
-    """缝隙归因"""
-    gap_types: Optional[list[GapType]] = None  # None = 未归因, [] = 已分析但无已知类型
+    """缝隙归因（值对象）"""
+    gap_types: Optional[list[GapType]] = None
     alternative_motif: Optional[str] = None
     reasoning: str = ""
 
 
 @dataclass
 class GapReport:
-    """缝隙分析报告（Article 聚合的一部分）"""
+    """缝隙分析报告（Article 聚合的一部分，实体）"""
     covered: list[GapItem] = field(default_factory=list)
     missing: list[GapItem] = field(default_factory=list)
     weak: list[GapItem] = field(default_factory=list)
@@ -50,17 +50,17 @@ class GapReport:
         return f"覆盖{len(self.covered)} / 缺失{len(self.missing)} / 弱化{len(self.weak)}"
 
 
-@dataclass
+@dataclass(frozen=True)
 class Suggestion:
-    """改进建议（6 方向）"""
+    """改进建议（值对象，6 方向）"""
     direction: Direction
     text: str
     paragraph_ref: str = ""
     reverse_risk: Optional[int] = None
 
     def __post_init__(self):
-        if self.reverse_risk is not None:
-            assert 1 <= self.reverse_risk <= 3, f"reverse_risk 必须在 1-3 之间，实际为 {self.reverse_risk}"
+        if self.reverse_risk is not None and not 1 <= self.reverse_risk <= 3:
+            raise ValueError(f"reverse_risk 必须在 1-3 之间，实际为 {self.reverse_risk}")
 
     def is_safe(self) -> bool:
         return self.direction in ("amplify", "transform", "restrain")
@@ -69,9 +69,9 @@ class Suggestion:
         return self.direction == "reverse" and (self.reverse_risk or 0) >= 2
 
 
-@dataclass
+@dataclass(frozen=True)
 class SuggestionDirection:
-    """改进方向定义"""
+    """改进方向定义（值对象）"""
     id: Direction
     name: str
     desc: str

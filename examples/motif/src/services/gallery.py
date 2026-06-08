@@ -4,7 +4,7 @@ from pathlib import Path
 
 from src.config import GALLERY_ROOT
 from src.infra import load_motif_yaml, load_yaml
-from src.services.converter import to_motifs
+from src.infra.acl import to_motifs
 from src.models import Motif, MotifProfile, Gallery, StyleDimension
 
 

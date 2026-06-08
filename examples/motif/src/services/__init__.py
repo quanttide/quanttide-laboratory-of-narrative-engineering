@@ -10,7 +10,7 @@
 - cross_work:  跨作品相似度、聚类、盲测
 """
 
-from src.services.converter import (
+from src.infra.acl import (
     to_motifs, to_dims, to_gap_report,
     DataclassJSONEncoder,
 )

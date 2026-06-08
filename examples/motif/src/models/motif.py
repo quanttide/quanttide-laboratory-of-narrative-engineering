@@ -14,7 +14,16 @@ class Motif:
     evidence: list[str] = field(default_factory=list)
 
     def __post_init__(self):
-        assert 1 <= self.weight <= 10, f"weight 必须在 1-10 之间，实际为 {self.weight}"
+        if not 1 <= self.weight <= 10:
+            raise ValueError(f"weight 必须在 1-10 之间，实际为 {self.weight}")
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Motif):
+            return NotImplemented
+        return self.title == other.title
+
+    def __hash__(self) -> int:
+        return hash(self.title)
 
     def is_strong(self) -> bool:
         return self.weight >= 7
@@ -34,7 +43,7 @@ class Motif:
         )
 
 
-@dataclass
+@dataclass(frozen=True)
 class SubMotif:
     """子母题 —— 同一母题下的不同变体类型"""
     parent_title: str

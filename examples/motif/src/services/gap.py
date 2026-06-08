@@ -4,7 +4,7 @@ import json
 
 from src.infra import call_llm, clean_json
 from src.prompts import load_prompt
-from src.services.converter import to_motifs
+from src.infra.acl import to_motifs
 from src.models import Motif, GapItem, GapReport, GapAttribution, Suggestion
 
 

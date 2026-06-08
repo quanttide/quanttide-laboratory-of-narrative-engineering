@@ -5,7 +5,7 @@ from collections import defaultdict
 
 from src.infra import call_llm, call_llm_openai, clean_json
 from src.prompts import load_prompt
-from src.services.converter import to_motifs
+from src.infra.acl import to_motifs
 from src.models import Motif
 
 

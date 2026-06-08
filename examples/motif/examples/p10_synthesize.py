@@ -17,7 +17,7 @@ from src.services import (
     generate_combined_fix, generate_style_only_fix, evaluate_pairwise,
     to_motifs, to_dims,
 )
-from src.models import StyleDimension
+from src.models import Article, ArticleAnalysis, StyleReview, FixGroup
 
 RESULTS_DIR = DATA_DIR / "p10"
 HUMAN_STYLE_MOTIF_MAP = {
@@ -28,10 +28,10 @@ HUMAN_STYLE_MOTIF_MAP = {
     "时代质感": ["歌声"],
 }
 ARTICLES = [
-    {"id": "T1", "name": "咖啡厅重逢", "path": "职场言情/3_初稿/1_1_咖啡厅重逢.md", "type": "初稿"},
-    {"id": "T2", "name": "酒吧表白",   "path": "职场言情/3_初稿/8_2_酒吧表白.md", "type": "初稿"},
-    {"id": "T3", "name": "深夜失眠",   "path": "职场言情/4_成稿/1_2_深夜失眠.md", "type": "成稿"},
-    {"id": "T4", "name": "赏雪谈心",   "path": "职场言情/3_初稿/赏雪谈心.md", "type": "盲测初稿"},
+    {"id": "T1", "name": "咖啡厅重逢", "path": "职场言情/3_初稿/1_1_咖啡厅重逢.md", "series": "urban", "type": "初稿"},
+    {"id": "T2", "name": "酒吧表白",   "path": "职场言情/3_初稿/8_2_酒吧表白.md", "series": "urban", "type": "初稿"},
+    {"id": "T3", "name": "深夜失眠",   "path": "职场言情/4_成稿/1_2_深夜失眠.md", "series": "urban", "type": "成稿"},
+    {"id": "T4", "name": "赏雪谈心",   "path": "职场言情/3_初稿/赏雪谈心.md", "series": "urban", "type": "盲测初稿"},
 ]
 
 
@@ -70,12 +70,14 @@ def main():
     dim_descs = {d["title"]: d.get("description", "") for d in dims_data}
     motif_descs = {m["title"]: m.get("description", "") for m in target_motifs}
 
-    all_diagnoses, all_fixes, all_evaluations = {}, {}, {}
+    all_diagnoses, all_evaluations = {}, {}
+    analyses: dict[str, ArticleAnalysis] = {}
 
     for art in ARTICLES:
         aid = art["id"]
         print(f"\n{'='*40}\n{aid} {art['name']} ({art['type']})")
         text = read_article_text(art["path"])
+        analysis = ArticleAnalysis(article=Article(id=aid, series=art["series"], name=art["name"], path=art["path"]))
 
         style_raw = cache_or_compute(RESULTS_DIR / f"style_review_{aid}.json",
             lambda: [dataclasses.asdict(d) for d in style_review(text, art["name"], style_prompt).dimension_scores],
@@ -85,6 +87,8 @@ def main():
         motif_raw = cache_or_compute(RESULTS_DIR / f"motif_extract_{aid}.json",
             lambda: [dataclasses.asdict(m) for m in extract_motifs(text, art["name"])], f"母题提取 {aid}")
         motif_list = to_motifs(motif_raw)
+        for m in motif_list:
+            analysis.add_motif(m)
 
         diagnoses = cache_or_compute(RESULTS_DIR / f"diagnosis_{aid}.json",
             lambda: diagnose_style_motif_links(
@@ -92,6 +96,11 @@ def main():
                 motif_list, target_motifs, art["name"]),
             f"诊断 {aid}")
         all_diagnoses[aid] = diagnoses
+
+        analysis.style_review = StyleReview(
+            dimension_scores=dimension_scores,
+            diagnoses=[FixGroup() for _ in diagnoses.get("links", [])],
+        )
 
         weak_dims = [d for d in dimension_scores if d.score <= 7]
         art_fixes, art_evals = {}, {}
@@ -113,15 +122,16 @@ def main():
             motif_fix = cache_or_compute_text(RESULTS_DIR / f"fix_motif_{aid}_{dim_name}.txt",
                 lambda: call_llm_text(motif_fix_prompt, "你是一个创作顾问。只输出建议文本。", temperature=0.3).strip(), verbose=False)
 
-            from src.models import FixGroup
-            art_fixes[dim_name] = FixGroup(combined=comb_fix, style_only=style_fix, motif_only=motif_fix)
+            fg = FixGroup(combined=comb_fix, style_only=style_fix, motif_only=motif_fix)
+            art_fixes[dim_name] = fg
+            analysis.fixes[dim_name] = fg
 
             pairwise_data = cache_or_compute(RESULTS_DIR / f"eval_{aid}_{dim_name}.json",
                 lambda: _run_pairwise(comb_fix, style_fix, motif_fix, dim_name, related_motif), f"评估 {aid}/{dim_name}")
             art_evals[dim_name] = pairwise_data
 
-        all_fixes[aid] = art_fixes
         all_evaluations[aid] = art_evals
+        analyses[aid] = analysis
 
     # Mapping matrix
     print(f"\n{'='*40}\n风格-母题映射矩阵\n{'='*40}")
@@ -138,7 +148,6 @@ def main():
         jaccard = len(shared) / len(human | llm) if (human | llm) else 0
         print(f"  {dim_name}: human={human} LLM={llm} shared={shared} new={llm_new} missed={human_missed} J={jaccard:.2f}")
 
-    # Report
     print(f"\n{'='*60}\np10 分析报告：三组改法对比\n{'='*60}")
     totals = {g: {d: 0 for d in ["specific", "root_cause", "motif_fit", "natural", "style_cover"]} | {"n_dims": 0}
               for g in ["combined", "style_only", "motif_only"]}
@@ -160,7 +169,8 @@ def main():
             print(f"  {group}: {', '.join(f'{k}={gt[k]:.1f}' for k in ['specific', 'root_cause', 'motif_fit', 'natural', 'style_cover'])}")
 
     cache_or_compute(RESULTS_DIR / "full_report.json", lambda: {
-        "diagnoses": all_diagnoses, "fixes": all_fixes, "evaluations": all_evaluations}, verbose=False)
+        "analyses": {aid: analysis.to_dict() for aid, analysis in analyses.items()},
+        "diagnoses": all_diagnoses, "evaluations": all_evaluations}, verbose=False)
     print(f"\n结果已保存到: {RESULTS_DIR}")
 
 
