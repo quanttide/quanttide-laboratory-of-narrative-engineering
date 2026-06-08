@@ -6,7 +6,6 @@ from src.infra import call_llm, clean_json
 from src.prompts import load_prompt
 from src.services.converter import to_motifs
 from src.models import Motif, GapItem, GapReport, GapAttribution, Suggestion
-from src.models.analysis import DIRECTIONS
 
 
 CROSS_WORK_MIRRORS = {
@@ -49,11 +48,11 @@ def compute_gap_report(extracted: list[Motif], target_motifs: list[dict]) -> Gap
     return GapReport(covered=covered, missing=missing, weak=weak, extracted_motifs=extracted)
 
 
-def gap_attribution(article_name: str, text_sample: str, missing_motif: dict) -> GapAttribution:
+def gap_attribution(article_name: str, text_sample: str, missing_motif: GapItem) -> GapAttribution:
     """分析母题缺失原因。"""
     prompt = load_prompt("p08/gap_attribution",
-        article_name=article_name, missing_title=missing_motif["title"],
-        missing_description=missing_motif.get("description", ""), sample=text_sample[:2000])
+        article_name=article_name, missing_title=missing_motif.title,
+        missing_description=missing_motif.description or "", sample=text_sample[:2000])
     raw = call_llm(prompt, "你是一个叙事编辑。只输出 JSON。", temperature=0.2)
     result = json.loads(clean_json(raw))
     return GapAttribution(
@@ -63,7 +62,7 @@ def gap_attribution(article_name: str, text_sample: str, missing_motif: dict) ->
     )
 
 
-def generate_suggestions(article_name: str, text_sample: str, gap: dict, gap_types: list[str], target_motif: dict) -> list[Suggestion]:
+def generate_suggestions(article_name: str, text_sample: str, gap: GapItem, gap_types: list[str], target_motif: dict) -> list[Suggestion]:
     """从 6 个方向生成改进建议。"""
     mirrors = CROSS_WORK_MIRRORS.get(target_motif["title"], [])
     mirror_text = "跨作品/跨场景变体参考：\n" + "\n".join(f"  - {m}" for m in mirrors) if mirrors else ""

@@ -17,7 +17,9 @@ from src.services import (
     cache_or_compute, read_article_text, semantic_similarity,
     load_motif_profile, extract_motifs, extract_motifs_joint,
 )
-from src.models import MatchItem, CoverageReport
+from src.models import MatchItem, CoverageReport, Motif, MotifProfile
+
+SIMILARITY_CUTOFF = 0.7
 
 RESULTS_DIR = DATA_DIR / "p05"
 
@@ -33,34 +35,33 @@ ARTICLES = [
 ]
 
 
-def compare_with_ground_truth(single_results: dict, joint_results: dict, gt: dict) -> dict:
+def compare_with_ground_truth(single_results: dict, joint_results: dict, gt: MotifProfile) -> dict:
     """步骤 3：与人工标注对比（覆盖率基于 unique GT 母题去重）"""
     report = {}
     for level_name in ["urban", "campus"]:
-        level_data = gt.get(level_name, {})
-        gt_motifs = level_data.get("motifs", [])
+        gt_motifs = gt.for_series(level_name)
         if not gt_motifs:
             continue
 
-        gt_descs = {m["title"]: m.get("description", "") for m in gt_motifs}
+        gt_descs = {m.title: m.description for m in gt_motifs}
 
         single_coverage = {}
         for art in ARTICLES:
             if art["series"] != level_name:
                 continue
             aid = art["id"]
-            extracted = single_results.get(aid, {}).get("motifs", [])
+            motifs = single_results.get(aid, {}).get("motifs", [])
             matched_gt = set()
             match_details = []
-            for e in extracted:
+            for e in motifs:
                 for g_title, g_desc in gt_descs.items():
                     sim = semantic_similarity(e.get("description", ""), g_desc)
-                    if sim > 0.7 and g_title not in matched_gt:
+                    if sim > SIMILARITY_CUTOFF and g_title not in matched_gt:
                         matched_gt.add(g_title)
-                        match_details.append(MatchItem(extracted=e["title"], gt=g_title, similarity=sim))
+                        match_details.append(MatchItem(extracted=e.get("title", ""), gt=g_title, similarity=sim))
                         break
             cr = CoverageReport(
-                extracted_count=len(extracted),
+                extracted_count=len(motifs),
                 matched_count=len(matched_gt),
                 coverage=len(matched_gt) / len(gt_motifs) if gt_motifs else 0,
                 matches=match_details,
@@ -78,16 +79,16 @@ def compare_with_ground_truth(single_results: dict, joint_results: dict, gt: dic
         for e in joint:
             for g_title, g_desc in gt_descs.items():
                 sim = semantic_similarity(e.get("description", ""), g_desc)
-                if sim > 0.7 and g_title not in joint_matched_gt:
+                if sim > SIMILARITY_CUTOFF and g_title not in joint_matched_gt:
                     joint_matched_gt.add(g_title)
-                    joint_match_details.append(MatchItem(extracted=e["title"], gt=g_title, similarity=sim))
+                    joint_match_details.append(MatchItem(extracted=e.get("title", ""), gt=g_title, similarity=sim))
                     break
 
         report[level_name] = {
             "single_coverage": single_coverage,
-            "single_avg_coverage": sum(c["coverage"] for c in single_coverage.values()) / len(single_coverage)
+            "single_avg_coverage": sum(sc["coverage"] for sc in single_coverage.values()) / len(single_coverage)
             if single_coverage else 0,
-            "joint_coverage": len(joint_matched_gt) / len(gt_motifs) if gt_motifs else 0,
+            "joint_coverage": len(joint_matched_gt) / len(gt_motifs_series) if gt_motifs_series else 0,
             "joint_matches": [{"extracted": m.extracted, "gt": m.gt, "similarity": m.similarity} for m in joint_match_details],
             "gt_motif_count": len(gt_motifs),
         }
@@ -107,7 +108,7 @@ def blind_clustering(motif_descriptions: dict) -> list[dict]:
     return json.loads(clean_json(raw))
 
 
-def report(gt: dict, single_results: dict, joint_results: dict, comparison: dict, clusterings: list[dict]):
+def report(profile: MotifProfile, single_results: dict, joint_results: dict, comparison: dict, clusterings: list[dict]):
     series_map = {a["id"]: a["series"] for a in ARTICLES}
     series_names = {"urban": "都市言情", "campus": "校园言情"}
 
@@ -116,9 +117,9 @@ def report(gt: dict, single_results: dict, joint_results: dict, comparison: dict
     print("=" * 60)
     print("\n## Ground Truth（人工标注）")
     for level in ["shared", "urban", "campus"]:
-        motifs = gt.get(level, {}).get("motifs", [])
+        motifs = getattr(profile, level, [])
         if motifs:
-            print(f"  {level}: {len(motifs)} 个母题 — {', '.join(m['title'] for m in motifs)}")
+            print(f"  {level}: {len(motifs)} 个母题 — {', '.join(m.title for m in motifs)}")
 
     print("\n## 母题提取质量对比")
     for level_name in ["urban", "campus"]:
@@ -162,16 +163,10 @@ def main():
     RESULTS_DIR.mkdir(exist_ok=True)
 
     print("\n加载 Gallery 母题标注...")
-    from src.services import load_motif_profile
     gt = load_motif_profile()
-    # compare_with_ground_truth expects dict format, convert
-    gt_dict = {
-        "shared": {"motifs": [{"title": m.title, "description": m.description, "weight": m.weight} for m in gt.shared]},
-        "urban": {"motifs": [{"title": m.title, "description": m.description, "weight": m.weight} for m in gt.urban]},
-        "campus": {"motifs": [{"title": m.title, "description": m.description, "weight": m.weight} for m in gt.campus]},
-    }
-    for level, data in gt_dict.items():
-        print(f"  {level}: {len(data.get('motifs', []))} 个母题")
+    for level_name in ["shared", "urban", "campus"]:
+        motifs = getattr(gt, level_name, [])
+        print(f"  {level_name}: {len(motifs)} 个母题")
 
     print("\n步骤 1: 单篇母题提取")
     single_results = {}
@@ -202,7 +197,7 @@ def main():
         joint_results[series] = result
 
     print("\n步骤 3: 与人工标注对比")
-    comparison = compare_with_ground_truth(single_results, joint_results, gt_dict)
+    comparison = compare_with_ground_truth(single_results, joint_results, gt)
 
     print("\n步骤 4: 盲品归因")
     clusterings = []
@@ -215,7 +210,7 @@ def main():
         clusterings.append(result)
 
     cache_or_compute(RESULTS_DIR / "comparison.json", lambda: comparison, verbose=False)
-    report(gt_dict, single_results, joint_results, comparison, clusterings)
+    report(gt, single_results, joint_results, comparison, clusterings)
     print(f"\n结果已保存到: {RESULTS_DIR}")
 
 
