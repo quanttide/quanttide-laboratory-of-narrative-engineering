@@ -37,7 +37,8 @@ def main():
     urban_target = load_motif_yaml(GALLERY_ROOT / "urban-romance" / "motif.yaml")
     campus_target = load_motif_yaml(GALLERY_ROOT / "campus-romance" / "motif.yaml")
 
-    all_gaps, all_suggestions, all_evaluations = {}, {}, {}
+    analyses: dict[str, ArticleAnalysis] = {}
+    all_evaluations = {}
 
     for art in ARTICLES:
         series = art["series"]
@@ -48,6 +49,8 @@ def main():
         print(f"  目标母题: {', '.join(target_titles)}")
 
         text = read_article_text(art["path"])
+        article = Article(id=art["id"], series=series, name=art["name"], path=art["path"])
+        analysis = ArticleAnalysis(article=article)
 
         gap_raw = cache_or_compute(
             RESULTS_DIR / f"motif_report_{art['id']}.json",
@@ -56,24 +59,25 @@ def main():
             f"母题报告 {art['id']}",
         )
         gap_report = to_gap_report(gap_raw)
-        all_gaps[art["id"]] = gap_report
+        analysis.set_gap_report(gap_report)
 
         gaps_to_fix = gap_report.fixable_gaps()
         print(f"  缝隙数: {len(gaps_to_fix)} ({gap_report.summary()})")
 
-        art_suggestions, art_evaluations = {}, {}
+        art_evaluations = {}
         for gap_item in gaps_to_fix:
             gt = gap_item.title
             attr = cache_or_compute(
                 RESULTS_DIR / f"gap_attr_{art['id']}_{gt}.json",
-                lambda: gap_attribution(art["name"], text, {"title": gt, "description": "", **{}}),
+                lambda: gap_attribution(art["name"], text, gap_item),
             )
             suggestions = cache_or_compute(
                 RESULTS_DIR / f"suggestions_{art['id']}_{gt}.json",
-                lambda: [dataclasses.asdict(s) for s in generate_suggestions(art["name"], text, gap_item, attr.gap_types or [],
-                    next((m for m in target_motifs if m["title"] == gt), {}))],
+                lambda: generate_suggestions(art["name"], text, gap_item, attr.gap_types or [],
+                    next((m for m in target_motifs if m["title"] == gt), {})),
             )
-            art_suggestions[gt] = suggestions
+            for s in suggestions:
+                analysis.add_suggestion(gt, s)
 
             evals = cache_or_compute(
                 RESULTS_DIR / f"evaluation_{art['id']}_{gt}.json",
@@ -81,21 +85,8 @@ def main():
             )
             art_evaluations[gt] = evals
 
-        all_suggestions[art["id"]] = art_suggestions
         all_evaluations[art["id"]] = art_evaluations
-
-    # ─── 聚合出口：统一为 ArticleAnalysis ───
-    analyses: dict[str, ArticleAnalysis] = {}
-    for art in ARTICLES:
-        aid = art["id"]
-        article = Article(id=aid, series=art["series"], name=art["name"], path=art["path"])
-        gr = to_gap_report(all_gaps.get(aid, {}))
-        analyses[aid] = ArticleAnalysis(
-            article=article,
-            motifs=gr.extracted_motifs,
-            gap_report=gr,
-            suggestions=all_suggestions.get(aid, {}),
-        )
+        analyses[art["id"]] = analysis
 
     print(f"\n{'='*60}\np08 分析报告\n{'='*60}")
     for art in ARTICLES:
@@ -124,11 +115,7 @@ def main():
 
     cache_or_compute(RESULTS_DIR / "full_report.json",
         lambda: {
-            "analyses": {aid: {
-                "article": dataclasses.asdict(a.article) if hasattr(a.article, 'id') else a.article,
-                "gap_report": dataclasses.asdict(a.gap_report) if a.gap_report else None,
-                "suggestions": a.suggestions,
-            } for aid, a in analyses.items()},
+            "analyses": {aid: analysis.to_dict() for aid, analysis in analyses.items()},
             "evaluations": all_evaluations,
         }, verbose=False)
     print(f"\n结果已保存到: {RESULTS_DIR}")
