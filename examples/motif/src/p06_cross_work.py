@@ -11,6 +11,15 @@ from pathlib import Path
 from src.config import FICTION_ROOT, GALLERY_ROOT, DATA_DIR
 from src.infra import call_llm, clean_json, cache_or_compute
 from src.prompts import load_prompt
+from src.domain import Variant, MotifSimilarityPair
+
+
+def _to_pairs(data: list) -> list[MotifSimilarityPair]:
+    if not data:
+        return []
+    if isinstance(data[0], MotifSimilarityPair):
+        return data
+    return [MotifSimilarityPair(**d) for d in data]
 
 RESULTS_DIR = DATA_DIR / "p06"
 
@@ -80,10 +89,10 @@ SCENE_PARAGRAPH_MAP: dict[str, dict[str, str]] = {
 }
 
 
-def load_full_paragraph_fragments() -> list[dict]:
+def load_full_paragraph_fragments() -> list[Variant]:
     fragments = collect_scene_fragments()
-    for f in fragments:
-        info = SCENE_PARAGRAPH_MAP.get(f["scene"])
+    for i, f in enumerate(fragments):
+        info = SCENE_PARAGRAPH_MAP.get(f.scene)
         if info:
             path = FICTION_ROOT / info["file"]
             if path.exists():
@@ -94,29 +103,29 @@ def load_full_paragraph_fragments() -> list[dict]:
                 if kw and kw in full:
                     idx = full.index(kw)
                     start = max(0, idx - 250)
-                    f["description"] = full[start:start + 500].strip()
+                    fragments[i] = Variant(motif=f.motif, series=f.series, scene=f.scene, description=full[start:start + 500].strip())
                 else:
-                    f["description"] = full[:500].strip()
+                    fragments[i] = Variant(motif=f.motif, series=f.series, scene=f.scene, description=full[:500].strip())
     return fragments
 
 
-def collect_scene_fragments() -> list[dict]:
+def collect_scene_fragments() -> list[Variant]:
     fragments = []
     for m in CROSS_WORK_MOTIFS:
         for v in m["variants"]:
-            fragments.append({"motif": m["motif"], "series": v["series"], "scene": v["scene"], "description": v["desc"]})
+            fragments.append(Variant(motif=m["motif"], series=v["series"], scene=v["scene"], description=v["desc"]))
     return fragments
 
 
-def cross_work_similarity_matrix(fragments: list[dict]) -> list[dict]:
+def cross_work_similarity_matrix(fragments: list[Variant]) -> list[MotifSimilarityPair]:
     n = len(fragments)
     cross_same, cross_diff, intra_diff = [], [], []
     for i in range(n):
         for j in range(i + 1, n):
             a, b = fragments[i], fragments[j]
-            if a["series"] != b["series"] and a["motif"] == b["motif"]:
+            if a.series != b.series and a.motif == b.motif:
                 cross_same.append((a, b))
-            elif a["series"] != b["series"]:
+            elif a.series != b.series:
                 cross_diff.append((a, b))
             else:
                 intra_diff.append((a, b))
@@ -125,28 +134,34 @@ def cross_work_similarity_matrix(fragments: list[dict]) -> list[dict]:
     for a, b in cross_same + cross_diff + intra_diff:
         series_name = lambda s: "都市言情" if s == "urban" else "校园言情"
         prompt = load_prompt("p06/similarity_judgment",
-            series_a=series_name(a["series"]), motif_a=a["motif"], desc_a=a["description"],
-            series_b=series_name(b["series"]), motif_b=b["motif"], desc_b=b["description"])
+            series_a=series_name(a.series), motif_a=a.motif, desc_a=a.description,
+            series_b=series_name(b.series), motif_b=b.motif, desc_b=b.description)
         try:
             raw = call_llm(prompt, "你是一个叙事学分析专家。只输出 JSON。")
-            result = json.loads(clean_json(raw))
-            result["pair_a"] = f"{a['motif']}_{a['series']}_{a['scene']}"
-            result["pair_b"] = f"{b['motif']}_{b['series']}_{b['scene']}"
-            result["same_gt_motif"] = a["motif"] == b["motif"]
-            if a["series"] != b["series"] and a["motif"] == b["motif"]:
-                result["pair_type"] = "cross-series_same-motif"
-            elif a["series"] != b["series"]:
-                result["pair_type"] = "cross-series_diff-motif"
+            data = json.loads(clean_json(raw))
+            pair_a = f"{a.motif}_{a.series}_{a.scene}"
+            pair_b = f"{b.motif}_{b.series}_{b.scene}"
+            same_gt = a.motif == b.motif
+            if a.series != b.series and a.motif == b.motif:
+                pt = "cross-series_same-motif"
+            elif a.series != b.series:
+                pt = "cross-series_diff-motif"
             else:
-                result["pair_type"] = "intra-series_diff-motif"
-            results.append(result)
+                pt = "intra-series_diff-motif"
+            results.append(MotifSimilarityPair(
+                pair_a=pair_a, pair_b=pair_b,
+                same_motif=data.get("same_motif", False), same_gt_motif=same_gt,
+                similarity=data.get("similarity", 0.0),
+                shared_pattern=data.get("shared_pattern", ""),
+                reasoning=data.get("reasoning", ""), pair_type=pt,
+            ))
         except Exception as e:
-            print(f"    ✗ {a['scene']} vs {b['scene']}: {e}")
+            print(f"    ✗ {a.scene} vs {b.scene}: {e}")
     return results
 
 
-def motif_chain_reconstruction(fragments: list[dict]) -> dict:
-    descriptions = "\n".join(f"场景 {i+1}: {f['description']}" for i, f in enumerate(fragments))
+def motif_chain_reconstruction(fragments: list[Variant]) -> dict:
+    descriptions = "\n".join(f"场景 {i+1}: {f.description}" for i, f in enumerate(fragments))
     prompt = load_prompt("p06/motif_chain_reconstruction", n=len(fragments), descriptions=descriptions)
     try:
         raw = call_llm(prompt, "你是一个叙事学分析专家。只输出 JSON。")
@@ -156,46 +171,46 @@ def motif_chain_reconstruction(fragments: list[dict]) -> dict:
         return {"clusters": []}
 
 
-def blind_pairing(fragments: list[dict], n_motifs: int = 4) -> dict:
-    unique_motifs = list(dict.fromkeys(f["motif"] for f in fragments))
+def blind_pairing(fragments: list[Variant], n_motifs: int = 4) -> dict:
+    unique_motifs = list(dict.fromkeys(f.motif for f in fragments))
     selected = random.sample(unique_motifs, min(n_motifs, len(unique_motifs)))
     test_items = []
     for motif in selected:
-        urban_variants = [f for f in fragments if f["motif"] == motif and f["series"] == "urban"]
-        campus_variants = [f for f in fragments if f["motif"] == motif and f["series"] == "campus"]
+        urban_variants = [f for f in fragments if f.motif == motif and f.series == "urban"]
+        campus_variants = [f for f in fragments if f.motif == motif and f.series == "campus"]
         if urban_variants and campus_variants:
             test_items.append(random.choice(urban_variants))
             test_items.append(random.choice(campus_variants))
     random.shuffle(test_items)
 
-    items_text = "\n".join(f"场景 {i+1}: {f['description']}" for i, f in enumerate(test_items))
+    items_text = "\n".join(f"场景 {i+1}: {f.description}" for i, f in enumerate(test_items))
     prompt = load_prompt("p06/blind_pairing", n=len(test_items), pairs=len(test_items) // 2, items_text=items_text)
     try:
         raw = call_llm(prompt, "你是一个叙事学分析专家。只输出 JSON。")
         result = json.loads(clean_json(raw))
         correct = sum(1 for pair in result.get("pairs", [])
-                      if test_items[pair["pair"][0] - 1]["motif"] == test_items[pair["pair"][1] - 1]["motif"])
+                      if test_items[pair["pair"][0] - 1].motif == test_items[pair["pair"][1] - 1].motif)
         result["accuracy"] = correct / len(result.get("pairs", [])) if result.get("pairs") else 0
         result["total_pairs"] = len(result.get("pairs", []))
         result["correct"] = correct
-        result["test_items"] = [{"id": i + 1, "motif": f["motif"], "series": f["series"]} for i, f in enumerate(test_items)]
+        result["test_items"] = [{"id": i + 1, "motif": f.motif, "series": f.series} for i, f in enumerate(test_items)]
         return result
     except Exception as e:
         return {"accuracy": 0, "error": str(e)}
 
 
-def report(similarity_results: list[dict], reconstruction: dict, blind_results: list[dict]):
+def report(similarity_results: list[MotifSimilarityPair], reconstruction: dict, blind_results: list[dict]):
     print("\n" + "=" * 60)
     print("p06 分析报告：母题跨作品识别")
     print("=" * 60)
 
-    cross_same = [r for r in similarity_results if r.get("pair_type") == "cross-series_same-motif"]
-    cross_diff = [r for r in similarity_results if r.get("pair_type") == "cross-series_diff-motif"]
-    intra_diff = [r for r in similarity_results if r.get("pair_type") == "intra-series_diff-motif"]
+    cross_same = [r for r in similarity_results if r.pair_type == "cross-series_same-motif"]
+    cross_diff = [r for r in similarity_results if r.pair_type == "cross-series_diff-motif"]
+    intra_diff = [r for r in similarity_results if r.pair_type == "intra-series_diff-motif"]
 
-    avg_same = sum(r["similarity"] for r in cross_same) / len(cross_same) if cross_same else 0
-    avg_cross = sum(r["similarity"] for r in cross_diff) / len(cross_diff) if cross_diff else 0
-    avg_intra = sum(r["similarity"] for r in intra_diff) / len(intra_diff) if intra_diff else 0
+    avg_same = sum(r.similarity for r in cross_same) / len(cross_same) if cross_same else 0
+    avg_cross = sum(r.similarity for r in cross_diff) / len(cross_diff) if cross_diff else 0
+    avg_intra = sum(r.similarity for r in intra_diff) / len(intra_diff) if intra_diff else 0
 
     print(f"\n## 相似度矩阵")
     print(f"  A) 跨作品·同母题: {avg_same:.3f} ({len(cross_same)} 对)")
@@ -210,10 +225,10 @@ def report(similarity_results: list[dict], reconstruction: dict, blind_results: 
     else:
         print(f"  ❌ 关系不符合预期")
 
-    for mn in sorted(set(r.get("pair_a", "").split("_")[0] for r in cross_same)):
-        mp = [r for r in cross_same if r.get("pair_a", "").startswith(mn)]
+    for mn in sorted(set(r.pair_a.split("_")[0] for r in cross_same)):
+        mp = [r for r in cross_same if r.pair_a.startswith(mn)]
         if mp:
-            print(f"    {mn}: avg={sum(r['similarity'] for r in mp)/len(mp):.2f}")
+            print(f"    {mn}: avg={sum(r.similarity for r in mp)/len(mp):.2f}")
 
     print(f"\n## 母题链重构")
     clusters = reconstruction.get("clusters", [])
@@ -240,11 +255,12 @@ def main():
     fragments = collect_scene_fragments()
     print(f"\n共 {len(fragments)} 个场景片段（{len(CROSS_WORK_MOTIFS)} 个母题）")
 
-    similarity_results = cache_or_compute(
+    similarity_raw = cache_or_compute(
         RESULTS_DIR / "similarity_matrix.json",
-        lambda: cross_work_similarity_matrix(fragments),
+        lambda: [vars(p) for p in cross_work_similarity_matrix(fragments)],
         "相似度矩阵",
     )
+    similarity_results = _to_pairs(similarity_raw)
 
     reconstruction = cache_or_compute(
         RESULTS_DIR / "motif_chain_reconstruction.json",

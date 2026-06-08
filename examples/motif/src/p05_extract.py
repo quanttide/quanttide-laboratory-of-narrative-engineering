@@ -15,6 +15,7 @@ import requests
 from src.config import FICTION_ROOT, GALLERY_ROOT, DATA_DIR
 from src.infra import call_llm, clean_json, cache_or_compute, read_article_text, load_motif_yaml, semantic_similarity
 from src.prompts import load_prompt
+from src.domain import MatchItem, Motif, MotifProfile, CoverageReport
 
 RESULTS_DIR = DATA_DIR / "p05"
 
@@ -37,6 +38,19 @@ def load_all_motif_ground_truth() -> dict:
         if path.exists():
             gt[level] = load_motif_yaml(path)
     return gt
+
+
+def load_motif_profile() -> MotifProfile:
+    """从 YAML 加载三层母题库，返回类型安全的 MotifProfile。"""
+    raw = load_all_motif_ground_truth()
+    def _to_motifs(data: dict) -> list[Motif]:
+        return [Motif(title=m["title"], description=m.get("description", ""), weight=m.get("weight", 5))
+                for m in data.get("motifs", [])]
+    return MotifProfile(
+        shared=_to_motifs(raw.get("shared", {})),
+        urban=_to_motifs(raw.get("urban", {})),
+        campus=_to_motifs(raw.get("campus", {})),
+    )
 
 
 def extract_motifs(text: str, article_name: str) -> dict:
@@ -78,13 +92,19 @@ def compare_with_ground_truth(single_results: dict, joint_results: dict, gt: dic
                     sim = semantic_similarity(e.get("description", ""), g_desc)
                     if sim > 0.7 and g_title not in matched_gt:
                         matched_gt.add(g_title)
-                        match_details.append({"extracted": e["title"], "gt": g_title, "similarity": sim})
+                        match_details.append(MatchItem(extracted=e["title"], gt=g_title, similarity=sim))
                         break
+            cr = CoverageReport(
+                extracted_count=len(extracted),
+                matched_count=len(matched_gt),
+                coverage=len(matched_gt) / len(gt_motifs) if gt_motifs else 0,
+                matches=match_details,
+            )
             single_coverage[aid] = {
-                "extracted_count": len(extracted),
-                "matched_count": len(matched_gt),
-                "coverage": len(matched_gt) / len(gt_motifs) if gt_motifs else 0,
-                "matches": match_details,
+                "extracted_count": cr.extracted_count,
+                "matched_count": cr.matched_count,
+                "coverage": cr.coverage,
+                "matches": [{"extracted": m.extracted, "gt": m.gt, "similarity": m.similarity} for m in cr.matches],
             }
 
         joint = joint_results.get(level_name, {}).get("motifs", [])
@@ -95,7 +115,7 @@ def compare_with_ground_truth(single_results: dict, joint_results: dict, gt: dic
                 sim = semantic_similarity(e.get("description", ""), g_desc)
                 if sim > 0.7 and g_title not in joint_matched_gt:
                     joint_matched_gt.add(g_title)
-                    joint_match_details.append({"extracted": e["title"], "gt": g_title, "similarity": sim})
+                    joint_match_details.append(MatchItem(extracted=e["title"], gt=g_title, similarity=sim))
                     break
 
         report[level_name] = {
@@ -103,7 +123,7 @@ def compare_with_ground_truth(single_results: dict, joint_results: dict, gt: dic
             "single_avg_coverage": sum(c["coverage"] for c in single_coverage.values()) / len(single_coverage)
             if single_coverage else 0,
             "joint_coverage": len(joint_matched_gt) / len(gt_motifs) if gt_motifs else 0,
-            "joint_matches": joint_match_details,
+            "joint_matches": [{"extracted": m.extracted, "gt": m.gt, "similarity": m.similarity} for m in joint_match_details],
             "gt_motif_count": len(gt_motifs),
         }
     return report

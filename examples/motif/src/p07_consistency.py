@@ -7,6 +7,8 @@ p07 — 母题一致性检验实验
 import json
 from pathlib import Path
 
+from src.domain import Motif
+
 from src.config import GALLERY_ROOT, DATA_DIR
 from src.infra import call_llm, call_llm_openai, clean_json, cache_or_compute, cache_or_compute_text, load_motif_yaml
 from src.prompts import load_prompt
@@ -56,19 +58,21 @@ def generate_scene(scene: dict, motifs: list[dict] | None, style: str) -> str:
     return raw.strip()
 
 
-def extract_motifs_from_text(text: str) -> list[dict]:
+def extract_motifs_from_text(text: str) -> list[Motif]:
     sample = text[:2000]
     prompt = load_prompt("p07/extract_motifs_scene", sample=sample)
     raw = call_llm(prompt, "你是一个专业的叙事学分析助手。只输出 JSON。", temperature=0.3)
-    return json.loads(clean_json(raw)).get("motifs", [])
+    items = json.loads(clean_json(raw)).get("motifs", [])
+    return [Motif(title=m["title"], description=m.get("description", ""), weight=m.get("weight", 5)) for m in items]
 
 
-def extract_motifs_cross_validate(text: str) -> list[dict]:
+def extract_motifs_cross_validate(text: str) -> list[Motif]:
     sample = text[:2000]
     prompt = load_prompt("p07/extract_motifs_scene", sample=sample)
     try:
         raw = call_llm_openai(prompt, "你是一个专业的叙事学分析助手。只输出 JSON。", temperature=0.3)
-        return json.loads(clean_json(raw)).get("motifs", [])
+        items = json.loads(clean_json(raw)).get("motifs", [])
+        return [Motif(title=m["title"], description=m.get("description", ""), weight=m.get("weight", 5)) for m in items]
     except Exception:
         return []
 
@@ -83,7 +87,16 @@ def llm_motif_match(detected_title: str, target_title: str, target_description: 
         return False
 
 
-def compute_alignment(detected: list[dict], target_titles: set[str], target_motifs: list[dict] | None = None) -> float:
+def _to_motifs(items) -> list[Motif]:
+    """将 LLM 返回或缓存读取的原始数据转为 list[Motif]（兼容新旧格式）。"""
+    if not items:
+        return []
+    if isinstance(items[0], Motif):
+        return items
+    return [Motif(title=m["title"], description=m.get("description", ""), weight=m.get("weight", 5)) for m in items]
+
+
+def compute_alignment(detected: list[Motif], target_titles: set[str], target_motifs: list[dict] | None = None) -> float:
     if not target_titles:
         return 0.0
     target_map = {m["title"]: m.get("description", "") for m in (target_motifs or [])}
@@ -123,15 +136,16 @@ def main():
                 lambda s=scene: generate_scene(s, motif_list, style_name),
                 f"生成 {scene['name']}", verbose=True,
             )
-            detected = cache_or_compute(
+            detected_raw = cache_or_compute(
                 detection_dir / f"constrained_{series}_{scene['id']}.json",
-                lambda t=text: {"motifs": extract_motifs_from_text(t)},
+                lambda t=text: [vars(m) for m in extract_motifs_from_text(t)],
                 verbose=False,
             )
-            alignment = compute_alignment(detected.get("motifs", []), target_titles, motif_list)
+            motifs = _to_motifs(detected_raw)
+            alignment = compute_alignment(motifs, target_titles, motif_list)
             all_results.append({"group": f"constrained_{series}", "scene": scene["name"], "alignment": alignment,
-                "detected_count": len(detected.get("motifs", [])), "target_count": len(target_titles),
-                "detected_titles": [m["title"] for m in detected.get("motifs", [])]})
+                "detected_count": len(motifs), "target_count": len(target_titles),
+                "detected_titles": [m.title for m in motifs]})
             print(f"      吻合度: {alignment*100:.0f}%")
 
         for scene in SCENE_TEMPLATES:
@@ -140,15 +154,16 @@ def main():
                 lambda s=scene: generate_scene(s, None, style_name),
                 f"生成对照 {scene['name']}", verbose=True,
             )
-            detected = cache_or_compute(
+            detected_raw = cache_or_compute(
                 detection_dir / f"control_{series}_{scene['id']}.json",
-                lambda t=text: {"motifs": extract_motifs_from_text(t)},
+                lambda t=text: [vars(m) for m in extract_motifs_from_text(t)],
                 verbose=False,
             )
-            alignment = compute_alignment(detected.get("motifs", []), target_titles, motif_list)
+            motifs = _to_motifs(detected_raw)
+            alignment = compute_alignment(motifs, target_titles, motif_list)
             all_results.append({"group": f"control_{series}", "scene": scene["name"], "alignment": alignment,
-                "detected_count": len(detected.get("motifs", [])), "target_count": len(target_titles),
-                "detected_titles": [m["title"] for m in detected.get("motifs", [])]})
+                "detected_count": len(motifs), "target_count": len(target_titles),
+                "detected_titles": [m.title for m in motifs]})
 
     # Cross-validation
     cross_validated = []
@@ -159,12 +174,13 @@ def main():
                 if not path.exists():
                     continue
                 text = path.read_text("utf-8")
-                cv_detected = cache_or_compute(
+                cv_raw = cache_or_compute(
                     detection_dir / f"crossval_{series}_{scene['id']}.json",
-                    lambda: {"motifs": extract_motifs_cross_validate(text)},
+                    lambda: [vars(m) for m in extract_motifs_cross_validate(text)],
                     verbose=False,
                 )
-                cv_alignment = compute_alignment(cv_detected.get("motifs", []), target_titles, motif_list)
+                cv_motifs = _to_motifs(cv_raw)
+                cv_alignment = compute_alignment(cv_motifs, target_titles, motif_list)
                 cross_validated.append({"series": series, "scene": scene["name"], "cv_alignment": cv_alignment})
 
         if cross_validated:

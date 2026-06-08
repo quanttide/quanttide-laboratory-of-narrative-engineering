@@ -10,6 +10,15 @@ from pathlib import Path
 
 from src.config import FICTION_ROOT, GALLERY_ROOT, DATA_DIR
 from src.infra import call_llm, call_llm_text, clean_json, cache_or_compute, cache_or_compute_text, read_article_text, load_yaml
+from src.domain import FixGroup, Motif, StyleReview, StyleDimension
+
+
+def _to_motifs(items) -> list[Motif]:
+    if not items:
+        return []
+    if isinstance(items[0], Motif):
+        return items
+    return [Motif(title=m["title"], description=m.get("description", ""), weight=m.get("weight", 5)) for m in items]
 from src.prompts import load_prompt
 
 RESULTS_DIR = DATA_DIR / "p10"
@@ -52,18 +61,23 @@ def build_style_prompt(style: dict, samples_dir: Path) -> str:
     return "\n".join(parts)
 
 
-def style_review(text: str, article_name: str, style_prompt: str) -> dict:
+def style_review(text: str, article_name: str, style_prompt: str) -> StyleReview:
     sample = text[:2500]
     prompt = load_prompt("p10/style_review", style_prompt=style_prompt, article_name=article_name, sample=sample)
     raw = call_llm(prompt, temperature=0.0)
-    return json.loads(clean_json(raw))
+    items = json.loads(clean_json(raw)).get("dimension_scores", [])
+    dims = [StyleDimension(title=d["dimension"], score=d.get("score", 5),
+                           evidence=d.get("evidence", []), note=d.get("note", ""))
+            for d in items]
+    return StyleReview(dimension_scores=dims)
 
 
-def extract_motifs(text: str, article_name: str) -> dict:
+def extract_motifs(text: str, article_name: str) -> list[Motif]:
     sample = text[:3000]
     prompt = load_prompt("p10/extract_motifs_style", article_name=article_name, sample=sample)
     raw = call_llm(prompt)
-    return json.loads(clean_json(raw))
+    items = json.loads(clean_json(raw)).get("motifs", [])
+    return [Motif(title=m["title"], description=m.get("description", ""), weight=m.get("weight", 5)) for m in items]
 
 
 def diagnose_style_motif_links(style_scores: list[dict], extracted_motifs: list[dict], target_motifs: list[dict], article_name: str) -> dict:
@@ -128,24 +142,27 @@ def main():
         print(f"\n{'='*40}\n{aid} {art['name']} ({art['type']})")
         text = read_article_text(art["path"])
 
-        style_result = cache_or_compute(RESULTS_DIR / f"style_review_{aid}.json",
-            lambda: style_review(text, art["name"], style_prompt), f"风格评审 {aid}")
+        style_raw = cache_or_compute(RESULTS_DIR / f"style_review_{aid}.json",
+            lambda: [vars(d) for d in style_review(text, art["name"], style_prompt).dimension_scores],
+            f"风格评审 {aid}")
+        dimension_scores = _to_dims(style_raw)
 
         motif_result = cache_or_compute(RESULTS_DIR / f"motif_extract_{aid}.json",
-            lambda: extract_motifs(text, art["name"]), f"母题提取 {aid}")
+            lambda: [vars(m) for m in extract_motifs(text, art["name"])], f"母题提取 {aid}")
+        motif_list = _to_motifs(motif_result)
 
         diagnoses = cache_or_compute(RESULTS_DIR / f"diagnosis_{aid}.json",
             lambda: diagnose_style_motif_links(
-                [d for d in style_result.get("dimension_scores", []) if d["score"] <= 7],
-                motif_result.get("motifs", []), target_motifs, art["name"]),
+                [{"dimension": d.title, "score": d.score, "note": d.note} for d in dimension_scores if d.score <= 7],
+                motif_list, target_motifs, art["name"]),
             f"诊断 {aid}")
         all_diagnoses[aid] = diagnoses
 
-        weak_dims = [d for d in style_result.get("dimension_scores", []) if d.get("score", 10) <= 7]
+        weak_dims = [d for d in dimension_scores if d.score <= 7]
         art_fixes, art_evals = {}, {}
 
         for wd in weak_dims[:3]:
-            dim_name = wd["dimension"]
+            dim_name = wd.title
             dim_desc = dim_descs.get(dim_name, "")
             links = diagnoses.get("links", [])
             related = next((l for l in links if l.get("weak_dimension") == dim_name), None)
@@ -168,7 +185,7 @@ def main():
             pairwise_data = cache_or_compute(RESULTS_DIR / f"eval_{aid}_{dim_name}.json",
                 lambda: _run_pairwise(comb_fix, style_fix, motif_fix, dim_name, related_motif), f"评估 {aid}/{dim_name}")
 
-            art_fixes[dim_name] = {"combined": comb_fix, "style_only": style_fix, "motif_only": motif_fix}
+            art_fixes[dim_name] = FixGroup(combined=comb_fix, style_only=style_fix, motif_only=motif_fix)
             art_evals[dim_name] = pairwise_data
 
         all_fixes[aid] = art_fixes
