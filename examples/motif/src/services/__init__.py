@@ -11,8 +11,7 @@
 """
 
 from src.services.converter import (
-    to_motifs, motifs_to_dicts, to_dims, dims_to_dicts,
-    to_gap_report, gap_report_to_dict, pairs_to_dicts,
+    to_motifs, to_dims, to_gap_report,
     DataclassJSONEncoder,
 )
 from src.services.gallery import load_motif_profile, load_gallery, build_style_prompt
@@ -34,12 +33,3 @@ from src.services.cross_work import (
     motif_chain_reconstruction,
     blind_pairing,
 )
-
-# Re-export infra basics for convenience
-from src.infra import (
-    call_llm, call_llm_text, call_llm_openai, clean_json,
-    semantic_similarity,
-    read_article_text, load_motif_yaml, load_yaml,
-    cache_or_compute, cache_or_compute_text,
-)
-from src.prompts import load_prompt, load_prompt_text

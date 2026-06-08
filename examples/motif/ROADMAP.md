@@ -35,31 +35,20 @@
 
 ---
 
-### 第 2 批：统一序列化
+### 第 2 批：统一序列化 ✅ 已完成
 
-消除 `vars()` / `motifs_to_dicts()` / 手写 dict 三种并存的序列化方式。
+消除 `vars()` / 冗余 `*_to_dicts()` / 手写 dict 三种并存的序列化方式。
 
 ```
 当前状态：
-  vars(m)                    — 5 处（p05/p06/p07/p08/p10）
-  motifs_to_dicts(m)         — 2 处（p10）
-  [vars(p) for p in pairs]  — 2 处（p06）
-  手写 dict 构造            — 8+ 处（所有 example 文件）
-
-目标状态：
-  dataclasses.asdict(obj)   — 统一替换所有 vars() 调用
-  converter.to_*()          — 保留幂等反向转换
-  json.dumps(..., cls=DataclassEncoder) — 自动序列化
+  vars(m)                    — ❌ 已全部替换为 dataclasses.asdict()
+  motifs_to_dicts()          — ❌ 已删除
+  dims_to_dicts()            — ❌ 已删除
+  pairs_to_dicts()           — ❌ 已删除
+  gap_report_to_dict()       — ❌ 已删除
+  DataclassJSONEncoder       — ✅ 可用，逐步切换中
+  converter.to_*()           — ✅ 保留幂等反向转换
 ```
-
-具体步骤：
-
-1. 新增 `DataclassJSONEncoder(json.JSONEncoder)` — `default` 中调用 `dataclasses.asdict`
-2. 修改 `cache_or_compute` 内部使用该 encoder
-3. 全局替换 `vars(m)` → `dataclasses.asdict(m)`
-4. 删除 `motifs_to_dicts()` / `pairs_to_dicts()` / `dims_to_dicts()` 等重复函数
-
-**工作量**：~1h | **影响**：消除 ~20 处序列化代码，统一出入口
 
 ---
 

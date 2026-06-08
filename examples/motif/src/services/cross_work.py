@@ -5,7 +5,6 @@ import random
 
 from src.infra import call_llm, clean_json
 from src.prompts import load_prompt
-from src.services.converter import pairs_to_dicts
 from src.models import Variant, MotifSimilarityPair
 
 

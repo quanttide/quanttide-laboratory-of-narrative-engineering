@@ -1,5 +1,6 @@
 """文章实体 — Article, SceneTemplate, ArticleAnalysis"""
 
+import dataclasses
 from dataclasses import dataclass, field
 from typing import Optional
 
@@ -29,17 +30,23 @@ class SceneTemplate:
 
 
 @dataclass
-class ExtractedMotifResult:
-    """单篇文章的母题提取结果。注：建议直接用 list[Motif]。"""
-    motifs: list[Motif] = field(default_factory=list)
-
-
-@dataclass
 class ArticleAnalysis:
     """一篇文章的完整分析结果（聚合根）"""
     article: Article
     motifs: list[Motif] = field(default_factory=list)
     gap_report: Optional[GapReport] = None
-    suggestions: dict[str, list[Suggestion]] = field(default_factory=dict)  # key = motif title
+    suggestions: dict[str, list[Suggestion]] = field(default_factory=dict)
     style_review: Optional[StyleReview] = None
     fixes: dict[str, FixGroup] = field(default_factory=dict)
+
+    def add_motif(self, motif: Motif) -> None:
+        self.motifs.append(motif)
+
+    def set_gap_report(self, report: GapReport) -> None:
+        self.gap_report = report
+
+    def add_suggestion(self, motif_title: str, suggestion: Suggestion) -> None:
+        self.suggestions.setdefault(motif_title, []).append(suggestion)
+
+    def to_dict(self) -> dict:
+        return dataclasses.asdict(self)

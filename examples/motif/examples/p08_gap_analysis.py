@@ -8,12 +8,13 @@ import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
+import dataclasses
 from src.config import GALLERY_ROOT, DATA_DIR
+from src.infra import cache_or_compute, read_article_text, load_motif_yaml
 from src.services import (
-    cache_or_compute, read_article_text, load_motif_yaml,
     extract_motifs, compute_gap_report, gap_attribution,
     generate_suggestions, evaluate_suggestions,
-    to_gap_report, gap_report_to_dict, to_motifs, motifs_to_dicts,
+    to_gap_report, to_motifs,
 )
 from src.models import DIRECTIONS, EvaluationScore, Article, ArticleAnalysis
 
@@ -50,7 +51,7 @@ def main():
 
         gap_raw = cache_or_compute(
             RESULTS_DIR / f"motif_report_{art['id']}.json",
-            lambda: gap_report_to_dict(compute_gap_report(
+            lambda: dataclasses.asdict(compute_gap_report(
                 extract_motifs(text, art["name"], "p08/extract_motifs_gap"), target_motifs)),
             f"母题报告 {art['id']}",
         )
@@ -125,7 +126,7 @@ def main():
         lambda: {
             "analyses": {aid: {
                 "article": dataclasses.asdict(a.article) if hasattr(a.article, 'id') else a.article,
-                "gap_report": gap_report_to_dict(a.gap_report) if a.gap_report else None,
+                "gap_report": dataclasses.asdict(a.gap_report) if a.gap_report else None,
                 "suggestions": a.suggestions,
             } for aid, a in analyses.items()},
             "evaluations": all_evaluations,

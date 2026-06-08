@@ -13,8 +13,8 @@ import random
 from collections import defaultdict
 
 from src.config import DATA_DIR
+from src.infra import cache_or_compute, read_article_text, semantic_similarity
 from src.services import (
-    cache_or_compute, read_article_text, semantic_similarity,
     load_motif_profile, extract_motifs, extract_motifs_joint,
 )
 from src.models import MatchItem, CoverageReport, Motif, MotifProfile

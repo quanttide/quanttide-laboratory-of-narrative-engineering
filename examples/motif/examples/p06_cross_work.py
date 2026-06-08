@@ -11,8 +11,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 import json
 
 from src.config import FICTION_ROOT, DATA_DIR
+from src.infra import cache_or_compute
 from src.services import (
-    cache_or_compute, cross_work_similarity_matrix,
+    cross_work_similarity_matrix,
     motif_chain_reconstruction, blind_pairing,
 )
 from src.models import Variant

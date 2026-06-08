@@ -8,13 +8,14 @@ import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
+import dataclasses
 from src.config import FICTION_ROOT, GALLERY_ROOT, DATA_DIR
+from src.infra import cache_or_compute, cache_or_compute_text, read_article_text, load_yaml, call_llm_text
 from src.services import (
-    cache_or_compute, cache_or_compute_text, read_article_text, load_yaml,
     load_gallery, build_style_prompt,
     extract_motifs, style_review, diagnose_style_motif_links,
     generate_combined_fix, generate_style_only_fix, evaluate_pairwise,
-    to_motifs, to_dims, dims_to_dicts, motifs_to_dicts,
+    to_motifs, to_dims,
 )
 from src.models import StyleDimension
 
@@ -77,12 +78,12 @@ def main():
         text = read_article_text(art["path"])
 
         style_raw = cache_or_compute(RESULTS_DIR / f"style_review_{aid}.json",
-            lambda: dims_to_dicts(style_review(text, art["name"], style_prompt).dimension_scores),
+            lambda: [dataclasses.asdict(d) for d in style_review(text, art["name"], style_prompt).dimension_scores],
             f"风格评审 {aid}")
         dimension_scores = to_dims(style_raw)
 
         motif_raw = cache_or_compute(RESULTS_DIR / f"motif_extract_{aid}.json",
-            lambda: motifs_to_dicts(extract_motifs(text, art["name"])), f"母题提取 {aid}")
+            lambda: [dataclasses.asdict(m) for m in extract_motifs(text, art["name"])], f"母题提取 {aid}")
         motif_list = to_motifs(motif_raw)
 
         diagnoses = cache_or_compute(RESULTS_DIR / f"diagnosis_{aid}.json",
@@ -109,7 +110,6 @@ def main():
                 lambda: generate_style_only_fix(art["name"], text, dim_name, dim_desc), verbose=False)
             motif_fix_prompt = load_prompt("p10/fix_motif_only",
                 article_name=art["name"], related_motif=related_motif, motif_desc=motif_desc, sample=text[:2000])
-            from src.infra import call_llm_text
             motif_fix = cache_or_compute_text(RESULTS_DIR / f"fix_motif_{aid}_{dim_name}.txt",
                 lambda: call_llm_text(motif_fix_prompt, "你是一个创作顾问。只输出建议文本。", temperature=0.3).strip(), verbose=False)
 

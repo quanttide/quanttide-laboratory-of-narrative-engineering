@@ -6,7 +6,7 @@ from pathlib import Path
 
 from src.infra import call_llm, call_llm_text, clean_json
 from src.prompts import load_prompt
-from src.services.converter import to_motifs, dims_to_dicts, to_dims
+from src.services.converter import to_motifs, to_dims
 from src.models import Motif, StyleReview, StyleDimension, StyleMotifLink, FixGroup
 from src.models.gallery import MotifProfile
 

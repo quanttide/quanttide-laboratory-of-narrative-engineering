@@ -4,7 +4,7 @@ import dataclasses
 import json
 from typing import Any
 
-from src.models import Motif, GapItem, GapReport, StyleDimension, MatchItem
+from src.models import Motif, GapItem, GapReport, StyleDimension
 
 
 class DataclassJSONEncoder(json.JSONEncoder):
@@ -21,11 +21,7 @@ def to_motifs(items) -> list[Motif]:
         return []
     if isinstance(items[0], Motif):
         return items
-    return [Motif(title=m["title"], description=m.get("description", ""), weight=m.get("weight", 5)) for m in items]
-
-
-def motifs_to_dicts(motifs: list[Motif]) -> list[dict]:
-    return [dataclasses.asdict(m) for m in motifs]
+    return [Motif(title=m.get("title", ""), description=m.get("description", ""), weight=m.get("weight", 5)) for m in items]
 
 
 def to_dims(data) -> list[StyleDimension]:
@@ -36,10 +32,6 @@ def to_dims(data) -> list[StyleDimension]:
         return data
     return [StyleDimension(title=d["title"], score=d.get("score", 5),
                            evidence=d.get("evidence", []), note=d.get("note", "")) for d in data]
-
-
-def dims_to_dicts(dims: list[StyleDimension]) -> list[dict]:
-    return [dataclasses.asdict(d) for d in dims]
 
 
 def to_gap_report(data) -> GapReport:
@@ -57,24 +49,3 @@ def to_gap_report(data) -> GapReport:
     return GapReport(covered=_items(data.get("covered", [])), missing=_items(data.get("missing", [])),
                      weak=_items(data.get("weak", [])),
                      extracted_motifs=to_motifs(data.get("extracted_motifs", [])))
-
-
-def gap_report_to_dict(r: GapReport) -> dict:
-    """GapReport → dict（JSON 序列化用）。"""
-    return {
-        "covered": [{"title": i.title, "target_weight": i.target_weight, "extracted_weight": i.extracted_weight,
-                      "description": i.description, "matched_via": i.matched_via} for i in r.covered],
-        "missing": [{"title": i.title, "target_weight": i.target_weight, "extracted_weight": i.extracted_weight,
-                      "description": i.description, "matched_via": i.matched_via} for i in r.missing],
-        "weak": [{"title": i.title, "target_weight": i.target_weight, "extracted_weight": i.extracted_weight,
-                   "description": i.description, "matched_via": i.matched_via} for i in r.weak],
-        "extracted_motifs": motifs_to_dicts(r.extracted_motifs),
-    }
-
-
-def pairs_to_dicts(pairs: list) -> list[dict]:
-    if not pairs:
-        return []
-    if isinstance(pairs[0], dict):
-        return pairs
-    return [dataclasses.asdict(p) for p in pairs]

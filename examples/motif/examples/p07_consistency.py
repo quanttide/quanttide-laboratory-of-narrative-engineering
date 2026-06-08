@@ -12,10 +12,10 @@ import json
 import os
 
 from src.config import GALLERY_ROOT, DATA_DIR
+from src.infra import cache_or_compute, cache_or_compute_text, load_motif_yaml, call_llm, call_llm_openai
 from src.services import (
-    cache_or_compute, cache_or_compute_text, load_motif_yaml,
     extract_motifs_from_text, extract_motifs_cross_validate,
-    call_llm, call_llm_openai, compute_alignment,
+    compute_alignment,
 )
 from src.models import Motif
 
