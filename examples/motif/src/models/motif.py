@@ -54,10 +54,18 @@ class SubMotif:
 @dataclass
 class Variant:
     """变体 —— 同一母题在不同作品/场景中的不同表现"""
-    motif: str  # TODO: 改为 Motif 引用（待 Gallery 聚合完善后）
+    motif: str
     series: Series
     scene: str
     description: str
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Variant):
+            return NotImplemented
+        return (self.motif, self.series, self.scene) == (other.motif, other.series, other.scene)
+
+    def __hash__(self) -> int:
+        return hash((self.motif, self.series, self.scene))
 
     def series_name(self) -> str:
         return "都市言情" if self.series == "urban" else "校园言情"

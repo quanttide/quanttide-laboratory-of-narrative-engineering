@@ -19,6 +19,14 @@ class Article:
     path: str
     type: ArticleType = "初稿"
 
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Article):
+            return NotImplemented
+        return self.id == other.id
+
+    def __hash__(self) -> int:
+        return hash(self.id)
+
 
 @dataclass
 class SceneTemplate:
@@ -27,6 +35,14 @@ class SceneTemplate:
     name: str
     type: SceneType
     desc: str
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, SceneTemplate):
+            return NotImplemented
+        return self.id == other.id
+
+    def __hash__(self) -> int:
+        return hash(self.id)
 
 
 @dataclass
