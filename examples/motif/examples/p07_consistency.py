@@ -4,6 +4,10 @@ p07 — 母题一致性检验实验
 
 验证以母题为约束生成多场景文本时，母题能否保持一致性和连贯性。
 """
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
+
 import json
 from pathlib import Path
 

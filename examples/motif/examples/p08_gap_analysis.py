@@ -4,6 +4,10 @@ p08 — 母题缝隙分析与多向改进实验
 
 检测初稿中的母题缝隙，从 6 个方向生成差异化改进建议。
 """
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
+
 import json
 from pathlib import Path
 

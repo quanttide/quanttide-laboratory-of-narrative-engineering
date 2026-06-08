@@ -4,6 +4,10 @@ p06 — 母题跨作品识别实验
 
 验证 LLM 能否识别同一母题在不同作品中的不同变体，建立跨作品关联。
 """
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
+
 import json
 import random
 from pathlib import Path

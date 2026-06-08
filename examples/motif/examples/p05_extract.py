@@ -4,6 +4,10 @@ p05 — 母题可提取性实验
 
 验证 LLM 能否从文本中提取母题，并与人工标注的 motif.yaml 对比。
 """
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
+
 import json
 import os
 import random

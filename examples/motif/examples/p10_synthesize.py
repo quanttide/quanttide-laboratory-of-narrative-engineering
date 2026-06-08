@@ -4,6 +4,10 @@ p10 — 母题驱动的风格改进实验
 
 风格诊断维度弱点 → 母题根因分析 → 三组改法对比。
 """
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
+
 import json
 import random
 from pathlib import Path
