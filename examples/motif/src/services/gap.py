@@ -37,7 +37,7 @@ def compute_gap_report(extracted: list[Motif], target_motifs: list[dict]) -> Gap
         else:
             found = False
             for et in extracted:
-                if t in et.title or et.title in t:
+                if et.matches_title(t):
                     if et.weight < tm["weight"] * 0.5:
                         weak.append(GapItem(title=t, target_weight=tm["weight"], extracted_weight=et.weight, matched_via=et.title))
                     else:

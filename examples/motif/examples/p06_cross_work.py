@@ -137,7 +137,7 @@ def main():
 
     similarity_raw = cache_or_compute(
         RESULTS_DIR / "similarity_matrix.json",
-        lambda: [vars(p) for p in cross_work_similarity_matrix(fragments)],
+        lambda: [dataclasses.asdict(p) for p in cross_work_similarity_matrix(fragments)],
         "相似度矩阵",
     )
     similarity_results = [MotifSimilarityPair(**d) if isinstance(d, dict) else d for d in similarity_raw]

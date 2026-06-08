@@ -1,6 +1,18 @@
-"""类型转换器 — dict↔dataclass 互转，统一处理接口"""
+"""类型转换器 — dict↔dataclass 互转、JSON 序列化"""
+
+import dataclasses
+import json
+from typing import Any
 
 from src.models import Motif, GapItem, GapReport, StyleDimension, MatchItem
+
+
+class DataclassJSONEncoder(json.JSONEncoder):
+    """支持 dataclass 的 JSON 编码器，自动调用 dataclasses.asdict()。"""
+    def default(self, o: Any) -> Any:
+        if dataclasses.is_dataclass(o):
+            return dataclasses.asdict(o)
+        return super().default(o)
 
 
 def to_motifs(items) -> list[Motif]:
@@ -13,8 +25,7 @@ def to_motifs(items) -> list[Motif]:
 
 
 def motifs_to_dicts(motifs: list[Motif]) -> list[dict]:
-    """list[Motif] → list[dict]（JSON 序列化用）。"""
-    return [vars(m) for m in motifs]
+    return [dataclasses.asdict(m) for m in motifs]
 
 
 def to_dims(data) -> list[StyleDimension]:
@@ -28,8 +39,7 @@ def to_dims(data) -> list[StyleDimension]:
 
 
 def dims_to_dicts(dims: list[StyleDimension]) -> list[dict]:
-    """list[StyleDimension] → list[dict]（JSON 序列化用）。"""
-    return [vars(d) for d in dims]
+    return [dataclasses.asdict(d) for d in dims]
 
 
 def to_gap_report(data) -> GapReport:
@@ -63,9 +73,8 @@ def gap_report_to_dict(r: GapReport) -> dict:
 
 
 def pairs_to_dicts(pairs: list) -> list[dict]:
-    """list[MotifSimilarityPair] → list[dict]（JSON 序列化用）。"""
     if not pairs:
         return []
     if isinstance(pairs[0], dict):
         return pairs
-    return [vars(p) for p in pairs]
+    return [dataclasses.asdict(p) for p in pairs]

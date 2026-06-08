@@ -70,6 +70,7 @@ def cache_or_compute(
     compute_fn: Callable[[], Any],
     description: str = "",
     verbose: bool = True,
+    json_encoder_cls=None,
 ) -> Any:
     """缓存抽象: 如果缓存存在则读取，否则计算 JSON 序列化并保存。"""
     if cache_path.exists():
@@ -82,7 +83,10 @@ def cache_or_compute(
 
     result = compute_fn()
     cache_path.parent.mkdir(exist_ok=True)
-    cache_path.write_text(json.dumps(result, ensure_ascii=False, indent=2), "utf-8")
+    kwargs = {"ensure_ascii": False, "indent": 2}
+    if json_encoder_cls:
+        kwargs["cls"] = json_encoder_cls
+    cache_path.write_text(json.dumps(result, **kwargs), "utf-8")
 
     if verbose and description:
         if isinstance(result, dict):

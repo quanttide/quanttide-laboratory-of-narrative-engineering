@@ -178,7 +178,7 @@ def main():
     for art in ARTICLES:
         result = cache_or_compute(
             RESULTS_DIR / f"motif_{art['id']}.json",
-            lambda a=art: [vars(m) for m in extract_motifs(read_article_text(a["path"]), a["name"])],
+            lambda a=art: [dataclasses.asdict(m) for m in extract_motifs(read_article_text(a["path"]), a["name"])],
             f"{art['id']} {art['name']}",
         )
         single_results[art["id"]] = {"motifs": result}

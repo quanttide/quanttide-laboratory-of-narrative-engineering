@@ -94,7 +94,7 @@ def main():
             )
             motifs = cache_or_compute(
                 detection_dir / f"constrained_{series}_{scene['id']}.json",
-                lambda t=text: [vars(m) for m in extract_motifs_from_text(t)],
+                lambda t=text: [dataclasses.asdict(m) for m in extract_motifs_from_text(t)],
                 verbose=False,
             )
             alignment = compute_alignment([Motif(**m) if isinstance(m, dict) else m for m in motifs], target_titles, motif_list)
@@ -111,7 +111,7 @@ def main():
             )
             motifs = cache_or_compute(
                 detection_dir / f"control_{series}_{scene['id']}.json",
-                lambda t=text: [vars(m) for m in extract_motifs_from_text(t)],
+                lambda t=text: [dataclasses.asdict(m) for m in extract_motifs_from_text(t)],
                 verbose=False,
             )
             alignment = compute_alignment([Motif(**m) if isinstance(m, dict) else m for m in motifs], target_titles, motif_list)
@@ -130,7 +130,7 @@ def main():
                 text = path.read_text("utf-8")
                 cv_motifs = cache_or_compute(
                     detection_dir / f"crossval_{series}_{scene['id']}.json",
-                    lambda: [vars(m) for m in extract_motifs_cross_validate(text)],
+                    lambda: [dataclasses.asdict(m) for m in extract_motifs_cross_validate(text)],
                     verbose=False,
                 )
                 cv_alignment = compute_alignment([Motif(**m) if isinstance(m, dict) else m for m in cv_motifs], target_titles, motif_list)

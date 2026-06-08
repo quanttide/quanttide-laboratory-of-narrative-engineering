@@ -18,6 +18,9 @@ class StyleDimension:
     def __post_init__(self):
         assert 1 <= self.score <= 10, f"score 必须在 1-10 之间，实际为 {self.score}"
 
+    def is_weak(self, threshold: int = 7) -> bool:
+        return self.score <= threshold
+
 
 @dataclass
 class StyleMotifLink:
@@ -26,6 +29,10 @@ class StyleMotifLink:
     related_missing_motif: Optional[str] = None
     confidence: Confidence = "medium"
     hypothesis: str = ""
+
+    def __post_init__(self):
+        valid = ("high", "medium", "low")
+        assert self.confidence in valid, f"confidence 必须为 {valid}，实际为 {self.confidence}"
 
 
 @dataclass

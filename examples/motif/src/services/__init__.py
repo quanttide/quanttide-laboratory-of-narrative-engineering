@@ -13,6 +13,7 @@
 from src.services.converter import (
     to_motifs, motifs_to_dicts, to_dims, dims_to_dicts,
     to_gap_report, gap_report_to_dict, pairs_to_dicts,
+    DataclassJSONEncoder,
 )
 from src.services.gallery import load_motif_profile, load_gallery, build_style_prompt
 from src.services.extraction import (

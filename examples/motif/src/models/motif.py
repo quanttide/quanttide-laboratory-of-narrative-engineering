@@ -16,6 +16,23 @@ class Motif:
     def __post_init__(self):
         assert 1 <= self.weight <= 10, f"weight 必须在 1-10 之间，实际为 {self.weight}"
 
+    def is_strong(self) -> bool:
+        return self.weight >= 7
+
+    def is_weak(self) -> bool:
+        return self.weight <= 3
+
+    def matches_title(self, other: str) -> bool:
+        return self.title == other or other in self.title or self.title in other
+
+    def merge(self, other: "Motif") -> "Motif":
+        return Motif(
+            title=self.title,
+            description=self.description or other.description,
+            weight=max(self.weight, other.weight),
+            evidence=list(set(self.evidence + other.evidence)),
+        )
+
 
 @dataclass
 class SubMotif:
@@ -32,3 +49,6 @@ class Variant:
     series: Series
     scene: str
     description: str
+
+    def series_name(self) -> str:
+        return "都市言情" if self.series == "urban" else "校园言情"

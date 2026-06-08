@@ -57,8 +57,8 @@ def main():
         gap_report = to_gap_report(gap_raw)
         all_gaps[art["id"]] = gap_report
 
-        gaps_to_fix = gap_report.missing + gap_report.weak
-        print(f"  缝隙数: {len(gaps_to_fix)} ({len(gap_report.covered)} 覆盖 / {len(gap_report.missing)} 缺失 / {len(gap_report.weak)} 弱化)")
+        gaps_to_fix = gap_report.fixable_gaps()
+        print(f"  缝隙数: {len(gaps_to_fix)} ({gap_report.summary()})")
 
         art_suggestions, art_evaluations = {}, {}
         for gap_item in gaps_to_fix:
@@ -69,7 +69,7 @@ def main():
             )
             suggestions = cache_or_compute(
                 RESULTS_DIR / f"suggestions_{art['id']}_{gt}.json",
-                lambda: [vars(s) for s in generate_suggestions(art["name"], text, gap_item, attr.gap_types or [],
+                lambda: [dataclasses.asdict(s) for s in generate_suggestions(art["name"], text, gap_item, attr.gap_types or [],
                     next((m for m in target_motifs if m["title"] == gt), {}))],
             )
             art_suggestions[gt] = suggestions

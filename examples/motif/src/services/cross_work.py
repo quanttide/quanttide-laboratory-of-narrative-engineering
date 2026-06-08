@@ -25,10 +25,9 @@ def cross_work_similarity_matrix(fragments: list[Variant]) -> list[MotifSimilari
 
     results = []
     for a, b in cross_same + cross_diff + intra_diff:
-        series_name = lambda s: "都市言情" if s == "urban" else "校园言情"
         prompt = load_prompt("p06/similarity_judgment",
-            series_a=series_name(a.series), motif_a=a.motif, desc_a=a.description,
-            series_b=series_name(b.series), motif_b=b.motif, desc_b=b.description)
+            series_a=a.series_name(), motif_a=a.motif, desc_a=a.description,
+            series_b=b.series_name(), motif_b=b.motif, desc_b=b.description)
         try:
             raw = call_llm(prompt, "你是一个叙事学分析专家。只输出 JSON。")
             data = json.loads(clean_json(raw))

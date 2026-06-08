@@ -16,6 +16,12 @@ class GapItem:
     description: str = ""
     matched_via: Optional[str] = None
 
+    def is_missing(self) -> bool:
+        return self.extracted_weight is None
+
+    def is_weak(self) -> bool:
+        return self.extracted_weight is not None and self.extracted_weight < self.target_weight * 0.5
+
 
 @dataclass
 class GapAttribution:
@@ -33,6 +39,16 @@ class GapReport:
     weak: list[GapItem] = field(default_factory=list)
     extracted_motifs: list[Motif] = field(default_factory=list)
 
+    def fixable_gaps(self) -> list[GapItem]:
+        return self.missing + self.weak
+
+    def coverage_rate(self) -> float:
+        total = len(self.covered) + len(self.missing) + len(self.weak)
+        return len(self.covered) / total if total else 0.0
+
+    def summary(self) -> str:
+        return f"覆盖{len(self.covered)} / 缺失{len(self.missing)} / 弱化{len(self.weak)}"
+
 
 @dataclass
 class Suggestion:
@@ -41,6 +57,16 @@ class Suggestion:
     text: str
     paragraph_ref: str = ""
     reverse_risk: Optional[int] = None
+
+    def __post_init__(self):
+        if self.reverse_risk is not None:
+            assert 1 <= self.reverse_risk <= 3, f"reverse_risk 必须在 1-3 之间，实际为 {self.reverse_risk}"
+
+    def is_safe(self) -> bool:
+        return self.direction in ("amplify", "transform", "restrain")
+
+    def is_risky(self) -> bool:
+        return self.direction == "reverse" and (self.reverse_risk or 0) >= 2
 
 
 @dataclass
