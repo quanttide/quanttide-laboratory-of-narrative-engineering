@@ -9,17 +9,15 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
 import json
-import os
 import random
 from collections import defaultdict
-from pathlib import Path
 
-import requests
-
-from src.config import FICTION_ROOT, GALLERY_ROOT, DATA_DIR
-from src.infra import call_llm, clean_json, cache_or_compute, read_article_text, load_motif_yaml, semantic_similarity
-from src.prompts import load_prompt
-from src.models import MatchItem, Motif, MotifProfile, CoverageReport
+from src.config import DATA_DIR
+from src.services import (
+    cache_or_compute, read_article_text, semantic_similarity,
+    load_motif_profile, extract_motifs, extract_motifs_joint,
+)
+from src.models import MatchItem, CoverageReport
 
 RESULTS_DIR = DATA_DIR / "p05"
 
@@ -33,43 +31,6 @@ ARTICLES = [
     {"id": "C2", "series": "campus", "name": "第五章（危机公关）", "path": "校园言情/4_成稿/5_第五章.md"},
     {"id": "C3", "series": "campus", "name": "第十章（KTV表白）", "path": "校园言情/4_成稿/10_第十章.md"},
 ]
-
-
-def load_all_motif_ground_truth() -> dict:
-    gt = {}
-    for level in ["shared", "urban", "campus"]:
-        path = GALLERY_ROOT / ("motif.yaml" if level == "shared" else f"{level}-romance/motif.yaml")
-        if path.exists():
-            gt[level] = load_motif_yaml(path)
-    return gt
-
-
-def load_motif_profile() -> MotifProfile:
-    """从 YAML 加载三层母题库，返回类型安全的 MotifProfile。"""
-    raw = load_all_motif_ground_truth()
-    def _to_motifs(data: dict) -> list[Motif]:
-        return [Motif(title=m["title"], description=m.get("description", ""), weight=m.get("weight", 5))
-                for m in data.get("motifs", [])]
-    return MotifProfile(
-        shared=_to_motifs(raw.get("shared", {})),
-        urban=_to_motifs(raw.get("urban", {})),
-        campus=_to_motifs(raw.get("campus", {})),
-    )
-
-
-def extract_motifs(text: str, article_name: str) -> dict:
-    sample = text[:3000]
-    prompt = load_prompt("p05/extract_single_motif", article_name=article_name, sample=sample)
-    raw = call_llm(prompt)
-    return json.loads(clean_json(raw))
-
-
-def extract_motifs_joint(texts: list[dict], series_name: str) -> dict:
-    combined_parts = [f"--- 文章: {t['name']} ---\n{t['text'][:2000]}" for t in texts]
-    combined = "\n\n".join(combined_parts)
-    prompt = load_prompt("p05/extract_joint_motif", series_name=series_name, combined=combined)
-    raw = call_llm(prompt)
-    return json.loads(clean_json(raw))
 
 
 def compare_with_ground_truth(single_results: dict, joint_results: dict, gt: dict) -> dict:
@@ -201,8 +162,15 @@ def main():
     RESULTS_DIR.mkdir(exist_ok=True)
 
     print("\n加载 Gallery 母题标注...")
-    gt = load_all_motif_ground_truth()
-    for level, data in gt.items():
+    from src.services import load_motif_profile
+    gt = load_motif_profile()
+    # compare_with_ground_truth expects dict format, convert
+    gt_dict = {
+        "shared": {"motifs": [{"title": m.title, "description": m.description, "weight": m.weight} for m in gt.shared]},
+        "urban": {"motifs": [{"title": m.title, "description": m.description, "weight": m.weight} for m in gt.urban]},
+        "campus": {"motifs": [{"title": m.title, "description": m.description, "weight": m.weight} for m in gt.campus]},
+    }
+    for level, data in gt_dict.items():
         print(f"  {level}: {len(data.get('motifs', []))} 个母题")
 
     print("\n步骤 1: 单篇母题提取")
@@ -210,10 +178,10 @@ def main():
     for art in ARTICLES:
         result = cache_or_compute(
             RESULTS_DIR / f"motif_{art['id']}.json",
-            lambda a=art: extract_motifs(read_article_text(a["path"]), a["name"]),
+            lambda a=art: [vars(m) for m in extract_motifs(read_article_text(a["path"]), a["name"])],
             f"{art['id']} {art['name']}",
         )
-        single_results[art["id"]] = result
+        single_results[art["id"]] = {"motifs": result}
 
     print("\n步骤 2: 多篇联合提取")
     joint_results = {}
@@ -234,7 +202,7 @@ def main():
         joint_results[series] = result
 
     print("\n步骤 3: 与人工标注对比")
-    comparison = compare_with_ground_truth(single_results, joint_results, gt)
+    comparison = compare_with_ground_truth(single_results, joint_results, gt_dict)
 
     print("\n步骤 4: 盲品归因")
     clusterings = []
@@ -247,7 +215,7 @@ def main():
         clusterings.append(result)
 
     cache_or_compute(RESULTS_DIR / "comparison.json", lambda: comparison, verbose=False)
-    report(gt, single_results, joint_results, comparison, clusterings)
+    report(gt_dict, single_results, joint_results, comparison, clusterings)
     print(f"\n结果已保存到: {RESULTS_DIR}")
 
 

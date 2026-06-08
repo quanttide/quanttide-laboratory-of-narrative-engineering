@@ -9,13 +9,15 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
 import json
-from pathlib import Path
-
-from src.models import Motif
+import os
 
 from src.config import GALLERY_ROOT, DATA_DIR
-from src.infra import call_llm, call_llm_openai, clean_json, cache_or_compute, cache_or_compute_text, load_motif_yaml
-from src.prompts import load_prompt
+from src.services import (
+    cache_or_compute, cache_or_compute_text, load_motif_yaml,
+    extract_motifs_from_text, extract_motifs_cross_validate,
+    call_llm, call_llm_openai, compute_alignment,
+)
+from src.models import Motif
 
 RESULTS_DIR = DATA_DIR / "p07"
 TEMPERATURE = 0.8
@@ -32,7 +34,7 @@ SCENE_TEMPLATES = [
     {"id": "scene9", "name": "独自加班到深夜", "type": "静态室内", "desc": "办公室只剩主角一个人。窗外的城市灯火通明，她打开手机相册，翻到一张旧照片。她放下手机，揉了揉太阳穴，给自己倒了杯水，却端着杯子发呆了好几分钟。"},
 ]
 
-ABSTRACT_MOTIF_ACTIONS: dict[str, str] = {
+ABSTRACT_MOTIF_ACTIONS = {
     "孤独": "写一段内心独白，让角色觉得无人可说、说不出来——手势和沉默比台词承载更多情感",
     "旁观者": "在场景中插入一个第三方角色的评论或反应（闺蜜/室友/同事/论坛网友）",
     "旁观者的缺席与在场": "在场景中插入一个第三方角色的评论或反应（闺蜜/室友/同事/论坛网友）",
@@ -53,6 +55,7 @@ def build_motif_description(motifs: list[dict]) -> str:
 
 
 def generate_scene(scene: dict, motifs: list[dict] | None, style: str) -> str:
+    from src.prompts import load_prompt
     motif_text = ""
     if motifs:
         motif_desc = build_motif_description(motifs)
@@ -60,57 +63,6 @@ def generate_scene(scene: dict, motifs: list[dict] | None, style: str) -> str:
     prompt = load_prompt("p07/generate_scene", style_name=style, scene_desc=scene["desc"], motif_text=motif_text)
     raw = call_llm(prompt, "你是一个专业的小说作家。只输出正文。", temperature=TEMPERATURE)
     return raw.strip()
-
-
-def extract_motifs_from_text(text: str) -> list[Motif]:
-    sample = text[:2000]
-    prompt = load_prompt("p07/extract_motifs_scene", sample=sample)
-    raw = call_llm(prompt, "你是一个专业的叙事学分析助手。只输出 JSON。", temperature=0.3)
-    items = json.loads(clean_json(raw)).get("motifs", [])
-    return [Motif(title=m["title"], description=m.get("description", ""), weight=m.get("weight", 5)) for m in items]
-
-
-def extract_motifs_cross_validate(text: str) -> list[Motif]:
-    sample = text[:2000]
-    prompt = load_prompt("p07/extract_motifs_scene", sample=sample)
-    try:
-        raw = call_llm_openai(prompt, "你是一个专业的叙事学分析助手。只输出 JSON。", temperature=0.3)
-        items = json.loads(clean_json(raw)).get("motifs", [])
-        return [Motif(title=m["title"], description=m.get("description", ""), weight=m.get("weight", 5)) for m in items]
-    except Exception:
-        return []
-
-
-def llm_motif_match(detected_title: str, target_title: str, target_description: str) -> bool:
-    prompt = load_prompt("p07/llm_motif_match",
-        detected_title=detected_title, target_title=target_title, target_description=target_description)
-    try:
-        raw = call_llm(prompt, "你是一个叙事学分析助手。只输出 yes 或 no。", temperature=0.1)
-        return raw.strip().lower() == "yes"
-    except Exception:
-        return False
-
-
-def _to_motifs(items) -> list[Motif]:
-    """将 LLM 返回或缓存读取的原始数据转为 list[Motif]（兼容新旧格式）。"""
-    if not items:
-        return []
-    if isinstance(items[0], Motif):
-        return items
-    return [Motif(title=m["title"], description=m.get("description", ""), weight=m.get("weight", 5)) for m in items]
-
-
-def compute_alignment(detected: list[Motif], target_titles: set[str], target_motifs: list[dict] | None = None) -> float:
-    if not target_titles:
-        return 0.0
-    target_map = {m["title"]: m.get("description", "") for m in (target_motifs or [])}
-    detected_titles = [m["title"] for m in detected]
-    matched = 0
-    for target in target_titles:
-        desc = target_map.get(target, "")
-        if any(llm_motif_match(dt, target, desc) for dt in detected_titles):
-            matched += 1
-    return min(matched / len(target_titles), 1.0)
 
 
 def main():
@@ -140,16 +92,15 @@ def main():
                 lambda s=scene: generate_scene(s, motif_list, style_name),
                 f"生成 {scene['name']}", verbose=True,
             )
-            detected_raw = cache_or_compute(
+            motifs = cache_or_compute(
                 detection_dir / f"constrained_{series}_{scene['id']}.json",
                 lambda t=text: [vars(m) for m in extract_motifs_from_text(t)],
                 verbose=False,
             )
-            motifs = _to_motifs(detected_raw)
-            alignment = compute_alignment(motifs, target_titles, motif_list)
+            alignment = compute_alignment([Motif(**m) if isinstance(m, dict) else m for m in motifs], target_titles, motif_list)
             all_results.append({"group": f"constrained_{series}", "scene": scene["name"], "alignment": alignment,
                 "detected_count": len(motifs), "target_count": len(target_titles),
-                "detected_titles": [m.title for m in motifs]})
+                "detected_titles": [m.get("title", m.title) for m in motifs]})
             print(f"      吻合度: {alignment*100:.0f}%")
 
         for scene in SCENE_TEMPLATES:
@@ -158,33 +109,31 @@ def main():
                 lambda s=scene: generate_scene(s, None, style_name),
                 f"生成对照 {scene['name']}", verbose=True,
             )
-            detected_raw = cache_or_compute(
+            motifs = cache_or_compute(
                 detection_dir / f"control_{series}_{scene['id']}.json",
                 lambda t=text: [vars(m) for m in extract_motifs_from_text(t)],
                 verbose=False,
             )
-            motifs = _to_motifs(detected_raw)
-            alignment = compute_alignment(motifs, target_titles, motif_list)
+            alignment = compute_alignment([Motif(**m) if isinstance(m, dict) else m for m in motifs], target_titles, motif_list)
             all_results.append({"group": f"control_{series}", "scene": scene["name"], "alignment": alignment,
                 "detected_count": len(motifs), "target_count": len(target_titles),
-                "detected_titles": [m.title for m in motifs]})
+                "detected_titles": [m.get("title", m.title) for m in motifs]})
 
     # Cross-validation
     cross_validated = []
-    if any(os.environ.get("OPENAI_API_KEY") for _ in [1]):
+    if os.environ.get("OPENAI_API_KEY"):
         for series, motif_list, target_titles, style_name in configs:
             for scene in SCENE_TEMPLATES:
                 path = generated_dir / f"constrained_{series}_{scene['id']}.txt"
                 if not path.exists():
                     continue
                 text = path.read_text("utf-8")
-                cv_raw = cache_or_compute(
+                cv_motifs = cache_or_compute(
                     detection_dir / f"crossval_{series}_{scene['id']}.json",
                     lambda: [vars(m) for m in extract_motifs_cross_validate(text)],
                     verbose=False,
                 )
-                cv_motifs = _to_motifs(cv_raw)
-                cv_alignment = compute_alignment(cv_motifs, target_titles, motif_list)
+                cv_alignment = compute_alignment([Motif(**m) if isinstance(m, dict) else m for m in cv_motifs], target_titles, motif_list)
                 cross_validated.append({"series": series, "scene": scene["name"], "cv_alignment": cv_alignment})
 
         if cross_validated:
@@ -193,8 +142,9 @@ def main():
             print(f"\n  交叉验证约束组: {avg_cv*100:.0f}% (DeepSeek: {avg_p*100:.0f}%, 差异: {abs(avg_cv-avg_p)*100:.0f}%)")
             print(f"  {'✅ 结果可信' if abs(avg_cv-avg_p)*100 <= 15 else '⚠️ 差异 > 15%，优先采信 GPT-4o-mini'}")
 
+    # Report
     print(f"\n{'='*60}\np07 分析报告：母题一致性检验\n{'='*60}")
-    for series, target_titles, style in [("urban", urban_titles, "都市言情"), ("campus", campus_titles, "校园言情")]:
+    for series, _, style in [("urban", urban_titles, "都市言情"), ("campus", campus_titles, "校园言情")]:
         constrained = [r for r in all_results if r["group"] == f"constrained_{series}"]
         control = [r for r in all_results if r["group"] == f"control_{series}"]
         avg_c = sum(r["alignment"] for r in constrained) / len(constrained) if constrained else 0
@@ -204,15 +154,13 @@ def main():
         print(f"  对照组平均吻合度: {avg_ct*100:.0f}%")
         print(f"  提升: {(avg_c-avg_ct)*100:+.0f} 百分点")
 
-    report_data = {
-        "results": all_results,
-        "cross_validation": {"cv_results": cross_validated,
-            "avg_cv_alignment": sum(r["cv_alignment"] for r in cross_validated) / len(cross_validated) if cross_validated else 0},
-    }
+    report_data = {"results": all_results, "cross_validation": {
+        "cv_results": cross_validated,
+        "avg_cv_alignment": sum(r["cv_alignment"] for r in cross_validated) / len(cross_validated) if cross_validated else 0,
+    }}
     cache_or_compute(RESULTS_DIR / "consistency_report.json", lambda: report_data, verbose=False)
     print(f"\n结果已保存到: {RESULTS_DIR}")
 
 
 if __name__ == "__main__":
-    import os
     main()
