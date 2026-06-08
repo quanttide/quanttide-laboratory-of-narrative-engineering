@@ -17,6 +17,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from src.config import REPO_ROOT, GALLERY_ROOT, DATA_DIR
 
 DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY", "")
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
 if not DEEPSEEK_API_KEY:
     print("错误：请设置 DEEPSEEK_API_KEY 环境变量")
     sys.exit(1)
@@ -123,39 +124,78 @@ def extract_motifs_from_text(text: str) -> list[dict]:
     return json.loads(clean_json(raw)).get("motifs", [])
 
 
-def compute_alignment(detected: list[dict], target_titles: set[str]) -> float:
-    """计算母题吻合度（基于 keywords 匹配）。
-    TODO: 生产环境应使用 embedding 模型或 LLM 语义匹配，而非基于子串。
+def call_llm_openai(prompt: str, system: str = "你是一个专业的叙事学分析助手。只输出 JSON。", temperature: float = 0.3) -> str:
+    """调用 OpenAI 兼容 API（GPT-4o-mini）作为交叉验证。"""
+    api_key = os.environ.get("OPENAI_API_KEY", "")
+    if not api_key:
+        raise ValueError("请设置 OPENAI_API_KEY 环境变量以使用交叉验证")
+    resp = requests.post(
+        "https://api.openai.com/v1/chat/completions",
+        headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+        json={
+            "model": "gpt-4o-mini",
+            "messages": [
+                {"role": "system", "content": system},
+                {"role": "user", "content": prompt},
+            ],
+            "temperature": temperature,
+        },
+        timeout=180,
+    )
+    resp.raise_for_status()
+    return resp.json()["choices"][0]["message"]["content"]
+
+
+def extract_motifs_cross_validate(text: str) -> list[dict]:
+    """用 GPT-4o-mini 做母题提取，用于交叉验证（消除同源偏差）。"""
+    sample = text[:2000]
+    prompt = f"""分析以下场景文本，从中提取叙事母题（motif）。
+母题定义：在叙事中反复出现的主题元素，包括具体意象、关系模式、行为习惯、叙事惯例。
+要求：提取 3-6 个母题，每个母题须有原文线索支撑。
+输出格式（JSON）：{{"motifs": [{{"title":"母题名","description":"一句话描述","weight":5,"evidence":["原文引用"]}}]}}
+场景文本：{sample}"""
+    try:
+        raw = call_llm_openai(prompt, "你是一个专业的叙事学分析助手。只输出 JSON。", temperature=0.3)
+        return json.loads(clean_json(raw)).get("motifs", [])
+    except Exception as e:
+        print(f"      交叉验证失败: {e}")
+        return []
+
+
+def llm_motif_match(detected_title: str, target_title: str, target_description: str) -> bool:
+    """用 LLM 判断提取的母题是否体现了目标母题的含义。"""
+    prompt = f"""判断以下提取的母题是否体现了目标母题的含义。只输出 yes 或 no。
+
+提取的母题: {detected_title}
+目标母题: {target_title}
+目标母题定义: {target_description}"""
+    try:
+        raw = call_llm(prompt, "你是一个叙事学分析助手。只输出 yes 或 no。", temperature=0.1)
+        return raw.strip().lower() == "yes"
+    except Exception:
+        return False
+
+
+def compute_alignment(detected: list[dict], target_titles: set[str], target_motifs: list[dict] | None = None) -> float:
+    """计算母题吻合度（基于 LLM 语义判断）。
+    替代原有的 keyword-map 匹配，消除 false positive/negative。
     """
     if not target_titles:
         return 0.0
 
-    # 对每个目标母题定义 keyword aliases
-    keyword_map = {
-        "十年": ["十年", "时间", "回忆", "往事", "暗恋", "等待", "漫长", "岁月", "错过"],
-        "手势": ["手势", "手", "触碰", "拥抱", "抱", "拉", "握", "擦", "递", "动作", "肢体", "身体", "接触"],
-        "雨": ["雨", "雨夜", "雨天", "雨水", "雨声"],
-        "孤独": ["孤独", "孤单", "独自", "一个人", "内心", "独白", "脆弱"],
-        "歌声": ["歌", "音乐", "歌曲", "唱"],
-        "论坛": ["论坛", "帖子", "回复", "评论", "评论区", "发帖", "网络", "系统提示"],
-        "协作书写": ["协作", "共同", "一起", "写", "声明", "编辑", "文档", "配合"],
-        "旁观者": ["旁观", "围观", "CP", "粉丝", "见证", "评论", "闺蜜", "室友", "朋友", "路人"],
-        "随身携带的温柔": ["随身", "温柔", "关怀", "准备", "纸巾", "外套", "披", "细心", "体贴", "照顾"],
-    }
+    target_map = {}
+    if target_motifs:
+        for m in target_motifs:
+            target_map[m["title"]] = m.get("description", "")
 
     detected_titles = [m["title"] for m in detected]
 
     matched = 0
     for target in target_titles:
-        aliases = keyword_map.get(target, [target])
+        desc = target_map.get(target, "")
         for dt in detected_titles:
-            used = False
-            for alias in aliases:
-                if alias in dt or dt in alias:
-                    matched += 1
-                    used = True
-                    break
-            if used:
+            if llm_motif_match(dt, target, desc):
+                matched += 1
                 break
 
     return min(matched / len(target_titles), 1.0)
@@ -219,7 +259,7 @@ def main():
                 detected = extract_motifs_from_text(text)
                 detect_cache.write_text(json.dumps({"motifs": detected}, ensure_ascii=False, indent=2), "utf-8")
 
-            alignment = compute_alignment(detected, target_titles)
+            alignment = compute_alignment(detected, target_titles, motif_list)
             all_results.append({
                 "group": f"constrained_{series}",
                 "scene": scene["name"],
@@ -250,7 +290,7 @@ def main():
                 detected = extract_motifs_from_text(text)
                 detect_cache.write_text(json.dumps({"motifs": detected}, ensure_ascii=False, indent=2), "utf-8")
 
-            alignment = compute_alignment(detected, target_titles)
+            alignment = compute_alignment(detected, target_titles, motif_list)
             all_results.append({
                 "group": f"control_{series}",
                 "scene": scene["name"],
@@ -260,6 +300,45 @@ def main():
                 "detected_titles": [m["title"] for m in detected],
             })
             print(f"      吻合度: {alignment*100:.0f}% ({len(detected)} 个检测 / {len(target_titles)} 个目标)")
+
+    # 步骤 3: 交叉验证（GPT-4o-mini 消除同源偏差）
+    print("\n" + "=" * 40)
+    print("步骤 3: 交叉验证（GPT-4o-mini，消除同源偏差）")
+    print("=" * 40)
+    cross_validated = []
+    if OPENAI_API_KEY:
+        for series, motif_list, target_titles, style_name in configs:
+            for scene in SCENE_TEMPLATES:
+                cache_file = generated_dir / f"constrained_{series}_{scene['id']}.txt"
+                if not cache_file.exists():
+                    continue
+                text = cache_file.read_text("utf-8")
+                cv_cache = detection_dir / f"crossval_{series}_{scene['id']}.json"
+                if cv_cache.exists():
+                    cv_detected = json.loads(cv_cache.read_text("utf-8")).get("motifs", [])
+                else:
+                    print(f"    {style_name} {scene['name']}...", end=" ", flush=True)
+                    cv_detected = extract_motifs_cross_validate(text)
+                    cv_cache.write_text(json.dumps({"motifs": cv_detected}, ensure_ascii=False, indent=2), "utf-8")
+                    print(f"✓ ({len(cv_detected)} 个母题)")
+                cv_alignment = compute_alignment(cv_detected, target_titles, motif_list)
+                cross_validated.append({
+                    "series": series,
+                    "scene": scene["name"],
+                    "group": "constrained",
+                    "cv_alignment": cv_alignment,
+                })
+        if cross_validated:
+            avg_cv = sum(r["cv_alignment"] for r in cross_validated) / len(cross_validated)
+            avg_primary = sum(r["alignment"] for r in all_results if r.get("group", "").startswith("constrained_")) / max(1, len([r for r in all_results if r.get("group", "").startswith("constrained_")]))
+            cv_diff = abs(avg_cv - avg_primary) * 100
+            print(f"\n  交叉验证约束组平均吻合度: {avg_cv*100:.0f}%（DeepSeek: {avg_primary*100:.0f}%，差异: {cv_diff:.0f}%）")
+            if cv_diff > 15:
+                print(f"  ⚠️ 差异 > 15%，结果优先采信 GPT-4o-mini 交叉验证")
+            else:
+                print(f"  ✅ 差异在 15% 以内，DeepSeek 结果可信")
+    else:
+        print("  跳过（未设置 OPENAI_API_KEY）")
 
     # 步骤 4-6: 对比分析
     print("\n" + "=" * 60)
@@ -300,6 +379,10 @@ def main():
             / max(1, len([r for r in all_results if r["group"] == "constrained_campus"])),
             "control": sum(r["alignment"] for r in all_results if r["group"] == "control_campus")
             / max(1, len([r for r in all_results if r["group"] == "control_campus"])),
+        },
+        "cross_validation": {
+            "cv_results": cross_validated,
+            "avg_cv_alignment": sum(r["cv_alignment"] for r in cross_validated) / len(cross_validated) if cross_validated else 0,
         },
     }
     (RESULTS_DIR / "consistency_report.json").write_text(

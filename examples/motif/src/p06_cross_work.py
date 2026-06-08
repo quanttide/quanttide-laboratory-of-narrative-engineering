@@ -15,7 +15,7 @@ import requests
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from src.config import REPO_ROOT, GALLERY_ROOT, DATA_DIR
+from src.config import REPO_ROOT, FICTION_ROOT, GALLERY_ROOT, DATA_DIR
 
 DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY", "")
 if not DEEPSEEK_API_KEY:
@@ -79,6 +79,60 @@ CROSS_WORK_MOTIFS = [
     },
 ]
 
+# 场景片段 → 原文段落映射（用于完整段落版聚类）
+SCENE_PARAGRAPH_MAP: dict[str, dict[str, str]] = {
+    "便利店闲坐": {"file": "职场言情/4_成稿/4_1_便利店谈心.md", "keyword": "便利店"},
+    "酒吧表白": {"file": "职场言情/4_成稿/8_2_酒吧表白.md", "keyword": "表白"},
+    "书房陪伴": {"file": "职场言情/4_成稿/10_1_书房陪伴.md", "keyword": "旁听"},
+    "咖啡厅重逢": {"file": "职场言情/4_成稿/1_1_咖啡厅重逢.md", "keyword": "日记"},
+    "医院初遇": {"file": "校园言情/3_初稿/1_第一章.md", "keyword": "扶住"},
+    "KTV表白": {"file": "校园言情/4_成稿/10_第十章.md", "keyword": "外套"},
+    "危机公关": {"file": "校园言情/4_成稿/5_第五章.md", "keyword": "火锅"},
+    "写声明": {"file": "校园言情/4_成稿/5_第五章.md", "keyword": "声明"},
+    "论坛隔空喊话": {"file": "校园言情/3_初稿/2_第二章.md", "keyword": "有缘再见"},
+    "论坛评论区": {"file": "校园言情/3_初稿/6_第六章.md", "keyword": "火锅"},
+}
+
+
+def load_scene_paragraph(scene_name: str, max_chars: int = 500) -> str:
+    """从原文中加载与场景匹配的段落（300-500 字）。"""
+    info = SCENE_PARAGRAPH_MAP.get(scene_name)
+    if not info:
+        return ""
+    path = FICTION_ROOT / info["file"]
+    if not path.exists():
+        return ""
+    text = path.read_text("utf-8")
+    lines = text.split("\n")
+    body = [l for l in lines if not l.startswith("# ")]
+    full = "\n".join(body)
+
+    keyword = info.get("keyword", "")
+    if keyword and keyword in full:
+        idx = full.index(keyword)
+        start = max(0, idx - max_chars // 2)
+        paragraph = full[start:start + max_chars]
+    else:
+        paragraph = full[:max_chars]
+
+    return paragraph.strip()
+
+
+def load_full_paragraph_fragments() -> list[dict]:
+    """加载完整段落替代单句摘要。"""
+    fragments = []
+    for m in CROSS_WORK_MOTIFS:
+        for v in m["variants"]:
+            paragraph = load_scene_paragraph(v["scene"])
+            if paragraph:
+                fragments.append({
+                    "motif": m["motif"],
+                    "series": v["series"],
+                    "scene": v["scene"],
+                    "description": paragraph,
+                })
+    return fragments if fragments else collect_scene_fragments()
+
 
 def call_llm(prompt: str, system: str = "你是一个专业的叙事学分析助手。只输出 JSON。") -> str:
     resp = requests.post(
@@ -126,23 +180,16 @@ def collect_scene_fragments() -> list[dict]:
 
 
 def cross_work_similarity_matrix(fragments: list[dict]) -> list[dict]:
-    """步骤 2：跨作品相似度矩阵
+    """步骤 2：跨作品相似度矩阵 + 同作品对照基线
     对 14 个片段两两配对（91 对），用 LLM 判定是否体现同一母题。
+    三组比较：
+    - cross-series same-motif: 跨作品同母题（验证母题客观性）
+    - cross-series diff-motif: 跨作品不同母题（验证母题区分度）
+    - intra-series diff-motif: 同作品不同母题（排除"风格元素"混淆，对照基线）
     注意：本实现对所有对做 LLM 判定。
     生产环境建议：先做 embedding 预筛选，仅对模糊边界对（cos 0.5-0.8）做 LLM 判定。
     """
-    pairs = []
-    for i in range(len(fragments)):
-        for j in range(i + 1, len(fragments)):
-            a, b = fragments[i], fragments[j]
-            if a["series"] == b["series"]:
-                continue  # 只看跨作品对
-            if a["motif"] == b["motif"]:
-                continue  # 同一母题内的对，用 LLM 直接判定
-            # 跨作品且不同母题的对
-            pairs.append((a, b))
-
-    # 同母题对也在列表中
+    # 跨作品同母题对
     same_motif_pairs = []
     for i in range(len(fragments)):
         for j in range(i + 1, len(fragments)):
@@ -150,7 +197,23 @@ def cross_work_similarity_matrix(fragments: list[dict]) -> list[dict]:
             if a["series"] != b["series"] and a["motif"] == b["motif"]:
                 same_motif_pairs.append((a, b))
 
-    all_pairs = same_motif_pairs + pairs
+    # 跨作品不同母题对
+    cross_diff_pairs = []
+    for i in range(len(fragments)):
+        for j in range(i + 1, len(fragments)):
+            a, b = fragments[i], fragments[j]
+            if a["series"] != b["series"] and a["motif"] != b["motif"]:
+                cross_diff_pairs.append((a, b))
+
+    # 同作品不同母题对（对照基线——排除"同作品风格元素"的混淆）
+    intra_diff_pairs = []
+    for i in range(len(fragments)):
+        for j in range(i + 1, len(fragments)):
+            a, b = fragments[i], fragments[j]
+            if a["series"] == b["series"] and a["motif"] != b["motif"]:
+                intra_diff_pairs.append((a, b))
+
+    all_pairs = same_motif_pairs + cross_diff_pairs + intra_diff_pairs
 
     results = []
     for a, b in all_pairs:
@@ -175,6 +238,13 @@ def cross_work_similarity_matrix(fragments: list[dict]) -> list[dict]:
             result["pair_a"] = f"{a['motif']}_{a['series']}_{a['scene']}"
             result["pair_b"] = f"{b['motif']}_{b['series']}_{b['scene']}"
             result["same_gt_motif"] = a["motif"] == b["motif"]
+            # 标记配对类型：cross-same / cross-diff / intra-diff
+            if a["series"] != b["series"] and a["motif"] == b["motif"]:
+                result["pair_type"] = "cross-series_same-motif"
+            elif a["series"] != b["series"]:
+                result["pair_type"] = "cross-series_diff-motif"
+            else:
+                result["pair_type"] = "intra-series_diff-motif"
             results.append(result)
         except Exception as e:
             print(f"    ✗ {a['scene']} vs {b['scene']}: {e}")
@@ -375,6 +445,53 @@ def main():
         print(f"✓ ({result.get('correct', 0)}/{result.get('total_pairs', 0)})")
 
     report(similarity_results, reconstruction, blind_results)
+
+    # 步骤 5: 完整段落版对照（可选）
+    print("\n" + "=" * 40)
+    print("步骤 5: 完整段落版对照（替代单句摘要）")
+    print("=" * 40)
+    full_paragraph_fragments = load_full_paragraph_fragments()
+    if full_paragraph_fragments and len(full_paragraph_fragments) == len(fragments):
+        print(f"  完整段落版: {len(full_paragraph_fragments)} 个片段")
+        full_cache_file = RESULTS_DIR / "motif_chain_reconstruction_full.json"
+        if full_cache_file.exists():
+            full_reconstruction = json.loads(full_cache_file.read_text("utf-8"))
+            print(f"  ← 母题链重构读取缓存 ({len(full_reconstruction.get('clusters', []))} 类)")
+        else:
+            print("  母题链重构（完整段落）...", end=" ", flush=True)
+            full_reconstruction = motif_chain_reconstruction(full_paragraph_fragments)
+            full_cache_file.write_text(json.dumps(full_reconstruction, ensure_ascii=False, indent=2), "utf-8")
+            print(f"✓ ({len(full_reconstruction.get('clusters', []))} 类)")
+
+        full_blind_results = []
+        for r in range(3):
+            fcache = RESULTS_DIR / f"blind_pairing_full_r{r+1}.json"
+            if fcache.exists():
+                full_blind_results.append(json.loads(fcache.read_text("utf-8")))
+                print(f"  配对盲测第 {r+1} 轮 ← 读取缓存")
+            else:
+                print(f"  配对盲测第 {r+1} 轮...", end=" ", flush=True)
+                result = blind_pairing(full_paragraph_fragments)
+                full_blind_results.append(result)
+                fcache.write_text(json.dumps(result, ensure_ascii=False, indent=2), "utf-8")
+                print(f"✓ ({result.get('correct', 0)}/{result.get('total_pairs', 0)})")
+
+        print(f"\n  {'='*40}")
+        print(f"  完整段落版 vs 单句摘要版对比")
+        print(f"  {'='*40}")
+        old_clusters = len(reconstruction.get("clusters", []))
+        new_clusters = len(full_reconstruction.get("clusters", []))
+        old_acc = sum(r.get("accuracy", 0) for r in blind_results) / len(blind_results) * 100 if blind_results else 0
+        new_acc = sum(r.get("accuracy", 0) for r in full_blind_results) / len(full_blind_results) * 100 if full_blind_results else 0
+        print(f"  母题链重构类数: {old_clusters} → {new_clusters}")
+        print(f"  配对盲测平均准确率: {old_acc:.0f}% → {new_acc:.0f}%")
+        if new_acc > 50:
+            print(f"  ✅ 完整段落版显著提升配对准确率（超过随机基线 50%）")
+        else:
+            print(f"  ⚠️ 完整段落版仍未显著超过随机基线")
+    else:
+        print("  跳过（未找到完整段落或片段数不匹配）")
+
     print(f"\n结果已保存到: {RESULTS_DIR}")
 
 

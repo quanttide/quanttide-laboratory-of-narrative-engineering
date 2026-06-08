@@ -172,26 +172,48 @@ def extract_motifs_joint(texts: list[dict], series_name: str) -> dict:
     return json.loads(clean_json(raw))
 
 
-def semantic_similarity(desc_a: str, desc_b: str) -> float:
-    """用 LLM 判断两个母题描述之间的语义相似度（0-1）。
-    TODO: 优先使用 embedding 模型（如 text-embedding-3）代替 LLM 避免循环论证。
+def get_embedding(text: str) -> list[float]:
+    """调用 embedding API 获取文本向量。
+    支持 OpenAI 兼容格式（text-embedding-3-small）。
     """
-    prompt = f"""判断以下两个母题描述的语义相似度，输出一个 0-1 之间的数字。
+    api_key = os.environ.get("OPENAI_API_KEY", "")
+    api_url = os.environ.get("EMBEDDING_API_URL", "https://api.openai.com/v1/embeddings")
+    model = os.environ.get("EMBEDDING_MODEL", "text-embedding-3-small")
 
-母题 A: {desc_a}
-母题 B: {desc_b}
+    if not api_key:
+        raise ValueError("请设置 OPENAI_API_KEY 环境变量以使用 embedding 匹配")
 
-只输出数字，不要其他文字。"""
+    resp = requests.post(
+        api_url,
+        headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+        json={"input": text, "model": model},
+        timeout=30,
+    )
+    resp.raise_for_status()
+    return resp.json()["data"][0]["embedding"]
+
+
+def cosine_similarity(a: list[float], b: list[float]) -> float:
+    dot = sum(x * y for x, y in zip(a, b))
+    norm_a = sum(x * x for x in a) ** 0.5
+    norm_b = sum(y * y for y in b) ** 0.5
+    return dot / (norm_a * norm_b) if norm_a and norm_b else 0.0
+
+
+def semantic_similarity(desc_a: str, desc_b: str) -> float:
+    """用 embedding 余弦相似度判断两个母题描述的语义相似度（0-1）。
+    替代原有的 LLM 判定方式，消除"LLM 提取→LLM 评估"循环论证。
+    """
     try:
-        raw = call_llm(prompt, "你是一个语义分析助手。只输出一个 0-1 的数字。")
-        val = float(raw.strip())
-        return max(0.0, min(1.0, val))
+        emb_a = get_embedding(desc_a)
+        emb_b = get_embedding(desc_b)
+        return max(0.0, min(1.0, cosine_similarity(emb_a, emb_b)))
     except Exception:
         return 0.0
 
 
 def compare_with_ground_truth(single_results: dict, joint_results: dict, gt: dict) -> dict:
-    """步骤 3：与人工标注对比"""
+    """步骤 3：与人工标注对比（覆盖率基于 unique GT 母题去重）"""
     report = {}
 
     for level_name, level_data in [("urban", gt.get("urban", {})), ("campus", gt.get("campus", {}))]:
@@ -202,43 +224,49 @@ def compare_with_ground_truth(single_results: dict, joint_results: dict, gt: dic
         gt_titles = {m["title"] for m in gt_motifs}
         gt_descs = {m["title"]: m.get("description", "") for m in gt_motifs}
 
-        # 单篇覆盖率
+        # 单篇覆盖率（基于 unique GT 母题去重）
         single_coverage = {}
         for art in ARTICLES:
             if art["series"] != level_name:
                 continue
             aid = art["id"]
             extracted = single_results.get(aid, {}).get("motifs", [])
-            matched = []
+            matched_gt = set()
+            match_details = []
             for e in extracted:
                 for g_title, g_desc in gt_descs.items():
                     sim = semantic_similarity(e.get("description", ""), g_desc)
                     if sim > 0.7:
-                        matched.append((e["title"], g_title, sim))
+                        if g_title not in matched_gt:
+                            matched_gt.add(g_title)
+                        match_details.append({"extracted": e["title"], "gt": g_title, "similarity": sim})
                         break
             single_coverage[aid] = {
                 "extracted_count": len(extracted),
-                "matched_count": len(matched),
-                "coverage": len(matched) / len(gt_motifs) if gt_motifs else 0,
-                "matches": [{"extracted": m[0], "gt": m[1], "similarity": m[2]} for m in matched],
+                "matched_count": len(matched_gt),
+                "coverage": len(matched_gt) / len(gt_motifs) if gt_motifs else 0,
+                "matches": match_details,
             }
 
-        # 联合覆盖率
+        # 联合覆盖率（基于 unique GT 母题去重）
         joint = joint_results.get(level_name, {}).get("motifs", [])
-        joint_matched = []
+        joint_matched_gt = set()
+        joint_match_details = []
         for e in joint:
             for g_title, g_desc in gt_descs.items():
                 sim = semantic_similarity(e.get("description", ""), g_desc)
                 if sim > 0.7:
-                    joint_matched.append((e["title"], g_title, sim))
+                    if g_title not in joint_matched_gt:
+                        joint_matched_gt.add(g_title)
+                    joint_match_details.append({"extracted": e["title"], "gt": g_title, "similarity": sim})
                     break
 
         report[level_name] = {
             "single_coverage": single_coverage,
             "single_avg_coverage": sum(c["coverage"] for c in single_coverage.values()) / len(single_coverage)
             if single_coverage else 0,
-            "joint_coverage": len(joint_matched) / len(gt_motifs) if gt_motifs else 0,
-            "joint_matches": [{"extracted": m[0], "gt": m[1], "similarity": m[2]} for m in joint_matched],
+            "joint_coverage": len(joint_matched_gt) / len(gt_motifs) if gt_motifs else 0,
+            "joint_matches": joint_match_details,
             "gt_motif_count": len(gt_motifs),
         }
 
@@ -318,8 +346,16 @@ def report(gt: dict, single_results: dict, joint_results: dict, comparison: dict
         for g in groups:
             members = g["members"]
             series_in_group = [series_map.get(m, "?") for m in members]
-            majority = max(set(series_in_group), key=series_in_group.count)
-            correct += sum(1 for s in series_in_group if s == majority)
+            counts = {}
+            for s in series_in_group:
+                counts[s] = counts.get(s, 0) + 1
+            max_count = max(counts.values())
+            # 平局时按随机基线计（50% 正确率）
+            if list(counts.values()).count(max_count) > 1:
+                correct += max_count
+            else:
+                majority = max(set(series_in_group), key=series_in_group.count)
+                correct += sum(1 for s in series_in_group if s == majority)
 
         acc = correct / len(ARTICLES) * 100 if ARTICLES else 0
         total_accuracy += acc

@@ -1,0 +1,14 @@
+比较下面两条针对「{weak_dim}」维度的改写建议，从 5 个维度各选赢家（或平局）。
+
+建议 A：{text_a}
+建议 B：{text_b}
+
+五个维度：
+1. specific: 谁给出了更具体的、可执行的文本操作？
+2. root_cause: 谁更对准了风格问题的真实原因？
+3. motif_fit: 谁更会增强母题「{related_motif}」？
+4. natural: 谁的修改更自然、不刻意？
+5. style_cover: 谁的修改更能提升「{weak_dim}」维度？
+
+对每个维度输出 winner: "A" / "B" / "tie"。
+输出JSON：{{"winners":{{"specific":"A","root_cause":"B","motif_fit":"tie","natural":"A","style_cover":"B"}}}}

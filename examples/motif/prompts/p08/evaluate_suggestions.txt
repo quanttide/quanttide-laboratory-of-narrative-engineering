@@ -1,0 +1,10 @@
+评估以下针对文章《{article_name}》缺母题「{gap_title}」的改进建议。
+每条建议从 4 维度评分（1-5）：
+- feasibility: 是否可在不改动结构的情况下执行？
+- motif_fit: 按建议修改后目标母题是否确实会增强？
+- naturalness: 修改后的场景是否自然不刻意？
+- actionable: 是否有明确执行步骤无须二次解读？
+
+输出 JSON：{{"evaluations": [{{"direction": "...", "scores": {{"feasibility":4, "motif_fit":3, "naturalness":4, "actionable":5}} }}] }}
+
+建议列表：{items}

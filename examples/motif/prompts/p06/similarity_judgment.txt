@@ -1,0 +1,14 @@
+判断以下两个来自不同小说的场景描述是否体现了同一叙事母题（motif）。
+
+场景 A：
+  作品: {series_a}
+  母题: {motif_a}
+  描述: {desc_a}
+
+场景 B：
+  作品: {series_b}
+  母题: {motif_b}
+  描述: {desc_b}
+
+输出格式（JSON）：
+{{"same_motif": true/false, "similarity": 0.0-1.0, "shared_pattern": "共同结构（如有）", "reasoning": "判断理由"}}

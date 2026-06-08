@@ -1,0 +1,24 @@
+
+你是《{article_name}》的创作顾问。这篇文章缺少母题「{target_title}」（定义：{target_description}）。
+已识别的原因：{gap_types_str}
+
+{mirror_text}
+
+请从以下 6 个方向各生成一条改进建议（每条 80-150 字）：
+1. 增强 - 强化已存在但偏弱的母题
+2. 引入 - 添加一个完全缺失的母题
+3. 借用 - 从上述变体参考借用（若无则从同系列其他场景）
+4. 转化 - 将现有场景元素改造成母题载体
+5. 克制 - 建议不做修改（仅当 weight≤6 或已有 2+ 高 weight 母题时有效）
+6. 反向 - 有意违抗母题制造张力（附加风险等级 1-3）
+
+输出 JSON：
+{
+  "suggestions": [
+    {{"direction": "amplify", "text": "建议内容...", "paragraph_ref": "第X段"}},
+    ...
+  ]
+}
+其中"反向"方向额外含 "reverse_risk": 1-3
+
+场景文本：{sample}
