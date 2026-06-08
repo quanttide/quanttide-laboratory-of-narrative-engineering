@@ -15,7 +15,7 @@ from src.services import (
     generate_suggestions, evaluate_suggestions,
     to_gap_report, gap_report_to_dict, to_motifs, motifs_to_dicts,
 )
-from src.models import DIRECTIONS, EvaluationScore
+from src.models import DIRECTIONS, EvaluationScore, Article, ArticleAnalysis
 
 RESULTS_DIR = DATA_DIR / "p08"
 
@@ -83,9 +83,25 @@ def main():
         all_suggestions[art["id"]] = art_suggestions
         all_evaluations[art["id"]] = art_evaluations
 
+    # ─── 聚合出口：统一为 ArticleAnalysis ───
+    analyses: dict[str, ArticleAnalysis] = {}
+    for art in ARTICLES:
+        aid = art["id"]
+        article = Article(id=aid, series=art["series"], name=art["name"], path=art["path"])
+        gr = to_gap_report(all_gaps.get(aid, {}))
+        analyses[aid] = ArticleAnalysis(
+            article=article,
+            motifs=gr.extracted_motifs,
+            gap_report=gr,
+            suggestions=all_suggestions.get(aid, {}),
+        )
+
     print(f"\n{'='*60}\np08 分析报告\n{'='*60}")
     for art in ARTICLES:
-        gr = to_gap_report(all_gaps.get(art["id"], {}))
+        analysis = analyses.get(art["id"])
+        if not analysis or not analysis.gap_report:
+            continue
+        gr = analysis.gap_report
         print(f"\n## {art['id']} {art['name']}")
         print(f"  覆盖: {len(gr.covered)} / 缺失: {len(gr.missing)} / 弱化: {len(gr.weak)}")
         for m in gr.missing:
@@ -106,8 +122,14 @@ def main():
                     print(f"    {d.name:<4}: feas={es.feasibility} fit={es.motif_fit} nat={es.naturalness} act={es.actionable} avg={avg:.1f}")
 
     cache_or_compute(RESULTS_DIR / "full_report.json",
-        lambda: {"gaps": {k: gap_report_to_dict(v) if hasattr(v, 'covered') else v for k, v in all_gaps.items()},
-                 "suggestions": all_suggestions, "evaluations": all_evaluations}, verbose=False)
+        lambda: {
+            "analyses": {aid: {
+                "article": dataclasses.asdict(a.article) if hasattr(a.article, 'id') else a.article,
+                "gap_report": gap_report_to_dict(a.gap_report) if a.gap_report else None,
+                "suggestions": a.suggestions,
+            } for aid, a in analyses.items()},
+            "evaluations": all_evaluations,
+        }, verbose=False)
     print(f"\n结果已保存到: {RESULTS_DIR}")
 
 
